@@ -1,36 +1,175 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VIVA Gestão Cultural
 
-## Getting Started
+Plataforma privada para gestão de projetos culturais, editais, documentação, cronograma, financeiro, equipe, participantes, mídia externa e geração de relatórios/dossiês em PDF.
 
-First, run the development server:
+O MVP está preparado para a Cia de Artes Viva e inclui o projeto inicial **Formação de Artistas de Rua e Montagem do Espetáculo Reféns**, vinculado ao **Circuito Catarinense de Cultura PNAB SC 2026**, inscrição **000937**, valor aprovado **R$ 50.000,00**.
+
+## Tecnologias
+
+- Next.js 16 com App Router
+- React 19 e TypeScript
+- Tailwind CSS 4 e shadcn/ui
+- Supabase Auth, Database, Storage e RLS
+- React Hook Form + Zod
+- TanStack Table
+- Recharts
+- date-fns
+- jsPDF + jspdf-autotable
+- XLSX/CSV utilities
+- Lucide React
+
+## Instalação
+
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+Acesse `http://localhost:3000`.
+
+Sem variáveis do Supabase, o app roda em modo demonstração com perfil `admin`. Ao configurar Supabase, as rotas protegidas passam a exigir sessão real.
+
+## Variáveis de ambiente
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+Não versionar `.env` nem `.env.local`. O `.gitignore` mantém esses arquivos fora do Git e permite apenas `.env.example`.
+
+## Configuração do Supabase
+
+1. Crie um projeto no Supabase.
+2. Execute `supabase/schema.sql` no SQL Editor.
+3. Execute `supabase/storage.sql` para criar buckets e policies.
+4. Execute `supabase/seed.sql` para inserir o projeto Reféns.
+5. Crie usuários no Supabase Auth.
+6. Cadastre os usuários na tabela `profiles` com `role` igual a `admin` ou `diretor_executivo`.
+
+Roles preparadas:
+
+- `admin`
+- `diretor_executivo`
+- `financeiro`
+- `editor_projeto`
+- `equipe_tecnica`
+- `visualizador`
+
+No MVP, somente `admin` e `diretor_executivo` acessam o sistema.
+
+## Configuração na Vercel
+
+1. Importe o repositório na Vercel.
+2. Configure as variáveis de ambiente listadas acima.
+3. Use o comando de build padrão:
+
+```bash
+npm run build
+```
+
+4. Garanta que `NEXT_PUBLIC_APP_URL` aponte para a URL de produção.
+
+## Scripts
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run lint
+npm run build
+npm run start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Estrutura
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```txt
+src/app
+  login
+  acesso-negado
+  (protected)
+    dashboard
+    projetos
+    documentos
+    cronograma
+    financeiro
+    equipe
+    participantes
+    midia
+    relatorios
+    configuracoes
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+src/components
+  auth
+  dashboard
+  documents
+  finance
+  layout
+  media
+  participants
+  projects
+  reports
+  schedule
+  settings
+  shared
+  team
 
-## Learn More
+src/lib
+  auth
+  supabase
+  utils
 
-To learn more about Next.js, take a look at the following resources:
+src/modules
+  projects
+  documents
+  media
+  finance
+  schedule
+  team
+  participants
+  reports
+  settings
+  users
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Cada módulo mantém `types`, `schemas`, `queries` e `actions` separados para facilitar evolução para CRUD real no Supabase.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Módulos disponíveis
 
-## Deploy on Vercel
+- Dashboard com KPIs, projeto em destaque, documentos, cronograma, financeiro, mídia e relatórios.
+- Projetos com tabela, cadastro, detalhe, timeline e abas internas.
+- Documentos com upload validado, bloqueio de vídeo, categorias, validade e preview.
+- Cronograma com aulas iniciais do Reféns, calendário, presença e plano de aula.
+- Financeiro com rubricas, despesas, comprovantes e resumo.
+- Equipe com funções, contratos e pagamentos.
+- Participantes com autorizações e presença.
+- Mídia com fotos/imagens e links externos de vídeos/pastas.
+- Relatórios com gerador de PDF e opções de dossiê.
+- Configurações completas por módulo, com bloqueios para configurações sensíveis.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Relatórios
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+O módulo `Relatórios` gera PDF no navegador com jsPDF. O fluxo está pronto para evoluir para:
+
+- salvar no bucket `reports`;
+- incluir fotos/documentos reais;
+- exportar ZIP;
+- exportar CSV/XLSX;
+- gerar DOCX se necessário.
+
+## Segurança
+
+- Next.js 16 usa `src/proxy.ts` para o controle inicial de sessão.
+- A autorização real também deve ser validada em cada Server Action antes de gravar dados.
+- O SQL em `supabase/schema.sql` habilita RLS nas tabelas.
+- Storage bloqueia upload direto de vídeos por policy e a UI valida extensões.
+
+## Próximas melhorias
+
+- Trocar queries seed por queries reais no Supabase.
+- Implementar mutations completas com auditoria.
+- Adicionar upload real para Storage.
+- Salvar PDFs gerados no bucket `reports`.
+- Implementar logs de atividade na UI.
+- Adicionar testes end-to-end para fluxos críticos.
