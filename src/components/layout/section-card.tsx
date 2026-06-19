@@ -18,16 +18,16 @@ export function SectionCard({
   return (
     <section
       className={cn(
-        "rounded-lg border border-border bg-card p-4 text-card-foreground soft-shadow sm:p-5",
+        "rounded-lg border border-border bg-card p-3.5 text-card-foreground soft-shadow sm:p-4",
         className,
       )}
     >
       {title || description || actions ? (
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            {title ? <h2 className="text-base font-semibold">{title}</h2> : null}
+            {title ? <h2 className="text-[0.98rem] font-semibold">{title}</h2> : null}
             {description ? (
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              <p className="mt-1 text-[0.9rem] leading-6 text-muted-foreground">
                 {description}
               </p>
             ) : null}

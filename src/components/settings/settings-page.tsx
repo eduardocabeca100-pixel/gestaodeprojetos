@@ -21,7 +21,7 @@ export async function SettingsPage({ sectionId }: { sectionId: string }) {
       title="Configurações"
       description="Painel administrativo para identidade, módulos, permissões, relatórios, segurança e integrações."
     >
-      <div className="grid gap-6 xl:grid-cols-[280px_1fr]">
+      <div className="grid gap-4 xl:grid-cols-[252px_1fr]">
         <SettingsSidebar />
         <SettingsPanel section={section} role={profile.role} />
       </div>

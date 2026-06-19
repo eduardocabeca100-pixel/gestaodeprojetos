@@ -23,19 +23,23 @@ export function SettingsPanel({
       title={section.title}
       description={section.description}
       actions={
-        <Button type="button" onClick={() => setFeedback(`Configurações de ${section.title} salvas localmente.`)}>
+        <Button
+          size="sm"
+          type="button"
+          onClick={() => setFeedback(`Configurações de ${section.title} salvas localmente.`)}
+        >
           <Save className="size-4" />
           Salvar
         </Button>
       }
     >
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-3 lg:grid-cols-2">
         {section.fields.map((field) => {
           const locked = !isAdminLike && field.lockedForDirector;
 
           return (
             <label key={field.label} className="block">
-              <span className="mb-1 flex items-center gap-2 text-sm font-medium">
+              <span className="mb-1 flex items-center gap-2 text-[0.9rem] font-medium">
                 {field.label}
                 {locked ? <LockKeyhole className="size-3.5 text-amber-600" /> : null}
               </span>

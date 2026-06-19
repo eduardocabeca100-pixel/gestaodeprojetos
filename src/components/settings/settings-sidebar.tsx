@@ -33,14 +33,14 @@ const settingsLinks = [
 
 export function SettingsSidebar() {
   return (
-    <nav className="grid gap-1 rounded-lg border border-border bg-white p-2 soft-shadow">
+    <nav className="grid gap-1 rounded-lg border border-border bg-white p-1.5 soft-shadow">
       {settingsLinks.map((link) => {
         const Icon = link.icon;
         return (
           <Link
             key={link.href}
             href={link.href}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
+            className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[0.9rem] font-medium text-muted-foreground transition hover:bg-muted hover:text-foreground"
           >
             <Icon className="size-4" />
             {link.label}

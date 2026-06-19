@@ -10,16 +10,16 @@ export function PageContainer({
   description?: string;
   actions?: ReactNode;
   children: ReactNode;
-}) {
+  }) {
   return (
-    <main className="content-safe flex w-full flex-1 flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-4 border-b border-border pb-5 md:flex-row md:items-end md:justify-between">
+    <main className="content-safe flex w-full flex-1 flex-col gap-5 px-4 py-4 sm:px-5 lg:px-6">
+      <div className="flex flex-col gap-3 border-b border-border pb-4 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
-          <h1 className="text-balance text-2xl font-semibold tracking-normal text-foreground">
+          <h1 className="text-balance text-[1.75rem] font-semibold tracking-normal text-foreground">
             {title}
           </h1>
           {description ? (
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+            <p className="mt-1.5 max-w-3xl text-[0.92rem] leading-6 text-muted-foreground">
               {description}
             </p>
           ) : null}
