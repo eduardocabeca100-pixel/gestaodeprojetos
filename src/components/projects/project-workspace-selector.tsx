@@ -57,7 +57,7 @@ export function ProjectWorkspaceSelector({
             ))}
           </div>
           <Button asChild className="mt-4 w-full">
-            <Link href={`/projetos/${project.id}`}>
+            <Link href={`/dashboard?project=${project.id}`}>
               <FolderKanban className="size-4" />
               Trabalhar neste projeto
               <ArrowRight className="ml-auto size-4" />

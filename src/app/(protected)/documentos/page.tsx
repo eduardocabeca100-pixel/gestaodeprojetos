@@ -7,7 +7,7 @@ import { DocumentUpload } from "@/components/documents/document-upload";
 import { PageContainer } from "@/components/layout/page-container";
 import { SectionCard } from "@/components/layout/section-card";
 import { ProjectScopeBanner } from "@/components/projects/project-scope-banner";
-import { getProjectId, type PageSearchParams } from "@/lib/utils/search-params";
+import { getActiveProject, type PageSearchParams } from "@/lib/utils/search-params";
 import { listDocuments } from "@/modules/documents/queries";
 
 export default async function DocumentsPage({
@@ -15,15 +15,15 @@ export default async function DocumentsPage({
 }: {
   searchParams: PageSearchParams;
 }) {
-  const projectId = await getProjectId(searchParams);
-  const documents = await listDocuments();
+  const project = await getActiveProject(searchParams);
+  const documents = await listDocuments(project.id);
 
   return (
     <PageContainer
       title="Documentos"
       description="Upload, visualização, validade, substituição e arquivamento de documentos vinculados a projetos."
     >
-      <ProjectScopeBanner projectId={projectId} />
+      <ProjectScopeBanner projectId={project.id} />
       <div className="grid gap-4 md:grid-cols-3">
         <DocumentCategoryCard title="Documentos válidos" count={2} icon={FileCheck2} tone="bg-emerald-50 text-emerald-700" />
         <DocumentCategoryCard title="Alertas de validade" count={1} icon={AlertTriangle} tone="bg-amber-50 text-amber-700" />
@@ -34,7 +34,7 @@ export default async function DocumentsPage({
           <DocumentList documents={documents} />
         </SectionCard>
         <SectionCard title="Upload">
-          <DocumentUpload />
+          <DocumentUpload project={project} />
         </SectionCard>
       </div>
       <DocumentPreview />

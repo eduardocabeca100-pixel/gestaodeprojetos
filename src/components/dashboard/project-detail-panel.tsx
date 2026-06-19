@@ -40,7 +40,7 @@ export function ProjectDetailPanel({ project }: { project: Project }) {
           </div>
         </div>
         <Button asChild>
-          <Link href={`/projetos/${project.id}`}>Ações</Link>
+          <Link href={`/documentos?project=${project.id}`}>Abrir abas</Link>
         </Button>
       </div>
       <div className="mt-6 grid gap-2 md:grid-cols-6">

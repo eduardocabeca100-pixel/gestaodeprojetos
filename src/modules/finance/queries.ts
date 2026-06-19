@@ -1,95 +1,149 @@
+import { getFeaturedProject, getProjectById } from "@/modules/projects/queries";
+import type { Project } from "@/modules/projects/types";
+
 import type { BudgetItem, Expense } from "./types";
 
-export const budgetItems: BudgetItem[] = [
+const budgetPlan = [
   {
-    id: "rubrica-formadores",
-    projectId: "refens",
+    id: "rubrica-equipe",
     category: "Recursos humanos",
-    name: "Professor/formador",
-    approvedAmount: 18000,
-    executedAmount: 4500,
-    notes: "Contratação para 11 aulas e ensaios pedagógicos.",
+    name: "Equipe artística e técnica",
+    approvedRatio: 0.36,
+    executedRatio: 0.53,
+    notes: "Contratação de equipe, direção, atuação, formação e produção.",
   },
   {
-    id: "rubrica-fotos",
-    projectId: "refens",
+    id: "rubrica-registro",
     category: "Registro fotográfico",
     name: "Registro fotográfico e tratamento de imagens",
-    approvedAmount: 5000,
-    executedAmount: 1200,
-    notes: "Fotos de aulas, bastidores e montagem.",
+    approvedRatio: 0.1,
+    executedRatio: 0.14,
+    notes: "Fotos, bastidores, tratamento de imagens e comprovação visual.",
   },
   {
     id: "rubrica-divulgacao",
-    projectId: "refens",
     category: "Divulgação",
     name: "Design e mídia de divulgação",
-    approvedAmount: 7000,
-    executedAmount: 1800,
-    notes: "Peças gráficas e impulsionamento.",
+    approvedRatio: 0.14,
+    executedRatio: 0.21,
+    notes: "Peças gráficas, comunicação e impulsionamento.",
   },
   {
     id: "rubrica-producao",
-    projectId: "refens",
     category: "Serviços de terceiros",
     name: "Produção executiva",
-    approvedAmount: 12000,
-    executedAmount: 1000,
-    notes: "Coordenação de cronograma, documentos e prestação.",
-  },
-];
-
-export const expenses: Expense[] = [
-  {
-    id: "despesa-1",
-    projectId: "refens",
-    budgetItemId: "rubrica-formadores",
-    description: "Parcela inicial do formador",
-    supplier: "Formador principal",
-    document: "000.000.000-00",
-    amount: 4500,
-    paidAt: "2026-08-10",
-    paymentMethod: "PIX",
-    receiptFile: "recibo-formador-parcela-1.pdf",
-    invoiceFile: null,
-    receiptType: "Recibo de prestador PF",
-    status: "Pago",
-    notes: "Comprovante vinculado ao documento financeiro.",
+    approvedRatio: 0.24,
+    executedRatio: 0.12,
+    notes: "Coordenação de cronograma, documentos e prestação de contas.",
   },
   {
-    id: "despesa-2",
-    projectId: "refens",
-    budgetItemId: "rubrica-fotos",
-    description: "Cobertura fotográfica das primeiras aulas",
-    supplier: "Fotógrafa convidada",
-    document: "00.000.000/0001-00",
-    amount: 1200,
-    paidAt: "2026-08-18",
-    paymentMethod: "Transferência",
-    receiptFile: "comprovante-fotografia.pdf",
-    invoiceFile: "nf-fotografia.pdf",
-    receiptType: "Nota fiscal de serviço",
-    status: "Pago",
-    notes: "Incluir no relatório fotográfico.",
+    id: "rubrica-acessibilidade",
+    category: "Acessibilidade",
+    name: "Acessibilidade e mediação",
+    approvedRatio: 0.1,
+    executedRatio: 0,
+    notes: "Ações de acesso, mediação e adequações necessárias.",
   },
-];
+  {
+    id: "rubrica-outros",
+    category: "Outros",
+    name: "Materiais, deslocamento e apoio",
+    approvedRatio: 0.06,
+    executedRatio: 0,
+    notes: "Materiais de consumo, pequenos deslocamentos e apoio operacional.",
+  },
+] as const;
 
-export async function listBudgetItems() {
-  return budgetItems;
+async function getScopedProject(projectId?: string) {
+  return projectId
+    ? (await getProjectById(projectId)) ?? (await getFeaturedProject())
+    : getFeaturedProject();
 }
 
-export async function listExpenses() {
-  return expenses;
+function roundAmount(value: number) {
+  return Math.round(value / 100) * 100;
 }
 
-export async function getFinancialSummary() {
-  const approved = budgetItems.reduce((total, item) => total + item.approvedAmount, 0);
-  const executed = budgetItems.reduce((total, item) => total + item.executedAmount, 0);
+function buildBudgetItems(project: Project): BudgetItem[] {
+  return budgetPlan.map((item) => ({
+    id: `${project.id}-${item.id}`,
+    projectId: project.id,
+    category: item.category,
+    name: item.name,
+    approvedAmount: roundAmount(project.approvedAmount * item.approvedRatio),
+    executedAmount: roundAmount(project.executedAmount * item.executedRatio),
+    notes: `${item.notes} Projeto: ${project.name}.`,
+  }));
+}
+
+function buildExpenses(project: Project, items: BudgetItem[]): Expense[] {
+  if (project.executedAmount <= 0) {
+    return [];
+  }
+
+  const firstAmount = roundAmount(project.executedAmount * 0.58);
+  const secondAmount = Math.max(project.executedAmount - firstAmount, 0);
+
+  return [
+    {
+      id: `${project.id}-despesa-1`,
+      projectId: project.id,
+      budgetItemId: items[0]?.id ?? `${project.id}-rubrica-equipe`,
+      description: `Pagamento artístico/técnico - ${project.name}`,
+      supplier: "Profissional pessoa física",
+      document: "000.000.000-00",
+      amount: firstAmount,
+      paidAt: project.id === "refens" ? "2026-08-10" : "2026-06-20",
+      paymentMethod: "PIX",
+      receiptFile: `recibo-${project.id}-prestador.pdf`,
+      invoiceFile: null,
+      receiptType: "Recibo de prestador PF",
+      status: "Pago",
+      notes: "Recibo obrigatório quando o prestador não emitir nota fiscal.",
+    },
+    {
+      id: `${project.id}-despesa-2`,
+      projectId: project.id,
+      budgetItemId: items[1]?.id ?? `${project.id}-rubrica-registro`,
+      description: `Comprovação visual e materiais - ${project.name}`,
+      supplier: "Fornecedor/prestador vinculado",
+      document: "00.000.000/0001-00",
+      amount: secondAmount,
+      paidAt: project.id === "refens" ? "2026-08-18" : "2026-07-05",
+      paymentMethod: "Transferência",
+      receiptFile: `comprovante-${project.id}.pdf`,
+      invoiceFile: `nf-${project.id}.pdf`,
+      receiptType: "Nota fiscal de serviço",
+      status: "Pago",
+      notes: "Anexar nota fiscal, cupom fiscal ou recibo conforme o caso.",
+    },
+  ];
+}
+
+export async function listBudgetItems(projectId?: string) {
+  const project = await getScopedProject(projectId);
+
+  return buildBudgetItems(project);
+}
+
+export async function listExpenses(projectId?: string) {
+  const project = await getScopedProject(projectId);
+  const items = buildBudgetItems(project);
+
+  return buildExpenses(project, items);
+}
+
+export async function getFinancialSummary(projectId?: string) {
+  const project = await getScopedProject(projectId);
+  const items = buildBudgetItems(project);
+  const projectExpenses = buildExpenses(project, items);
+  const approved = items.reduce((total, item) => total + item.approvedAmount, 0);
+  const executed = project.executedAmount;
 
   return {
     approved,
     executed,
     remaining: approved - executed,
-    expenseCount: expenses.length,
+    expenseCount: projectExpenses.length,
   };
 }

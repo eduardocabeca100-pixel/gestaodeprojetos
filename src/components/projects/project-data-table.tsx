@@ -17,7 +17,7 @@ const columns: ColumnDef<Project>[] = [
       <div>
         <Link
           className="font-medium text-primary"
-          href={`/projetos/${row.original.id}`}
+          href={`/dashboard?project=${row.original.id}`}
         >
           {row.original.name}
         </Link>

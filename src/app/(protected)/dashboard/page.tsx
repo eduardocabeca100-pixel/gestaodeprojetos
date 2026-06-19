@@ -11,32 +11,38 @@ import { ProjectMiniCard } from "@/components/dashboard/project-mini-card";
 import { RecentActivities } from "@/components/dashboard/recent-activities";
 import { PageContainer } from "@/components/layout/page-container";
 import { SectionCard } from "@/components/layout/section-card";
+import { getActiveProject, type PageSearchParams } from "@/lib/utils/search-params";
 import { listDocuments } from "@/modules/documents/queries";
 import { getFinancialSummary } from "@/modules/finance/queries";
 import { listMediaItems } from "@/modules/media/queries";
-import { getFeaturedProject, getProjectKpis, listProjects } from "@/modules/projects/queries";
+import { getProjectKpis, listProjects } from "@/modules/projects/queries";
 import { listReports } from "@/modules/reports/queries";
 import { listUpcomingActivities } from "@/modules/schedule/queries";
 
 const kpiIcons = [Folder, Wallet, ReceiptText, BarChart3];
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: PageSearchParams;
+}) {
+  const activeProject = await getActiveProject(searchParams);
   const [kpis, projects, featured, documents, activities, finance, media, reports] =
     await Promise.all([
       getProjectKpis(),
       listProjects(),
-      getFeaturedProject(),
-      listDocuments(),
-      listUpcomingActivities(),
-      getFinancialSummary(),
-      listMediaItems(),
-      listReports(),
+      activeProject,
+      listDocuments(activeProject.id),
+      listUpcomingActivities(activeProject.id),
+      getFinancialSummary(activeProject.id),
+      listMediaItems(activeProject.id),
+      listReports(activeProject.id),
     ]);
 
   return (
     <PageContainer
-      title="Dashboard"
-      description="Visão operacional dos projetos culturais, documentos, financeiro e prestação de contas."
+      title={`Dashboard - ${featured.name}`}
+      description="Visão operacional do projeto ativo, com documentos, financeiro e prestação de contas."
     >
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {kpis.map((kpi, index) => {
@@ -48,11 +54,11 @@ export default async function DashboardPage() {
       <div className="grid gap-6 2xl:grid-cols-[0.95fr_1.05fr]">
         <SectionCard title="Meus projetos" description="Projetos ativos e em planejamento.">
           <div className="grid gap-4 xl:grid-cols-3 2xl:grid-cols-1">
-            {projects.map((project, index) => (
+            {projects.map((project) => (
               <ProjectMiniCard
                 key={project.id}
                 project={project}
-                highlighted={index === 0}
+                highlighted={project.id === featured.id}
               />
             ))}
           </div>
@@ -65,7 +71,7 @@ export default async function DashboardPage() {
         <RecentActivities activities={activities} />
         <DashboardFinance {...finance} />
         <DashboardMedia mediaItems={media} />
-        <DashboardReports reports={reports} />
+        <DashboardReports projectId={featured.id} reports={reports} />
       </div>
 
       <BenefitsFooter />

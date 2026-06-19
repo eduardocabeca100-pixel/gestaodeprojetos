@@ -6,8 +6,9 @@ import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isAllowedDocument, isBlockedVideo } from "@/lib/utils/file-validation";
 import { documentCategories } from "@/modules/documents/types";
+import type { Project } from "@/modules/projects/types";
 
-export function DocumentUpload() {
+export function DocumentUpload({ project }: { project: Project }) {
   const [message, setMessage] = useState<string | null>(null);
 
   return (
@@ -55,8 +56,8 @@ export function DocumentUpload() {
       </label>
       <label className="block">
         <span className="text-sm font-medium">Projeto vinculado</span>
-        <select className="form-input mt-1" defaultValue="refens">
-          <option value="refens">Reféns</option>
+        <select className="form-input mt-1" defaultValue={project.id}>
+          <option value={project.id}>{project.name}</option>
         </select>
       </label>
       <label className="block">

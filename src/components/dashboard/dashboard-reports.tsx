@@ -6,14 +6,20 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/status-badge";
 import type { Report } from "@/modules/reports/types";
 
-export function DashboardReports({ reports }: { reports: Report[] }) {
+export function DashboardReports({
+  projectId,
+  reports,
+}: {
+  projectId: string;
+  reports: Report[];
+}) {
   return (
     <SectionCard
       title="Relatórios"
       description="Dossiês e relatórios prontos para geração."
       actions={
         <Button asChild>
-          <Link href="/relatorios">
+          <Link href={`/relatorios?project=${projectId}`}>
             <FileDown className="size-4" />
             Gerar PDF
           </Link>

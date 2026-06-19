@@ -57,7 +57,7 @@ export function ProjectCard({
           {formatCurrency(project.approvedAmount)}
         </span>
         <Link
-          href={`/projetos/${project.id}`}
+          href={`/dashboard?project=${project.id}`}
           className="inline-flex items-center gap-1 font-medium text-primary"
         >
           Abrir

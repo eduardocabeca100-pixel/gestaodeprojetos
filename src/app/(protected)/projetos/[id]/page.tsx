@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { PageContainer } from "@/components/layout/page-container";
 import { SectionCard } from "@/components/layout/section-card";
 import { ProjectActionsMenu } from "@/components/projects/project-actions-menu";
+import { ProjectForm } from "@/components/projects/project-form";
 import { ProjectHeader } from "@/components/projects/project-header";
 import { ProjectStatusTimeline } from "@/components/projects/project-status-timeline";
 import { ProjectSummaryCard } from "@/components/projects/project-summary-card";
@@ -35,6 +36,9 @@ export default async function ProjectDetailPage({
       </SectionCard>
       <ProjectSummaryCard project={project} />
       <ProjectTabs overview={{ summary: project.summary, notes: project.notes }} />
+      <div id="editar-projeto">
+        <ProjectForm project={project} />
+      </div>
     </PageContainer>
   );
 }

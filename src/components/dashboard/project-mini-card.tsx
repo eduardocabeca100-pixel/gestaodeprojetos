@@ -18,7 +18,7 @@ export function ProjectMiniCard({
 }) {
   return (
     <Link
-      href={`/projetos/${project.id}`}
+      href={`/dashboard?project=${project.id}`}
       className={
         highlighted
           ? "grid gap-4 rounded-lg border border-primary bg-white p-4 soft-shadow sm:grid-cols-[92px_1fr]"

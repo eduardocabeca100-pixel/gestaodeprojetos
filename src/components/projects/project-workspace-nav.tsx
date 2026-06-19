@@ -13,7 +13,7 @@ import {
 import type { Project } from "@/modules/projects/types";
 
 const tabs = [
-  { label: "Visão Geral", href: "", icon: LayoutDashboard },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Documentos", href: "/documentos", icon: FileText },
   { label: "Documentos Oficiais", href: "/documentos-oficiais", icon: FileSignature },
   { label: "Cronograma", href: "/cronograma", icon: CalendarDays },
@@ -44,7 +44,7 @@ export function ProjectWorkspaceNav({ project }: { project: Project }) {
           return (
             <Link
               key={tab.label}
-              href={tab.href ? `${tab.href}?project=${project.id}` : `/projetos/${project.id}`}
+              href={`${tab.href}?project=${project.id}`}
               className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition hover:border-primary hover:text-primary"
             >
               <Icon className="size-4" />

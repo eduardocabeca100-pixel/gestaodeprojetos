@@ -7,9 +7,64 @@ import { SectionCard } from "@/components/layout/section-card";
 import { Button } from "@/components/ui/button";
 import { generateSlug } from "@/lib/utils/generate-slug";
 import { projectSchema, type ProjectFormValues } from "@/modules/projects/schemas";
-import { projectStatuses } from "@/modules/projects/types";
+import { projectStatuses, type Project } from "@/modules/projects/types";
 
-export function ProjectForm() {
+const defaultProjectValues: ProjectFormValues = {
+  name: "Reféns",
+  fullTitle: "Formação de Artistas de Rua e Montagem do Espetáculo Reféns",
+  slug: "formacao-artistas-rua-espetaculo-refens",
+  shortDescription: "Formação cênica e montagem teatral.",
+  summary:
+    "Formação de artistas de rua com aulas, ensaios, comprovações e montagem do espetáculo Reféns.",
+  edital: "Circuito Catarinense de Cultura PNAB SC 2026",
+  registrationNumber: "000937",
+  approvedAmount: 50000,
+  executedAmount: 0,
+  status: "Classificado",
+  currentStage: "Habilitação em andamento",
+  modality: "Ações de Qualificação e Formação",
+  className: "Classe II",
+  proponent: "Cia de Artes Viva",
+  proponentDocument: "00.000.000/0001-00",
+  city: "Florianópolis",
+  state: "SC",
+  startDate: "2026-08-01",
+  endDate: "2027-07-31",
+  notes: "",
+  archived: false,
+};
+
+function getProjectValues(project?: Project): ProjectFormValues {
+  if (!project) {
+    return defaultProjectValues;
+  }
+
+  return {
+    name: project.name,
+    fullTitle: project.fullTitle,
+    slug: project.slug,
+    shortDescription: project.shortDescription,
+    summary: project.summary,
+    edital: project.edital,
+    registrationNumber: project.registrationNumber,
+    approvedAmount: project.approvedAmount,
+    executedAmount: project.executedAmount,
+    status: project.status,
+    currentStage: project.currentStage,
+    modality: project.modality,
+    className: project.className,
+    proponent: project.proponent,
+    proponentDocument: project.proponentDocument,
+    city: project.city,
+    state: project.state,
+    startDate: project.startDate,
+    endDate: project.endDate,
+    notes: project.notes,
+    archived: project.archived,
+  };
+}
+
+export function ProjectForm({ project }: { project?: Project }) {
   const {
     register,
     handleSubmit,
@@ -17,34 +72,14 @@ export function ProjectForm() {
     formState: { errors, isSubmitSuccessful },
   } = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
-    defaultValues: {
-      name: "Reféns",
-      fullTitle: "Formação de Artistas de Rua e Montagem do Espetáculo Reféns",
-      slug: "formacao-artistas-rua-espetaculo-refens",
-      shortDescription: "Formação cênica e montagem teatral.",
-      summary:
-        "Formação de artistas de rua com aulas, ensaios, comprovações e montagem do espetáculo Reféns.",
-      edital: "Circuito Catarinense de Cultura PNAB SC 2026",
-      registrationNumber: "000937",
-      approvedAmount: 50000,
-      executedAmount: 0,
-      status: "Classificado",
-      currentStage: "Habilitação em andamento",
-      modality: "Ações de Qualificação e Formação",
-      className: "Classe II",
-      proponent: "Cia de Artes Viva",
-      proponentDocument: "00.000.000/0001-00",
-      city: "Florianópolis",
-      state: "SC",
-      startDate: "2026-08-01",
-      endDate: "2027-07-31",
-      notes: "",
-      archived: false,
-    },
+    defaultValues: getProjectValues(project),
   });
 
   return (
-    <SectionCard title="Cadastro de projeto" description="Campos principais do edital e execução.">
+    <SectionCard
+      title={project ? "Editar projeto" : "Cadastro de projeto"}
+      description="Campos principais do edital e execução."
+    >
       {isSubmitSuccessful ? (
         <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
           Projeto validado localmente. A próxima etapa é persistir no Supabase.

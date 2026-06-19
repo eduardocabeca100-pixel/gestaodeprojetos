@@ -19,7 +19,7 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -27,22 +27,51 @@ import type { CurrentProfile } from "@/lib/auth/require-role";
 import { logout } from "@/modules/users/actions";
 
 const navigation = [
-  { label: "Dashboard", href: "/dashboard", icon: Home },
+  { label: "Dashboard", href: "/dashboard", icon: Home, projectScoped: true },
   { label: "Projetos", href: "/projetos", icon: Folder },
-  { label: "Documentos", href: "/documentos", icon: FileText },
-  { label: "Docs Oficiais", href: "/documentos-oficiais", icon: FileSignature },
-  { label: "Cronograma", href: "/cronograma", icon: CalendarDays },
-  { label: "Financeiro", href: "/financeiro", icon: Wallet },
-  { label: "Equipe", href: "/equipe", icon: Users },
-  { label: "Participantes", href: "/participantes", icon: Users },
-  { label: "Mídia", href: "/midia", icon: ImageIcon },
-  { label: "Relatórios", href: "/relatorios", icon: BarChart3 },
+  { label: "Documentos", href: "/documentos", icon: FileText, projectScoped: true },
+  {
+    label: "Docs Oficiais",
+    href: "/documentos-oficiais",
+    icon: FileSignature,
+    projectScoped: true,
+  },
+  { label: "Cronograma", href: "/cronograma", icon: CalendarDays, projectScoped: true },
+  { label: "Financeiro", href: "/financeiro", icon: Wallet, projectScoped: true },
+  { label: "Equipe", href: "/equipe", icon: Users, projectScoped: true },
+  { label: "Participantes", href: "/participantes", icon: Users, projectScoped: true },
+  { label: "Mídia", href: "/midia", icon: ImageIcon, projectScoped: true },
+  { label: "Relatórios", href: "/relatorios", icon: BarChart3, projectScoped: true },
   { label: "Notificações", href: "/notificacoes", icon: Bell, badge: "3" },
   { label: "Configurações", href: "/configuracoes/geral", icon: Settings },
 ];
 
+function getProjectIdFromPathname(pathname: string) {
+  const [, section, projectId] = pathname.split("/");
+
+  if (section !== "projetos" || !projectId) {
+    return null;
+  }
+
+  if (projectId === "novo" || projectId === "selecionar") {
+    return null;
+  }
+
+  return projectId;
+}
+
 function SidebarContent({ profile }: { profile: CurrentProfile }) {
   const pathname = usePathname();
+  const [searchProjectId, setSearchProjectId] = useState<string | null>(null);
+  const activeProjectId = searchProjectId ?? getProjectIdFromPathname(pathname);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setSearchProjectId(new URLSearchParams(window.location.search).get("project"));
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname]);
 
   return (
     <aside className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
@@ -69,6 +98,10 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
       <nav className="flex-1 space-y-1 px-3">
         {navigation.map((item) => {
           const Icon = item.icon;
+          const href =
+            "projectScoped" in item && item.projectScoped && activeProjectId
+              ? `${item.href}?project=${activeProjectId}`
+              : item.href;
           const active =
             pathname === item.href ||
             pathname.startsWith(`${item.href}/`) ||
@@ -79,7 +112,7 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={href}
               className={cn(
                 "flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-sidebar-foreground/76 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 active && "bg-sidebar-accent text-sidebar-accent-foreground",
