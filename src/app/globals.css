@@ -127,6 +127,8 @@
     @apply bg-background text-foreground;
     overflow-x: hidden;
     font-family: var(--font-viva-sans);
+    font-size: 14px;
+    line-height: 1.45;
     text-rendering: optimizeLegibility;
   }
   h1,
@@ -142,6 +144,7 @@
   html {
     @apply font-sans;
     overflow-x: hidden;
+    font-size: 14px;
   }
   a,
   button {
@@ -155,7 +158,7 @@
   }
 
   .form-input {
-    @apply w-full rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-sm transition focus:border-primary focus:ring-3 focus:ring-primary/15;
+    @apply w-full min-h-9 rounded-lg border border-input bg-white px-3 py-1.5 text-[0.95rem] shadow-sm transition focus:border-primary focus:ring-3 focus:ring-primary/15;
   }
 
   .content-safe {
