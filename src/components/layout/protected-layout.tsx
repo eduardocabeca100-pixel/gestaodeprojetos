@@ -13,7 +13,7 @@ export async function ProtectedLayout({ children }: { children: ReactNode }) {
     <PasswordResetGate profile={profile}>
       <div className="min-h-screen bg-background">
         <AppSidebar profile={profile} />
-        <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden lg:pl-72">
+        <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden lg:pl-[272px]">
           <Topbar profile={profile} />
           {children}
         </div>

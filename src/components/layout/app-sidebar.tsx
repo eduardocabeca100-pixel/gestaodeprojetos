@@ -79,22 +79,22 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
 
   return (
     <aside
-      className="flex h-full flex-col bg-sidebar text-sidebar-foreground"
+      className="flex h-[100dvh] flex-col overflow-hidden bg-sidebar text-sidebar-foreground"
       style={{ fontFamily: '"Arial Black", Arial, Helvetica, sans-serif' }}
     >
-      <div className="flex h-24 items-center border-b border-sidebar-border px-6">
+      <div className="flex shrink-0 items-center border-b border-sidebar-border px-5 py-4">
         <div className="min-w-0">
-          <p className="truncate text-4xl font-black leading-none tracking-normal">
+          <p className="truncate text-[2.15rem] font-black leading-none tracking-normal">
             VIVA
           </p>
-          <p className="mt-1 truncate text-[0.66rem] font-semibold uppercase tracking-[0.25em] text-sidebar-foreground/70">
+          <p className="mt-1 truncate text-[0.62rem] font-semibold uppercase tracking-[0.24em] text-sidebar-foreground/70">
             Gestão Cultural
           </p>
         </div>
       </div>
 
-      <div className="p-4">
-        <Button asChild className="w-full justify-start bg-sidebar-primary">
+      <div className="shrink-0 px-4 py-3">
+        <Button asChild className="h-10 w-full justify-start bg-sidebar-primary px-4 text-sm font-semibold">
           <Link href="/projetos/novo">
             <Plus className="size-4" />
             Novo Projeto
@@ -102,7 +102,7 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
         </Button>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3">
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-3 [scrollbar-width:thin]">
         {navigation.map((item) => {
           const Icon = item.icon;
           const href =
@@ -121,14 +121,14 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
               key={item.href}
               href={href}
               className={cn(
-                "flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-sidebar-foreground/76 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                "flex h-9 items-center gap-2.5 rounded-lg px-3 text-[0.92rem] font-semibold text-sidebar-foreground/78 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 active && "bg-sidebar-accent text-sidebar-accent-foreground",
               )}
             >
-              <Icon className="size-4" />
+              <Icon className="size-[15px] shrink-0" />
               <span>{item.label}</span>
               {"badge" in item ? (
-                <span className="ml-auto rounded-full bg-sidebar-primary px-2 py-0.5 text-xs text-sidebar-primary-foreground">
+                <span className="ml-auto rounded-full bg-sidebar-primary px-2 py-0.5 text-[11px] text-sidebar-primary-foreground">
                   {item.badge}
                 </span>
               ) : null}
@@ -137,14 +137,14 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
         })}
       </nav>
 
-      <div className="border-t border-sidebar-border p-4">
-        <div className="mb-3 flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-white/10 text-sm font-semibold">
+      <div className="shrink-0 border-t border-sidebar-border p-3">
+        <div className="mb-2.5 flex items-center gap-2.5">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-white/10 text-sm font-semibold">
             {profile.name.slice(0, 1)}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium">{profile.name}</p>
-            <p className="truncate text-xs text-sidebar-foreground/65">
+            <p className="truncate text-[13px] font-semibold leading-4">{profile.name}</p>
+            <p className="truncate text-[11px] leading-4 text-sidebar-foreground/65">
               {profile.role === "super_admin"
                 ? "Super Admin"
                 : profile.role === "admin"
@@ -155,7 +155,7 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
         </div>
         <form action={logout}>
           <Button
-            className="w-full justify-start border-sidebar-border bg-transparent text-sidebar-foreground hover:bg-sidebar-accent"
+            className="h-10 w-full justify-start border-sidebar-border bg-transparent text-sm text-sidebar-foreground hover:bg-sidebar-accent"
             variant="outline"
             type="submit"
           >
@@ -182,7 +182,7 @@ export function AppSidebar({ profile }: { profile: CurrentProfile }) {
         <Menu className="size-5" />
       </button>
 
-      <div className="fixed inset-y-0 left-0 z-30 hidden w-72 lg:block">
+      <div className="fixed inset-y-0 left-0 z-30 hidden w-[272px] lg:block">
         <SidebarContent profile={profile} />
       </div>
 
@@ -194,7 +194,7 @@ export function AppSidebar({ profile }: { profile: CurrentProfile }) {
             type="button"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute inset-y-0 left-0 w-80 max-w-[85vw]">
+          <div className="absolute inset-y-0 left-0 w-[272px] max-w-[86vw]">
             <SidebarContent profile={profile} />
           </div>
           <button
