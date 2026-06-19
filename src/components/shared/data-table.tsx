@@ -36,7 +36,7 @@ export function DataTable<TData>({
       <label className="relative block max-w-md">
         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <input
-          className="h-8.5 w-full rounded-lg border border-input bg-white pl-9 pr-3 text-[13px] shadow-sm transition focus:border-primary focus:ring-3 focus:ring-primary/15"
+          className="h-[var(--viva-input-height)] w-full rounded-lg border border-input bg-white pl-9 pr-3 text-[13px] shadow-sm transition focus:border-primary focus:ring-3 focus:ring-primary/15"
           placeholder={searchPlaceholder}
           value={globalFilter}
           onChange={(event) => setGlobalFilter(event.target.value)}

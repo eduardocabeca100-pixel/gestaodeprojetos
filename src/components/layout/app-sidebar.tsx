@@ -79,12 +79,12 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
 
   return (
     <aside
-      className="flex h-[100dvh] flex-col overflow-hidden bg-sidebar text-sidebar-foreground"
-      style={{ fontFamily: '"Arial Black", Arial, Helvetica, sans-serif' }}
+      className="flex h-[100dvh] w-[var(--viva-sidebar-width)] flex-col overflow-hidden bg-sidebar text-sidebar-foreground"
+      style={{ fontFamily: "var(--font-viva-heading)" }}
     >
-      <div className="flex shrink-0 items-center border-b border-sidebar-border px-4 py-3.5">
+      <div className="flex shrink-0 items-center border-b border-sidebar-border px-4 py-3">
         <div className="min-w-0">
-          <p className="truncate text-[1.95rem] font-black leading-none tracking-normal">
+          <p className="truncate text-[1.9rem] font-black leading-none tracking-normal">
             VIVA
           </p>
           <p className="mt-1 truncate text-[0.6rem] font-semibold uppercase tracking-[0.24em] text-sidebar-foreground/70">
@@ -93,8 +93,8 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
         </div>
       </div>
 
-      <div className="shrink-0 px-3.5 py-2.5">
-        <Button asChild className="h-9 w-full justify-start bg-sidebar-primary px-3.5 text-[0.92rem] font-semibold">
+      <div className="shrink-0 px-3 py-2.5">
+        <Button asChild className="h-[var(--viva-button-height)] w-full justify-start bg-sidebar-primary px-3.5 text-[0.88rem] font-semibold">
           <Link href="/projetos/novo">
             <Plus className="size-4" />
             Novo Projeto
@@ -122,12 +122,12 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
                 key={item.href}
                 href={href}
                 className={cn(
-                  "flex h-8 items-center gap-2 rounded-lg px-3 text-[0.88rem] font-semibold text-sidebar-foreground/78 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  "flex h-[var(--viva-sidebar-item-height)] items-center gap-2 rounded-lg px-3 text-[0.86rem] font-semibold text-sidebar-foreground/78 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   active && "bg-sidebar-accent text-sidebar-accent-foreground",
                 )}
               >
-                <Icon className="size-[15px] shrink-0" />
-                <span>{item.label}</span>
+              <Icon className="viva-sidebar-icon size-[15px] shrink-0" />
+              <span className="viva-sidebar-label">{item.label}</span>
                 {"badge" in item ? (
                   <span className="ml-auto rounded-full bg-sidebar-primary px-2 py-0.5 text-[10px] text-sidebar-primary-foreground">
                     {item.badge}
@@ -155,7 +155,7 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
             </div>
             <form action={logout}>
               <Button
-                className="h-9 w-full justify-start border-sidebar-border bg-transparent text-[0.88rem] text-sidebar-foreground hover:bg-sidebar-accent"
+                className="h-[var(--viva-button-height)] w-full justify-start border-sidebar-border bg-transparent text-[0.86rem] text-sidebar-foreground hover:bg-sidebar-accent"
                 variant="outline"
                 type="submit"
               >
@@ -184,7 +184,7 @@ export function AppSidebar({ profile }: { profile: CurrentProfile }) {
         <Menu className="size-5" />
       </button>
 
-      <div className="fixed inset-y-0 left-0 z-30 hidden w-[248px] lg:block">
+      <div className="fixed inset-y-0 left-0 z-30 hidden w-[var(--viva-sidebar-width)] lg:block">
         <SidebarContent profile={profile} />
       </div>
 
@@ -196,7 +196,7 @@ export function AppSidebar({ profile }: { profile: CurrentProfile }) {
             type="button"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute inset-y-0 left-0 w-[248px] max-w-[86vw]">
+          <div className="absolute inset-y-0 left-0 w-[var(--viva-sidebar-width)] max-w-[86vw]">
             <SidebarContent profile={profile} />
           </div>
           <button

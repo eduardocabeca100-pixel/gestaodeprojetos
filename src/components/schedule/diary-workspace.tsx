@@ -242,7 +242,7 @@ export function DiaryWorkspace({
             </>
           }
         >
-          <div className="space-y-2">
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
             {participants.map((participant) => {
               const isPresent = presentIds.includes(participant.id);
 
@@ -252,24 +252,22 @@ export function DiaryWorkspace({
                   type="button"
                   className={
                     isPresent
-                      ? "flex w-full items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-left"
-                      : "flex w-full items-center justify-between rounded-lg border border-border bg-white p-3 text-left transition hover:border-primary"
+                      ? "flex min-h-16 w-full items-center justify-between rounded-lg border border-emerald-200 bg-emerald-50 p-2.5 text-left"
+                      : "flex min-h-16 w-full items-center justify-between rounded-lg border border-border bg-white p-2.5 text-left transition hover:border-primary"
                   }
                   onClick={() => toggleParticipant(participant.id)}
                 >
                   <div>
-                    <p className="font-medium">{participant.fullName}</p>
+                    <p className="text-sm font-medium">{participant.fullName}</p>
                     <p className="text-xs text-muted-foreground">
                       {participant.city && participant.neighborhood
                         ? `${participant.city} - ${participant.neighborhood}`
                         : participant.neighborhood || participant.city || "Sem bairro"}
                     </p>
                   </div>
-                  {isPresent ? (
-                    <UserCheck className="size-4 text-emerald-700" />
-                  ) : (
-                    <UserX className="size-4 text-muted-foreground" />
-                  )}
+                  <span className={isPresent ? "rounded-full bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white" : "rounded-full bg-muted px-2 py-1 text-[11px] font-semibold text-muted-foreground"}>
+                    {isPresent ? "Presente" : "Ausente"}
+                  </span>
                 </button>
               );
             })}
