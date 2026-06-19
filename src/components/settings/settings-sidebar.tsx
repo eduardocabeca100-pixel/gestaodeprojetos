@@ -1,6 +1,5 @@
 import Link from "next/link";
 import {
-  Award,
   CalendarDays,
   Database,
   FileText,
@@ -23,7 +22,6 @@ const settingsLinks = [
   { href: "/configuracoes/documentos", label: "Documentos", icon: FileText },
   { href: "/configuracoes/midia", label: "Mídia", icon: ImageIcon },
   { href: "/configuracoes/cronograma", label: "Cronograma", icon: CalendarDays },
-  { href: "/configuracoes/certificados", label: "Certificados", icon: Award },
   { href: "/configuracoes/financeiro", label: "Financeiro", icon: Wallet },
   { href: "/configuracoes/relatorios", label: "Relatórios", icon: SlidersHorizontal },
   { href: "/configuracoes/usuarios", label: "Usuários", icon: Users },
