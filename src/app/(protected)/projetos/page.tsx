@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { FolderKanban, Plus } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { SectionCard } from "@/components/layout/section-card";
@@ -15,12 +15,20 @@ export default async function ProjectsPage() {
       title="Projetos"
       description="CRUD de projetos culturais com status, valores, prazos e filtros."
       actions={
-        <Button asChild>
-          <Link href="/projetos/novo">
-            <Plus className="size-4" />
-            Novo projeto
-          </Link>
-        </Button>
+        <>
+          <Button asChild variant="outline">
+            <Link href="/projetos/selecionar">
+              <FolderKanban className="size-4" />
+              Escolher projeto
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/projetos/novo">
+              <Plus className="size-4" />
+              Novo projeto
+            </Link>
+          </Button>
+        </>
       }
     >
       <SectionCard title="Projetos cadastrados" description="Busque por nome, edital ou status.">

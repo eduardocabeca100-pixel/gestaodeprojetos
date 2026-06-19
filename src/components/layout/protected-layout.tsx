@@ -11,7 +11,7 @@ export async function ProtectedLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background">
       <AppSidebar profile={profile} />
-      <div className="flex min-h-screen flex-col lg:pl-72">
+      <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden lg:pl-72">
         <Topbar profile={profile} />
         {children}
       </div>

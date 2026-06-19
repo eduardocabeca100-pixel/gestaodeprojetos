@@ -140,6 +140,7 @@ Cada módulo mantém `types`, `schemas`, `queries` e `actions` separados para fa
 - Dashboard com KPIs, projeto em destaque, documentos, cronograma, financeiro, mídia e relatórios.
 - Projetos com tabela, cadastro, detalhe, timeline e abas internas.
 - Documentos com upload validado, bloqueio de vídeo, categorias, validade e preview.
+- Documentos Oficiais com editor, modelos, logo própria, PDF/TXT, autorizações, termos e recibos.
 - Cronograma com aulas iniciais do Reféns, calendário, presença e plano de aula.
 - Financeiro com rubricas, despesas, comprovantes e resumo.
 - Equipe com funções, contratos e pagamentos.
@@ -171,5 +172,6 @@ O módulo `Relatórios` gera PDF no navegador com jsPDF. O fluxo está pronto pa
 - Implementar mutations completas com auditoria.
 - Adicionar upload real para Storage.
 - Salvar PDFs gerados no bucket `reports`.
+- Persistir documentos oficiais no bucket `official-documents`.
 - Implementar logs de atividade na UI.
 - Adicionar testes end-to-end para fluxos críticos.

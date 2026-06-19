@@ -8,6 +8,9 @@ export const settingsSections: SettingsSection[] = [
     fields: [
       { label: "Nome do sistema", value: "VIVA Gestão Cultural", type: "text" },
       { label: "Nome da instituição", value: "Cia de Artes Viva", type: "text" },
+      { label: "Logo principal do sistema", value: "", type: "file" },
+      { label: "Logo para fundo escuro", value: "", type: "file" },
+      { label: "Logo dos documentos oficiais", value: "", type: "file" },
       { label: "E-mail institucional", value: "contato@ciaviva.local", type: "text" },
       { label: "WhatsApp", value: "(48) 99999-0000", type: "text" },
       { label: "Cidade", value: "Florianópolis", type: "text" },
@@ -26,6 +29,7 @@ export const settingsSections: SettingsSection[] = [
     description: "Tema, cores, densidade e organização visual.",
     fields: [
       { label: "Tema", value: "Claro", type: "select" },
+      { label: "Fonte do painel", value: "Arial / Helvetica", type: "select" },
       { label: "Cor principal", value: "#7c3aed", type: "color" },
       { label: "Cor secundária", value: "#0f172a", type: "color" },
       { label: "Cor de sucesso", value: "#059669", type: "color" },

@@ -204,6 +204,29 @@ create table public.reports (
   status text not null default 'Rascunho'
 );
 
+create table public.official_documents (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references public.projects(id) on delete cascade,
+  template text not null,
+  title text not null,
+  code text not null,
+  document_date date not null default current_date,
+  subject text,
+  status text not null default 'Rascunho',
+  recipient text,
+  recipient_role text,
+  institution text,
+  signer_one text,
+  signer_one_role text,
+  signer_two text,
+  signer_two_role text,
+  content text not null,
+  storage_path text,
+  created_by uuid references public.profiles(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create table public.settings (
   id text primary key,
   value jsonb not null default '{}',
@@ -273,6 +296,7 @@ alter table public.team_members enable row level security;
 alter table public.budget_items enable row level security;
 alter table public.expenses enable row level security;
 alter table public.reports enable row level security;
+alter table public.official_documents enable row level security;
 alter table public.settings enable row level security;
 alter table public.user_permissions enable row level security;
 alter table public.audit_logs enable row level security;
@@ -345,6 +369,11 @@ create policy "operators write expenses" on public.expenses
 create policy "operators read reports" on public.reports
   for select using (public.is_operator());
 create policy "operators write reports" on public.reports
+  for all using (public.is_operator()) with check (public.is_operator());
+
+create policy "operators read official documents" on public.official_documents
+  for select using (public.is_operator());
+create policy "operators write official documents" on public.official_documents
   for all using (public.is_operator()) with check (public.is_operator());
 
 create policy "operators read settings" on public.settings

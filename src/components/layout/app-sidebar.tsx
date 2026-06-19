@@ -6,6 +6,7 @@ import {
   BarChart3,
   Bell,
   CalendarDays,
+  FileSignature,
   FileText,
   Folder,
   Home,
@@ -29,6 +30,7 @@ const navigation = [
   { label: "Dashboard", href: "/dashboard", icon: Home },
   { label: "Projetos", href: "/projetos", icon: Folder },
   { label: "Documentos", href: "/documentos", icon: FileText },
+  { label: "Docs Oficiais", href: "/documentos-oficiais", icon: FileSignature },
   { label: "Cronograma", href: "/cronograma", icon: CalendarDays },
   { label: "Financeiro", href: "/financeiro", icon: Wallet },
   { label: "Equipe", href: "/equipe", icon: Users },
@@ -69,8 +71,10 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
           const Icon = item.icon;
           const active =
             pathname === item.href ||
-            (item.href !== "/dashboard" &&
-              pathname.startsWith(item.href.split("/").slice(0, 2).join("/")));
+            pathname.startsWith(`${item.href}/`) ||
+            (item.href === "/projetos" && pathname.startsWith("/projetos/")) ||
+            (item.href === "/configuracoes/geral" &&
+              pathname.startsWith("/configuracoes"));
 
           return (
             <Link

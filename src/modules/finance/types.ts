@@ -19,8 +19,19 @@ export const expenseStatuses = [
   "Cancelado",
 ] as const;
 
+export const receiptTypes = [
+  "Nota fiscal de serviço",
+  "Nota fiscal de material",
+  "Cupom fiscal",
+  "Recibo de prestador PF",
+  "Recibo de ator/artista",
+  "RPA",
+  "Comprovante bancário",
+] as const;
+
 export type BudgetCategory = (typeof budgetCategories)[number];
 export type ExpenseStatus = (typeof expenseStatuses)[number];
+export type ReceiptType = (typeof receiptTypes)[number];
 
 export type BudgetItem = {
   id: string;
@@ -44,6 +55,7 @@ export type Expense = {
   paymentMethod: string;
   receiptFile: string | null;
   invoiceFile: string | null;
+  receiptType: ReceiptType;
   status: ExpenseStatus;
   notes: string;
 };

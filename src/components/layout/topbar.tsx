@@ -6,7 +6,7 @@ import type { CurrentProfile } from "@/lib/auth/require-role";
 export function Topbar({ profile }: { profile: CurrentProfile }) {
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/92 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-3 px-4 sm:px-6 lg:px-8">
+      <div className="flex h-16 w-full min-w-0 items-center gap-3 px-4 sm:px-6 lg:px-8">
         <div className="ml-11 flex flex-1 items-center gap-3 lg:ml-0">
           <label className="relative hidden w-full max-w-lg sm:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />

@@ -51,6 +51,18 @@ export function SettingsPanel({
                   defaultValue={field.value}
                   disabled={locked}
                 />
+              ) : field.type === "file" ? (
+                <div className="rounded-lg border border-dashed border-border bg-white p-3">
+                  <input
+                    className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-2 file:text-sm file:font-medium file:text-primary-foreground"
+                    type="file"
+                    accept="image/*,.svg"
+                    disabled={locked}
+                  />
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    PNG transparente, SVG ou JPG. Será salvo no bucket de configurações.
+                  </p>
+                </div>
               ) : (
                 <input
                   className="form-input"

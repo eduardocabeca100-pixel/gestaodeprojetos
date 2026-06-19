@@ -3,7 +3,7 @@ import { z } from "zod";
 export const settingFieldSchema = z.object({
   label: z.string().min(2),
   value: z.string(),
-  type: z.enum(["text", "textarea", "toggle", "color", "number", "select"]),
+  type: z.enum(["text", "textarea", "toggle", "color", "number", "select", "file"]),
   lockedForDirector: z.boolean().optional(),
 });
 

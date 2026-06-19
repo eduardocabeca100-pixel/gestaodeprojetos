@@ -1,7 +1,7 @@
 export type SettingField = {
   label: string;
   value: string;
-  type: "text" | "textarea" | "toggle" | "color" | "number" | "select";
+  type: "text" | "textarea" | "toggle" | "color" | "number" | "select" | "file";
   lockedForDirector?: boolean;
 };
 

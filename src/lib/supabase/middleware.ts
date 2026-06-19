@@ -7,6 +7,7 @@ const protectedPrefixes = [
   "/dashboard",
   "/projetos",
   "/documentos",
+  "/documentos-oficiais",
   "/cronograma",
   "/financeiro",
   "/equipe",

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { budgetCategories, expenseStatuses } from "./types";
+import { budgetCategories, expenseStatuses, receiptTypes } from "./types";
 
 export const budgetItemSchema = z.object({
   projectId: z.string().min(1),
@@ -20,6 +20,7 @@ export const expenseSchema = z.object({
   amount: z.coerce.number().min(0.01),
   paidAt: z.string().min(8),
   paymentMethod: z.string().min(2),
+  receiptType: z.enum(receiptTypes),
   status: z.enum(expenseStatuses),
   notes: z.string().optional(),
 });

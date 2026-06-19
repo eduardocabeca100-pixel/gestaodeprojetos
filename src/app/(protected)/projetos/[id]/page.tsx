@@ -7,6 +7,7 @@ import { ProjectHeader } from "@/components/projects/project-header";
 import { ProjectStatusTimeline } from "@/components/projects/project-status-timeline";
 import { ProjectSummaryCard } from "@/components/projects/project-summary-card";
 import { ProjectTabs } from "@/components/projects/project-tabs";
+import { ProjectWorkspaceNav } from "@/components/projects/project-workspace-nav";
 import { getProjectById } from "@/modules/projects/queries";
 
 export default async function ProjectDetailPage({
@@ -28,6 +29,7 @@ export default async function ProjectDetailPage({
       actions={<ProjectActionsMenu />}
     >
       <ProjectHeader project={project} />
+      <ProjectWorkspaceNav project={project} />
       <SectionCard title="Timeline de etapas">
         <ProjectStatusTimeline current={project.currentStage} />
       </SectionCard>
