@@ -128,6 +128,18 @@ export const settingsSections: SettingsSection[] = [
     ],
   },
   {
+    id: "seguranca",
+    title: "Segurança de acesso",
+    description: "Troca de senha, primeiro login e políticas de acesso.",
+    fields: [
+      { label: "Senha atual", value: "", type: "password" },
+      { label: "Nova senha", value: "", type: "password" },
+      { label: "Confirmar nova senha", value: "", type: "password" },
+      { label: "Exigir troca no primeiro login", value: "true", type: "toggle", lockedForDirector: true },
+      { label: "Permitir super admin", value: "true", type: "toggle", lockedForDirector: true },
+    ],
+  },
+  {
     id: "backup",
     title: "Backup e segurança",
     description: "Auditoria, lixeira e exportação dos dados.",

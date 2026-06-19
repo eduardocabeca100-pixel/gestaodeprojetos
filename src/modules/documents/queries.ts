@@ -14,6 +14,18 @@ function buildDocuments(project: Project): ProjectDocument[] {
 
   return [
     {
+      id: `${project.id}-doc-edital`,
+      fileName: `edital-principal-${slug}.pdf`,
+      category: "Edital e anexos",
+      projectId: project.id,
+      linkedTo: "Edital principal",
+      uploadedAt: "2026-06-19",
+      uploadedBy: "Eduardo / Marcel",
+      expiresAt: null,
+      notes: `Cópia do edital e anexos do projeto ${project.name}.`,
+      status: "Válido",
+    },
+    {
       id: `${project.id}-doc-certidao`,
       fileName: `certidao-negativa-${slug}.pdf`,
       category: "Certidões",

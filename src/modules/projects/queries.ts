@@ -9,15 +9,15 @@ export const projects: Project[] = [
     fullTitle: "Formação de Artistas de Rua e Montagem do Espetáculo Reféns",
     slug: "formacao-artistas-rua-espetaculo-refens",
     shortDescription:
-      "Projeto de formação cênica e montagem teatral com artistas de rua.",
+      "Projeto de formação cênica, diário de classe, documentos oficiais e montagem teatral com artistas de rua.",
     summary:
-      "A formação organiza 11 encontros pedagógicos, ensaios, registros documentais e montagem do espetáculo Reféns para circulação cultural.",
+      "A formação organiza 11 encontros pedagógicos, ensaios, diário de presença, anexos do edital, documentos oficiais, registros documentais e montagem do espetáculo Reféns para circulação cultural.",
     edital: "Circuito Catarinense de Cultura PNAB SC 2026",
     registrationNumber: "000937",
     approvedAmount: 50000,
     executedAmount: 8500,
     status: "Classificado",
-    currentStage: "Habilitação em andamento",
+    currentStage: "Habilitação documental e organização de anexos",
     modality: "Ações de Qualificação e Formação",
     className: "Classe II",
     proponent: "Cia de Artes Viva",
@@ -29,7 +29,7 @@ export const projects: Project[] = [
     coverUrl: null,
     bannerUrl: null,
     notes:
-      "Prioridade atual: organizar habilitação documental, certidões e cronograma base.",
+      "Prioridade atual: organizar habilitação documental, anexos do edital, certidões, cronograma base e diário de classe.",
     archived: false,
   },
   {

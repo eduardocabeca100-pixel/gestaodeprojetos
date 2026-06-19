@@ -16,12 +16,16 @@ export type Participant = {
   birthDate: string;
   phone: string;
   email: string;
+  city: string;
   neighborhood: string;
   address: string;
+  photoUrl: string | null;
   guardianName: string | null;
   guardianPhone: string | null;
   imageAuthorization: boolean;
   participationAuthorization: boolean;
+  imageAuthorizationFileName: string | null;
+  participationAuthorizationFileName: string | null;
   pedagogicalNotes: string;
   status: ParticipantStatus;
   attendanceRate: number;

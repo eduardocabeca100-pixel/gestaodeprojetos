@@ -9,6 +9,8 @@ import { formatCurrency } from "@/lib/utils/format-currency";
 import { formatDate } from "@/lib/utils/format-date";
 import type { Project } from "@/modules/projects/types";
 
+import { ProjectQuickEdit } from "./project-quick-edit";
+
 const stages = [
   ["1", "Avaliação", "Concluída"],
   ["2", "Habilitação", "Em andamento"],
@@ -28,7 +30,12 @@ export function ProjectDetailPanel({ project }: { project: Project }) {
         <span className="text-foreground">{project.name}</span>
       </div>
       <div className="grid gap-4 md:grid-cols-[100px_1fr_auto]">
-        <ProjectPoster projectId={project.id} title={project.name} className="h-36" />
+        <ProjectPoster
+          projectId={project.id}
+          title={project.name}
+          imageUrl={project.coverUrl ?? project.bannerUrl}
+          className="h-36"
+        />
         <div>
           <h2 className="text-xl font-semibold">{project.name}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{project.fullTitle}</p>
@@ -39,9 +46,14 @@ export function ProjectDetailPanel({ project }: { project: Project }) {
             <Info label="Status" value={<StatusBadge value={project.status} />} />
           </div>
         </div>
-        <Button asChild>
-          <Link href={`/documentos?project=${project.id}`}>Abrir abas</Link>
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button asChild variant="outline">
+            <Link href="#editar-projeto">Editar projeto</Link>
+          </Button>
+          <Button asChild>
+            <Link href={`/documentos?project=${project.id}`}>Abrir abas</Link>
+          </Button>
+        </div>
       </div>
       <div className="mt-6 grid gap-2 md:grid-cols-6">
         {stages.map(([number, title, status]) => (
@@ -71,6 +83,7 @@ export function ProjectDetailPanel({ project }: { project: Project }) {
         <InfoCard label="Modalidade" value={project.modality} />
         <InfoCard label="Classe" value={project.className} />
       </div>
+      <ProjectQuickEdit project={project} />
     </section>
   );
 }

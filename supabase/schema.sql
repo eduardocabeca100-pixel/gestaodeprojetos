@@ -2,6 +2,7 @@ create extension if not exists "pgcrypto";
 
 create type public.app_role as enum (
   'admin',
+  'super_admin',
   'diretor_executivo',
   'financeiro',
   'editor_projeto',
@@ -16,6 +17,7 @@ create table public.profiles (
   role public.app_role not null default 'visualizador',
   avatar_url text,
   is_active boolean not null default true,
+  must_change_password boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

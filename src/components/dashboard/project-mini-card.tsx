@@ -28,6 +28,7 @@ export function ProjectMiniCard({
       <ProjectPoster
         projectId={project.id}
         title={project.name}
+        imageUrl={project.coverUrl ?? project.bannerUrl}
         className={highlighted ? "h-36" : "h-28"}
       />
       <div className="min-w-0">

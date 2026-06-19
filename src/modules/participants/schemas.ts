@@ -9,6 +9,7 @@ export const participantSchema = z.object({
   birthDate: z.string().min(8),
   phone: z.string().min(8),
   email: z.email().optional().or(z.literal("")),
+  city: z.string().min(2),
   neighborhood: z.string().min(2),
   address: z.string().min(2),
   guardianName: z.string().optional(),

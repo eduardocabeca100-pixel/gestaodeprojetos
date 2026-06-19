@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import type { CurrentProfile } from "@/lib/auth/require-role";
 
 export function Topbar({ profile }: { profile: CurrentProfile }) {
+  const roleLabel =
+    profile.role === "super_admin"
+      ? "Super Admin"
+      : profile.role === "admin"
+        ? "Administrador Geral"
+        : "Direção Executiva";
+
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/92 backdrop-blur">
       <div className="flex h-16 w-full min-w-0 items-center gap-3 px-4 sm:px-6 lg:px-8">
@@ -25,7 +32,7 @@ export function Topbar({ profile }: { profile: CurrentProfile }) {
         </Button>
         <div className="hidden min-w-0 text-right sm:block">
           <p className="truncate text-sm font-medium">{profile.name}</p>
-          <p className="text-xs text-muted-foreground">{profile.email}</p>
+          <p className="text-xs text-muted-foreground">{roleLabel} - {profile.email}</p>
         </div>
       </div>
     </header>

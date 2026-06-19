@@ -1,13 +1,14 @@
 export const budgetCategories = [
-  "Recursos humanos",
-  "Serviços de terceiros",
-  "Material de consumo",
-  "Divulgação",
+  "Direção executiva",
+  "Formação / oficinas",
+  "Atuação / elenco",
+  "Técnica e operação",
+  "Registro fotográfico e vídeo",
+  "Divulgação e design",
   "Acessibilidade",
-  "Transporte/logística",
+  "Transporte e logística",
   "Alimentação",
-  "Registro fotográfico",
-  "Prestação de contas",
+  "Documentação e prestação de contas",
   "Outros",
 ] as const;
 

@@ -1,5 +1,6 @@
 export const roles = [
   "admin",
+  "super_admin",
   "diretor_executivo",
   "financeiro",
   "editor_projeto",
@@ -29,6 +30,24 @@ export type Permission =
 
 const rolePermissions: Record<Role, Permission[]> = {
   admin: [
+    "create_project",
+    "edit_project",
+    "archive_project",
+    "delete_project",
+    "upload_documents",
+    "upload_media",
+    "view_finance",
+    "edit_finance",
+    "generate_report",
+    "view_participants",
+    "edit_participants",
+    "manage_users",
+    "change_settings",
+    "export_data",
+    "generate_dossier",
+    "access_backup",
+  ],
+  super_admin: [
     "create_project",
     "edit_project",
     "archive_project",
@@ -79,5 +98,5 @@ export function can(role: Role, permission: Permission) {
 }
 
 export function canAccessRole(role: string | null | undefined): role is Role {
-  return role === "admin" || role === "diretor_executivo";
+  return role === "admin" || role === "super_admin" || role === "diretor_executivo";
 }

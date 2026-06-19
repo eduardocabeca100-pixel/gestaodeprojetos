@@ -1,5 +1,6 @@
 export const documentCategories = [
   "Habilitação",
+  "Edital e anexos",
   "Proposta e anexos",
   "Certidões",
   "Termos e contratos",

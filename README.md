@@ -28,7 +28,7 @@ npm run dev
 
 Acesse `http://localhost:3000`.
 
-Sem variáveis do Supabase, o app roda em modo demonstração com perfil `admin`. Ao configurar Supabase, as rotas protegidas passam a exigir sessão real.
+Sem variáveis do Supabase, o app roda em modo demonstração com perfil administrativo genérico. Ao configurar Supabase, as rotas protegidas passam a exigir sessão real.
 
 ## Variáveis de ambiente
 
@@ -53,13 +53,24 @@ Não versionar `.env` nem `.env.local`. O `.gitignore` mantém esses arquivos fo
 Roles preparadas:
 
 - `admin`
+- `super_admin`
 - `diretor_executivo`
 - `financeiro`
 - `editor_projeto`
 - `equipe_tecnica`
 - `visualizador`
 
-No MVP, somente `admin` e `diretor_executivo` acessam o sistema.
+No MVP, `admin`, `super_admin` e `diretor_executivo` acessam o sistema.
+
+## Preparação para Firebase
+
+O repositório já inclui a base para publicação no Firebase App Hosting com o projeto `gestaodeprojetosviva`:
+
+- `.firebaserc` com o alias padrão do projeto;
+- `apphosting.yaml` com configurações iniciais de runtime;
+- `NEXT_PUBLIC_APP_URL` preparado para a URL pública de produção.
+
+Depois de conectar o projeto real no Firebase, ajuste as variáveis do Supabase no painel do serviço.
 
 ## Configuração na Vercel
 

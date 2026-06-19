@@ -10,15 +10,17 @@ export type CurrentProfile = {
   role: Role;
   avatar_url: string | null;
   is_active: boolean;
+  must_change_password: boolean;
 };
 
 export const demoProfile: CurrentProfile = {
   id: "demo-admin",
-  name: "Eduardo / Marcel",
-  email: "admin@viva.local",
+  name: "Administrador Geral",
+  email: "admin@ciaviva.com",
   role: "admin",
   avatar_url: null,
   is_active: true,
+  must_change_password: false,
 };
 
 export async function getCurrentProfile(): Promise<CurrentProfile | null> {
@@ -40,11 +42,13 @@ export async function getCurrentProfile(): Promise<CurrentProfile | null> {
     return null;
   }
 
-  const { data: profile } = await supabase
+  const profileResult = await supabase
     .from("profiles")
-    .select("id, name, email, role, avatar_url, is_active")
+    .select("id, name, email, role, avatar_url, is_active, must_change_password")
     .eq("id", user.id)
     .maybeSingle();
+
+  const profile = profileResult.data as CurrentProfile | null;
 
   if (!profile) {
     return {
@@ -54,14 +58,23 @@ export async function getCurrentProfile(): Promise<CurrentProfile | null> {
       role: "visualizador",
       avatar_url: null,
       is_active: true,
+      must_change_password: false,
     };
   }
 
-  return profile;
+  return {
+    id: profile.id,
+    name: profile.name,
+    email: profile.email,
+    role: profile.role,
+    avatar_url: profile.avatar_url,
+    is_active: profile.is_active,
+    must_change_password: profile.must_change_password ?? false,
+  };
 }
 
 export async function requireAuthorizedProfile(
-  roles: Role[] = ["admin", "diretor_executivo"],
+  roles: Role[] = ["admin", "super_admin", "diretor_executivo"],
 ) {
   const profile = await getCurrentProfile();
 

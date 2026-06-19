@@ -11,7 +11,9 @@ export function ParticipantCard({ participant }: { participant: Participant }) {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="font-semibold">{participant.fullName}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{participant.neighborhood}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {participant.city} - {participant.neighborhood}
+          </p>
         </div>
         <StatusBadge value={participant.status} />
       </div>
@@ -26,7 +28,14 @@ export function ParticipantCard({ participant }: { participant: Participant }) {
             {participant.email}
           </p>
         ) : null}
+        {participant.address ? <p className="text-xs">{participant.address}</p> : null}
         <AuthorizationStatus authorized={participant.imageAuthorization} />
+        <p className="text-xs text-muted-foreground">
+          {participant.imageAuthorizationFileName ?? "Sem arquivo de imagem"}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {participant.participationAuthorizationFileName ?? "Sem termo de participação"}
+        </p>
       </div>
       <div className="mt-4">
         <AttendanceStatus rate={participant.attendanceRate} />

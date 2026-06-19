@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 import { cn } from "@/lib/utils";
 
 const posterStyles: Record<string, string> = {
@@ -9,10 +11,12 @@ const posterStyles: Record<string, string> = {
 export function ProjectPoster({
   projectId,
   title,
+  imageUrl,
   className,
 }: {
   projectId: string;
   title: string;
+  imageUrl?: string | null;
   className?: string;
 }) {
   return (
@@ -23,6 +27,10 @@ export function ProjectPoster({
         className,
       )}
     >
+      {imageUrl ? (
+        <Image alt={title} className="object-cover opacity-70" fill sizes="(max-width: 768px) 100vw, 320px" src={imageUrl} unoptimized />
+      ) : null}
+      <div className="absolute inset-0 bg-black/15" />
       <div className="absolute inset-x-3 bottom-3 z-10">
         <p className="text-lg font-black uppercase leading-none tracking-normal">
           {title}

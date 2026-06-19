@@ -4,17 +4,20 @@ import { requireAuthorizedProfile } from "@/lib/auth/require-role";
 
 import { AppSidebar } from "./app-sidebar";
 import { Topbar } from "./topbar";
+import { PasswordResetGate } from "./password-reset-gate";
 
 export async function ProtectedLayout({ children }: { children: ReactNode }) {
   const profile = await requireAuthorizedProfile();
 
   return (
-    <div className="min-h-screen bg-background">
-      <AppSidebar profile={profile} />
-      <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden lg:pl-72">
-        <Topbar profile={profile} />
-        {children}
+    <PasswordResetGate profile={profile}>
+      <div className="min-h-screen bg-background">
+        <AppSidebar profile={profile} />
+        <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden lg:pl-72">
+          <Topbar profile={profile} />
+          {children}
+        </div>
       </div>
-    </div>
+    </PasswordResetGate>
   );
 }

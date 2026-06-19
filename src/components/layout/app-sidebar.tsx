@@ -6,6 +6,7 @@ import {
   BarChart3,
   Bell,
   CalendarDays,
+  ClipboardList,
   FileSignature,
   FileText,
   Folder,
@@ -14,6 +15,7 @@ import {
   LogOut,
   Menu,
   Plus,
+  Paperclip,
   Settings,
   Users,
   Wallet,
@@ -37,6 +39,8 @@ const navigation = [
     projectScoped: true,
   },
   { label: "Cronograma", href: "/cronograma", icon: CalendarDays, projectScoped: true },
+  { label: "Diário de classe", href: "/diario-de-classe", icon: ClipboardList, projectScoped: true },
+  { label: "Edital e anexos", href: "/edital", icon: Paperclip, projectScoped: true },
   { label: "Financeiro", href: "/financeiro", icon: Wallet, projectScoped: true },
   { label: "Equipe", href: "/equipe", icon: Users, projectScoped: true },
   { label: "Participantes", href: "/participantes", icon: Users, projectScoped: true },
@@ -74,7 +78,10 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
   }, [pathname]);
 
   return (
-    <aside className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
+    <aside
+      className="flex h-full flex-col bg-sidebar text-sidebar-foreground"
+      style={{ fontFamily: '"Arial Black", Arial, Helvetica, sans-serif' }}
+    >
       <div className="flex h-24 items-center border-b border-sidebar-border px-6">
         <div className="min-w-0">
           <p className="truncate text-4xl font-black leading-none tracking-normal">
@@ -138,7 +145,11 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{profile.name}</p>
             <p className="truncate text-xs text-sidebar-foreground/65">
-              {profile.role === "admin" ? "Administrador Geral" : "Diretor Executivo"}
+              {profile.role === "super_admin"
+                ? "Super Admin"
+                : profile.role === "admin"
+                  ? "Administrador Geral"
+                  : "Diretor Executivo"}
             </p>
           </div>
         </div>

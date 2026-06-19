@@ -8,7 +8,14 @@ import type { Project } from "@/modules/projects/types";
 export function ProjectHeader({ project }: { project: Project }) {
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-white soft-shadow">
-      <div className="h-40 bg-[linear-gradient(135deg,#1d1930,#7c3aed_52%,#16a34a)]" />
+      <div
+        className="h-40 bg-cover bg-center"
+        style={
+          project.coverUrl
+            ? { backgroundImage: `url(${project.coverUrl})` }
+            : { backgroundImage: "linear-gradient(135deg,#1d1930,#7c3aed 52%,#16a34a)" }
+        }
+      />
       <div className="p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">

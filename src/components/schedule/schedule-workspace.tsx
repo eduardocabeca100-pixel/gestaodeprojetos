@@ -6,6 +6,8 @@ import {
   CheckCircle2,
   ClipboardList,
   Plus,
+  PencilLine,
+  Trash2,
   Save,
 } from "lucide-react";
 
@@ -98,6 +100,24 @@ export function ScheduleWorkspace({
     setFeedback("Nova atividade criada.");
   }
 
+  function editActivity(activityId: string) {
+    setSelectedId(activityId);
+    setFeedback("Atividade aberta para edição.");
+  }
+
+  function deleteActivity(activityId: string) {
+    setItems((current) => {
+      const next = current.filter((activity) => activity.id !== activityId);
+
+      if (selectedId === activityId) {
+        setSelectedId(next[0]?.id ?? "");
+      }
+
+      return next;
+    });
+    setFeedback("Atividade removida.");
+  }
+
   function markDone() {
     if (!selected) return;
 
@@ -158,15 +178,22 @@ export function ScheduleWorkspace({
         >
           <div className="space-y-3">
             {items.map((activity) => (
-              <button
+              <article
                 key={activity.id}
-                type="button"
+                role="button"
+                tabIndex={0}
                 className={
                   activity.id === selected.id
                     ? "w-full rounded-lg border border-primary bg-primary/10 p-4 text-left"
                     : "w-full rounded-lg border border-border bg-white p-4 text-left transition hover:border-primary"
                 }
                 onClick={() => setSelectedId(activity.id)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setSelectedId(activity.id);
+                  }
+                }}
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -195,7 +222,27 @@ export function ScheduleWorkspace({
                     {activity.documentCount} docs
                   </span>
                 </div>
-              </button>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => editActivity(activity.id)}
+                  >
+                    <PencilLine className="size-3.5" />
+                    Editar
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => deleteActivity(activity.id)}
+                  >
+                    <Trash2 className="size-3.5" />
+                    Apagar
+                  </Button>
+                </div>
+              </article>
             ))}
           </div>
         </SectionCard>

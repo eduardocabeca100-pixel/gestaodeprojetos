@@ -10,6 +10,7 @@ import {
   Plug,
   Settings,
   SlidersHorizontal,
+  ShieldCheck,
   Users,
   Wallet,
 } from "lucide-react";
@@ -24,6 +25,7 @@ const settingsLinks = [
   { href: "/configuracoes/financeiro", label: "Financeiro", icon: Wallet },
   { href: "/configuracoes/relatorios", label: "Relatórios", icon: SlidersHorizontal },
   { href: "/configuracoes/usuarios", label: "Usuários", icon: Users },
+  { href: "/configuracoes/seguranca", label: "Segurança de acesso", icon: ShieldCheck },
   { href: "/configuracoes/backup", label: "Backup", icon: HardDrive },
   { href: "/configuracoes/integracoes", label: "Integrações", icon: Plug },
   { href: "/configuracoes/campos-personalizados", label: "Campos personalizados", icon: Database },
