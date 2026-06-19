@@ -13,6 +13,7 @@ const tabs = [
   "Participantes",
   "Mídia",
   "Relatórios",
+  "Certificados",
 ];
 
 export function ProjectTabs({

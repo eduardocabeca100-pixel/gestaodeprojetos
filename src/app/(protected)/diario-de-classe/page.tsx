@@ -4,6 +4,7 @@ import { ProjectScopeBanner } from "@/components/projects/project-scope-banner";
 import { getActiveProject, type PageSearchParams } from "@/lib/utils/search-params";
 import { listActivities } from "@/modules/schedule/queries";
 import { listParticipants } from "@/modules/participants/queries";
+import { listTeamMembers } from "@/modules/team/queries";
 
 export default async function DiaryPage({
   searchParams,
@@ -15,6 +16,7 @@ export default async function DiaryPage({
     listActivities(project.id),
     listParticipants(project.id),
   ]);
+  const teamMembers = await listTeamMembers(project.id);
 
   return (
     <PageContainer
@@ -22,7 +24,12 @@ export default async function DiaryPage({
       description="Chamada por aula, presença dos participantes e geração de certificados com conteúdo programático."
     >
       <ProjectScopeBanner projectId={project.id} />
-      <DiaryWorkspace project={project} activities={activities} participants={participants} />
+      <DiaryWorkspace
+        project={project}
+        activities={activities}
+        participants={participants}
+        teamMembers={teamMembers}
+      />
     </PageContainer>
   );
 }

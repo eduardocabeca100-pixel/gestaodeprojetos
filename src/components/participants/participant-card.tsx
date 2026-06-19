@@ -6,11 +6,18 @@ import { AttendanceStatus } from "@/components/participants/attendance-status";
 import type { Participant } from "@/modules/participants/types";
 
 export function ParticipantCard({ participant }: { participant: Participant }) {
+  const isAtRisk = participant.attendanceRate < 75;
+
   return (
     <article className="rounded-lg border border-border bg-white p-4">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="font-semibold">{participant.fullName}</h3>
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="truncate font-semibold">{participant.fullName}</h3>
+            <span className={isAtRisk ? "rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700" : "rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700"}>
+              {participant.attendanceRate}%
+            </span>
+          </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {participant.city} - {participant.neighborhood}
           </p>

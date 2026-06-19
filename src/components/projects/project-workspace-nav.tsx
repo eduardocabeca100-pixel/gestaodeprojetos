@@ -3,6 +3,7 @@ import {
   BarChart3,
   CalendarDays,
   ClipboardList,
+  Award,
   FileSignature,
   FileText,
   Paperclip,
@@ -20,6 +21,7 @@ const tabs = [
   { label: "Documentos Oficiais", href: "/documentos-oficiais", icon: FileSignature },
   { label: "Cronograma", href: "/cronograma", icon: CalendarDays },
   { label: "Diário de classe", href: "/diario-de-classe", icon: ClipboardList },
+  { label: "Certificados", href: "/certificados", icon: Award },
   { label: "Edital e anexos", href: "/edital", icon: Paperclip },
   { label: "Financeiro", href: "/financeiro", icon: Wallet },
   { label: "Equipe", href: "/equipe", icon: Users },
@@ -45,10 +47,14 @@ export function ProjectWorkspaceNav({ project }: { project: Project }) {
       <div className="flex gap-2 overflow-x-auto pb-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
+          const href =
+            tab.label === "Certificados"
+              ? `/projetos/${project.id}/certificados`
+              : `${tab.href}?project=${project.id}`;
           return (
             <Link
               key={tab.label}
-              href={`${tab.href}?project=${project.id}`}
+              href={href}
               className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition hover:border-primary hover:text-primary"
             >
               <Icon className="size-4" />
