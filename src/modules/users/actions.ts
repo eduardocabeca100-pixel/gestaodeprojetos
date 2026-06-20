@@ -128,20 +128,36 @@ export async function updatePassword(
     redirect("/login");
   }
 
-  const { error } = await supabase.auth.updateUser({
-    password: parsed.data.password,
-  });
+  const admin = createAdminClient();
 
-  if (error) {
+  if (!admin) {
     return {
-      message: "Não foi possível atualizar a senha agora.",
+      message:
+        "Configure SUPABASE_SERVICE_ROLE_KEY para concluir a troca de senha.",
     };
   }
 
-  await supabase
+  const { error: authError } = await admin.auth.admin.updateUserById(user.id, {
+    password: parsed.data.password,
+  });
+
+  if (authError) {
+    return {
+      message: authError.message ?? "Não foi possível atualizar a senha agora.",
+    };
+  }
+
+  const { error: profileError } = await admin
     .from("profiles")
     .update({ must_change_password: false } as never)
     .eq("id", user.id);
+
+  if (profileError) {
+    return {
+      message:
+        profileError.message ?? "Não foi possível liberar o acesso do usuário.",
+    };
+  }
 
   redirect("/dashboard");
 }
