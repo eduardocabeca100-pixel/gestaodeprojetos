@@ -150,78 +150,86 @@ export async function createUser(
   _state: CreateUserState | undefined,
   formData: FormData,
 ): Promise<CreateUserState | undefined> {
-  const currentProfile = await getCurrentProfile();
+  try {
+    const currentProfile = await getCurrentProfile();
 
-  if (!currentProfile || !["admin", "super_admin"].includes(currentProfile.role)) {
-    return {
-      message: "Você não tem permissão para criar usuários.",
-    };
-  }
+    if (!currentProfile || !["admin", "super_admin"].includes(currentProfile.role)) {
+      return {
+        message: "Você não tem permissão para criar usuários.",
+      };
+    }
 
-  const parsed = createUserSchema.safeParse({
-    name: formData.get("name"),
-    email: formData.get("email"),
-    role: formData.get("role"),
-    tempPassword: formData.get("tempPassword"),
-    confirmPassword: formData.get("confirmPassword"),
-    mustChangePassword: formData.get("mustChangePassword"),
-  });
+    const parsed = createUserSchema.safeParse({
+      name: formData.get("name"),
+      email: formData.get("email"),
+      role: formData.get("role"),
+      tempPassword: formData.get("tempPassword"),
+      confirmPassword: formData.get("confirmPassword"),
+      mustChangePassword: formData.get("mustChangePassword"),
+    });
 
-  if (!parsed.success) {
-    return {
-      errors: parsed.error.flatten().fieldErrors,
-      message: "Revise os campos do novo usuário.",
-    };
-  }
+    if (!parsed.success) {
+      return {
+        errors: parsed.error.flatten().fieldErrors,
+        message: "Revise os campos do novo usuário.",
+      };
+    }
 
-  const admin = createAdminClient();
+    const admin = createAdminClient();
 
-  if (!admin) {
-    return {
-      message:
-        "Configure SUPABASE_SERVICE_ROLE_KEY para criar usuários no Supabase.",
-    };
-  }
+    if (!admin) {
+      return {
+        message:
+          "Configure SUPABASE_SERVICE_ROLE_KEY para criar usuários no Supabase.",
+      };
+    }
 
-  const { data, error } = await admin.auth.admin.createUser({
-    email: parsed.data.email,
-    password: parsed.data.tempPassword,
-    email_confirm: true,
-    user_metadata: { name: parsed.data.name },
-  });
+    const { data, error } = await admin.auth.admin.createUser({
+      email: parsed.data.email,
+      password: parsed.data.tempPassword,
+      email_confirm: true,
+      user_metadata: { name: parsed.data.name },
+    });
 
-  if (error || !data.user) {
-    return {
-      message: error?.message ?? "Não foi possível criar o usuário.",
-    };
-  }
+    if (error || !data.user) {
+      return {
+        message: error?.message ?? "Não foi possível criar o usuário.",
+      };
+    }
 
-  const { error: profileError } = await admin.from("profiles").insert({
-    id: data.user.id,
-    name: parsed.data.name,
-    email: parsed.data.email,
-    role: parsed.data.role,
-    is_active: true,
-    must_change_password: parsed.data.mustChangePassword,
-  } as never);
-
-  if (profileError) {
-    return {
-      message: profileError.message,
-    };
-  }
-
-  return {
-    message: `Usuário ${parsed.data.name} criado no Supabase.`,
-    user: {
+    const { error: profileError } = await admin.from("profiles").insert({
       id: data.user.id,
       name: parsed.data.name,
       email: parsed.data.email,
       role: parsed.data.role,
-      mustChangePassword: parsed.data.mustChangePassword,
-      isActive: true,
-    },
-  };
+      is_active: true,
+      must_change_password: parsed.data.mustChangePassword,
+    } as never);
+
+    if (profileError) {
+      return {
+        message: profileError.message,
+      };
+    }
+
+    return {
+      message: `Usuário ${parsed.data.name} criado no Supabase.`,
+      user: {
+        id: data.user.id,
+        name: parsed.data.name,
+        email: parsed.data.email,
+        role: parsed.data.role,
+        mustChangePassword: parsed.data.mustChangePassword,
+        isActive: true,
+      },
+    };
+  } catch (error) {
+    console.error("createUser failed", error);
+
+    return {
+      message: error instanceof Error ? error.message : "Erro inesperado ao criar o usuário.",
+    };
+  }
 }
 
 export async function logout() {

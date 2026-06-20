@@ -42,12 +42,6 @@ export function UserManagementWorkspace() {
         <SectionCard
           title="Criar usuário"
           description="Central para adicionar pessoas, definir papel e exigir nova senha no primeiro acesso."
-          actions={
-            <Button form="user-create-form" type="submit" disabled={pending}>
-              <UserPlus className="size-4" />
-              {pending ? "Criando..." : "Adicionar usuário"}
-            </Button>
-          }
         >
           <form id="user-create-form" action={action} className="grid gap-4 md:grid-cols-2">
             <label className="block md:col-span-2">
@@ -59,6 +53,9 @@ export function UserManagementWorkspace() {
                 onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
                 placeholder="Nome da pessoa"
               />
+              {state?.errors?.name?.length ? (
+                <p className="mt-1 text-xs text-destructive">{state.errors.name[0]}</p>
+              ) : null}
             </label>
             <label className="block md:col-span-2">
               <span className="text-sm font-medium">E-mail</span>
@@ -70,6 +67,9 @@ export function UserManagementWorkspace() {
                 onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
                 placeholder="usuario@ciaviva.com"
               />
+              {state?.errors?.email?.length ? (
+                <p className="mt-1 text-xs text-destructive">{state.errors.email[0]}</p>
+              ) : null}
             </label>
             <label className="block">
               <span className="text-sm font-medium">Perfil</span>
@@ -85,6 +85,9 @@ export function UserManagementWorkspace() {
                   </option>
                 ))}
               </select>
+              {state?.errors?.role?.length ? (
+                <p className="mt-1 text-xs text-destructive">{state.errors.role[0]}</p>
+              ) : null}
             </label>
             <label className="block">
               <span className="text-sm font-medium">Senha temporária</span>
@@ -96,6 +99,9 @@ export function UserManagementWorkspace() {
                 onChange={(event) => setForm((current) => ({ ...current, tempPassword: event.target.value }))}
                 placeholder="Senha para o primeiro acesso"
               />
+              {state?.errors?.tempPassword?.length ? (
+                <p className="mt-1 text-xs text-destructive">{state.errors.tempPassword[0]}</p>
+              ) : null}
             </label>
             <label className="block md:col-span-2">
               <span className="text-sm font-medium">Confirmar senha</span>
@@ -107,6 +113,9 @@ export function UserManagementWorkspace() {
                 onChange={(event) => setForm((current) => ({ ...current, confirmPassword: event.target.value }))}
                 placeholder="Repita a senha temporária"
               />
+              {state?.errors?.confirmPassword?.length ? (
+                <p className="mt-1 text-xs text-destructive">{state.errors.confirmPassword[0]}</p>
+              ) : null}
             </label>
             <label className="flex items-center gap-2 text-sm md:col-span-2">
               <input
@@ -118,6 +127,12 @@ export function UserManagementWorkspace() {
               />
               Obrigar redefinição no primeiro login
             </label>
+            <div className="md:col-span-2 flex justify-end">
+              <Button type="submit" disabled={pending}>
+                <UserPlus className="size-4" />
+                {pending ? "Criando..." : "Adicionar usuário"}
+              </Button>
+            </div>
           </form>
         </SectionCard>
 
