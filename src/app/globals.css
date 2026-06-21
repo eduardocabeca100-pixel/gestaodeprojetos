@@ -183,3 +183,13 @@
     overflow-x: hidden;
   }
 }
+
+
+/* Remove o bloco interno GC / Companhia de Artes Viva / Bem-vindo de volta do LoginForm */
+.login-form-sem-boas-vindas form > div:first-child {
+  display: none !important;
+}
+
+.login-form-sem-boas-vindas form {
+  margin-top: 0 !important;
+}

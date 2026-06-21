@@ -70,12 +70,6 @@ export default function LoginPage() {
               <div className="mt-7 text-center text-xs text-slate-500">
                 Acesso restrito aos responsáveis autorizados.
               </div>
-
-              <style jsx global>{`
-                .login-form-sem-boas-vindas form > div:first-child {
-                  display: none !important;
-                }
-              `}</style>
             </div>
           </div>
         </section>
