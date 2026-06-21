@@ -63,11 +63,19 @@ export default function LoginPage() {
                 </h2>
               </div>
 
-              <LoginForm />
+              <div className="login-form-sem-boas-vindas">
+                <LoginForm />
+              </div>
 
               <div className="mt-7 text-center text-xs text-slate-500">
                 Acesso restrito aos responsáveis autorizados.
               </div>
+
+              <style jsx global>{`
+                .login-form-sem-boas-vindas form > div:first-child {
+                  display: none !important;
+                }
+              `}</style>
             </div>
           </div>
         </section>
