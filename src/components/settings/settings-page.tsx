@@ -9,7 +9,7 @@ import { getSettingsSection } from "@/modules/settings/queries";
 
 export async function SettingsPage({ sectionId }: { sectionId: string }) {
   const [profile, section] = await Promise.all([
-    requireAuthorizedProfile(),
+    requireAuthorizedProfile(["super_admin"]),
     getSettingsSection(sectionId),
   ]);
 

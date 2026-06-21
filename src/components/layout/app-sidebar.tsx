@@ -26,6 +26,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { CurrentProfile } from "@/lib/auth/require-role";
+import { can } from "@/lib/auth/permissions";
 import { logout } from "@/modules/users/actions";
 
 const navigation = [
@@ -68,6 +69,10 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
   const pathname = usePathname();
   const [searchProjectId, setSearchProjectId] = useState<string | null>(null);
   const activeProjectId = searchProjectId ?? getProjectIdFromPathname(pathname);
+  const visibleNavigation = navigation.filter(
+    (item) =>
+      item.href !== "/configuracoes/geral" || can(profile.role, "change_settings"),
+  );
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -94,17 +99,23 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
       </div>
 
       <div className="shrink-0 px-3 py-2.5">
-        <Button asChild className="h-[var(--viva-button-height)] w-full justify-start bg-sidebar-primary px-3.5 text-[0.88rem] font-semibold">
-          <Link href="/projetos/novo">
-            <Plus className="size-4" />
-            Novo Projeto
-          </Link>
-        </Button>
+        {can(profile.role, "create_project") ? (
+          <Button asChild className="h-[var(--viva-button-height)] w-full justify-start bg-sidebar-primary px-3.5 text-[0.88rem] font-semibold">
+            <Link href="/projetos/novo">
+              <Plus className="size-4" />
+              Novo Projeto
+            </Link>
+          </Button>
+        ) : (
+          <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-sidebar-foreground/70">
+            Acesso somente aos projetos liberados
+          </div>
+        )}
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto px-2.5 pb-3 [scrollbar-width:thin]">
         <nav className="space-y-1">
-          {navigation.map((item) => {
+          {visibleNavigation.map((item) => {
             const Icon = item.icon;
             const href =
               "projectScoped" in item && item.projectScoped && activeProjectId
@@ -149,7 +160,11 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
                     ? "Super Admin"
                     : profile.role === "admin"
                       ? "Administrador Geral"
-                      : "Diretor Executivo"}
+                      : profile.role === "diretor_executivo"
+                        ? "Diretor Executivo"
+                        : profile.role === "editor_projeto"
+                          ? "Produtor"
+                          : "Equipe do projeto"}
                 </p>
               </div>
             </div>

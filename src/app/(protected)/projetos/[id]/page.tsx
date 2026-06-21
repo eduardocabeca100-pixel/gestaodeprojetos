@@ -10,6 +10,8 @@ import { ProjectSummaryCard } from "@/components/projects/project-summary-card";
 import { ProjectTabs } from "@/components/projects/project-tabs";
 import { ProjectWorkspaceNav } from "@/components/projects/project-workspace-nav";
 import { getProjectById } from "@/modules/projects/queries";
+import { can } from "@/lib/auth/permissions";
+import { requireAuthorizedProfile } from "@/lib/auth/require-role";
 
 export default async function ProjectDetailPage({
   params,
@@ -17,7 +19,10 @@ export default async function ProjectDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const project = await getProjectById(id);
+  const [profile, project] = await Promise.all([
+    requireAuthorizedProfile(),
+    getProjectById(id),
+  ]);
 
   if (!project) {
     notFound();
@@ -27,7 +32,12 @@ export default async function ProjectDetailPage({
     <PageContainer
       title={project.name}
       description={project.currentStage}
-      actions={<ProjectActionsMenu />}
+      actions={
+        <ProjectActionsMenu
+          canDuplicate={can(profile.role, "create_project")}
+          canArchive={can(profile.role, "archive_project")}
+        />
+      }
     >
       <ProjectHeader project={project} />
       <ProjectWorkspaceNav project={project} />

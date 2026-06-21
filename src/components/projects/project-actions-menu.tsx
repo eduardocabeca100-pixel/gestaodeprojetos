@@ -6,7 +6,13 @@ import { Archive, Copy, Edit } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-export function ProjectActionsMenu() {
+export function ProjectActionsMenu({
+  canDuplicate,
+  canArchive,
+}: {
+  canDuplicate: boolean;
+  canArchive: boolean;
+}) {
   const [message, setMessage] = useState("");
 
   return (
@@ -18,20 +24,24 @@ export function ProjectActionsMenu() {
           Editar
         </Link>
       </Button>
-      <Button asChild variant="outline">
-        <Link href="/projetos/novo">
-          <Copy className="size-4" />
-          Duplicar
-        </Link>
-      </Button>
-      <Button
-        type="button"
-        variant="destructive"
-        onClick={() => setMessage("Projeto marcado para arquivamento.")}
-      >
-        <Archive className="size-4" />
-        Arquivar
-      </Button>
+      {canDuplicate ? (
+        <Button asChild variant="outline">
+          <Link href="/projetos/novo">
+            <Copy className="size-4" />
+            Duplicar
+          </Link>
+        </Button>
+      ) : null}
+      {canArchive ? (
+        <Button
+          type="button"
+          variant="destructive"
+          onClick={() => setMessage("Projeto marcado para arquivamento.")}
+        >
+          <Archive className="size-4" />
+          Arquivar
+        </Button>
+      ) : null}
     </div>
   );
 }

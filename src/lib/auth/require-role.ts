@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { canAccessRole, type Role } from "@/lib/auth/permissions";
+import { canAccessRole, dashboardRoles, type Role } from "@/lib/auth/permissions";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 
 export type CurrentProfile = {
@@ -14,10 +14,10 @@ export type CurrentProfile = {
 };
 
 export const demoProfile: CurrentProfile = {
-  id: "demo-admin",
-  name: "Administrador Geral",
-  email: "admin@ciaviva.com",
-  role: "admin",
+  id: "demo-super-admin",
+  name: "Super Administrador",
+  email: "superadmin@ciaviva.com",
+  role: "super_admin",
   avatar_url: null,
   is_active: true,
   must_change_password: false,
@@ -74,7 +74,7 @@ export async function getCurrentProfile(): Promise<CurrentProfile | null> {
 }
 
 export async function requireAuthorizedProfile(
-  roles: Role[] = ["admin", "super_admin", "diretor_executivo"],
+  roles: Role[] = [...dashboardRoles],
 ) {
   const profile = await getCurrentProfile();
 

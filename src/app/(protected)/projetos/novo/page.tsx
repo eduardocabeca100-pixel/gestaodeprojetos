@@ -2,8 +2,11 @@ import { PageContainer } from "@/components/layout/page-container";
 import { ProjectBannerUpload } from "@/components/projects/project-banner-upload";
 import { ProjectCoverUpload } from "@/components/projects/project-cover-upload";
 import { ProjectForm } from "@/components/projects/project-form";
+import { requireAuthorizedProfile } from "@/lib/auth/require-role";
 
-export default function NewProjectPage() {
+export default async function NewProjectPage() {
+  await requireAuthorizedProfile(["admin", "super_admin"]);
+
   return (
     <PageContainer
       title="Novo projeto"

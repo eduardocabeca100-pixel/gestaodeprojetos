@@ -6,9 +6,14 @@ import { SectionCard } from "@/components/layout/section-card";
 import { ProjectDataTable } from "@/components/projects/project-data-table";
 import { Button } from "@/components/ui/button";
 import { listProjects } from "@/modules/projects/queries";
+import { can } from "@/lib/auth/permissions";
+import { requireAuthorizedProfile } from "@/lib/auth/require-role";
 
 export default async function ProjectsPage() {
-  const projects = await listProjects();
+  const [profile, projects] = await Promise.all([
+    requireAuthorizedProfile(),
+    listProjects(),
+  ]);
 
   return (
     <PageContainer
@@ -22,12 +27,14 @@ export default async function ProjectsPage() {
               Escolher projeto
             </Link>
           </Button>
-          <Button asChild>
-            <Link href="/projetos/novo">
-              <Plus className="size-4" />
-              Novo projeto
-            </Link>
-          </Button>
+          {can(profile.role, "create_project") ? (
+            <Button asChild>
+              <Link href="/projetos/novo">
+                <Plus className="size-4" />
+                Novo projeto
+              </Link>
+            </Button>
+          ) : null}
         </>
       }
     >

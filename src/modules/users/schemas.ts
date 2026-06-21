@@ -39,16 +39,22 @@ export const createUserSchema = z
       "admin",
       "super_admin",
       "diretor_executivo",
-      "financeiro",
-      "editor_projeto",
-      "equipe_tecnica",
-      "visualizador",
     ]),
     tempPassword: z.string().min(8, "A senha temporária precisa ter pelo menos 8 caracteres."),
     confirmPassword: z.string().min(8, "Confirme a senha temporária."),
     mustChangePassword: z.coerce.boolean(),
+    projectIds: z.array(z.string()).default([]),
   })
   .refine((data) => data.tempPassword === data.confirmPassword, {
     message: "As senhas não coincidem.",
     path: ["confirmPassword"],
-  });
+  })
+  .refine(
+    (data) =>
+      ["admin", "super_admin"].includes(data.role) ||
+      data.projectIds.length > 0,
+    {
+      message: "Selecione ao menos um projeto para este usuário.",
+      path: ["projectIds"],
+    },
+  );

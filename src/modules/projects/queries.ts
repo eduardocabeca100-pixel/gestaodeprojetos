@@ -1,3 +1,10 @@
+import "server-only";
+
+import { redirect } from "next/navigation";
+
+import { canAccessEveryProject } from "@/lib/auth/permissions";
+import { getCurrentProfile } from "@/lib/auth/require-role";
+import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/utils/format-currency";
 
 import type { Project, ProjectKpi } from "./types";
@@ -35,19 +42,71 @@ export const projects: Project[] = [
 ];
 
 export async function listProjects() {
-  return projects;
+  const profile = await getCurrentProfile();
+
+  if (!profile) {
+    return [];
+  }
+
+  if (!hasSupabaseServerEnv() || canAccessEveryProject(profile.role)) {
+    return projects;
+  }
+
+  const supabase = await createClient();
+
+  if (!supabase) {
+    return [];
+  }
+
+  const membershipResult = await supabase
+    .from("project_memberships")
+    .select("project_id")
+    .eq("profile_id", profile.id);
+
+  if (membershipResult.error || !membershipResult.data?.length) {
+    return [];
+  }
+
+  const projectIds = membershipResult.data.map((membership) => membership.project_id);
+  const projectResult = await supabase
+    .from("projects")
+    .select("id, slug")
+    .in("id", projectIds);
+
+  if (projectResult.error) {
+    return [];
+  }
+
+  const allowedKeys = new Set(
+    projectResult.data.flatMap((project) => [project.id, project.slug]),
+  );
+
+  return projects.filter(
+    (project) => allowedKeys.has(project.id) || allowedKeys.has(project.slug),
+  );
 }
 
 export async function getFeaturedProject() {
-  return projects[0];
+  const [project] = await listProjects();
+
+  if (!project) {
+    redirect("/acesso-negado?motivo=sem-projeto");
+  }
+
+  return project;
 }
 
 export async function getProjectById(id: string) {
-  return projects.find((project) => project.id === id || project.slug === id);
+  const accessibleProjects = await listProjects();
+
+  return accessibleProjects.find(
+    (project) => project.id === id || project.slug === id,
+  );
 }
 
 export async function getProjectKpis(): Promise<ProjectKpi[]> {
-  const activeProjects = projects.filter((project) => !project.archived);
+  const accessibleProjects = await listProjects();
+  const activeProjects = accessibleProjects.filter((project) => !project.archived);
   const approvedTotal = activeProjects.reduce(
     (total, project) => total + project.approvedAmount,
     0,

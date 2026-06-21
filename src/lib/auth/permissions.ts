@@ -41,11 +41,8 @@ const rolePermissions: Record<Role, Permission[]> = {
     "generate_report",
     "view_participants",
     "edit_participants",
-    "manage_users",
-    "change_settings",
     "export_data",
     "generate_dossier",
-    "access_backup",
   ],
   super_admin: [
     "create_project",
@@ -66,9 +63,7 @@ const rolePermissions: Record<Role, Permission[]> = {
     "access_backup",
   ],
   diretor_executivo: [
-    "create_project",
     "edit_project",
-    "archive_project",
     "upload_documents",
     "upload_media",
     "view_finance",
@@ -76,13 +71,11 @@ const rolePermissions: Record<Role, Permission[]> = {
     "generate_report",
     "view_participants",
     "edit_participants",
-    "change_settings",
     "export_data",
     "generate_dossier",
   ],
   financeiro: ["view_finance", "edit_finance", "export_data"],
   editor_projeto: [
-    "create_project",
     "edit_project",
     "upload_documents",
     "upload_media",
@@ -98,5 +91,20 @@ export function can(role: Role, permission: Permission) {
 }
 
 export function canAccessRole(role: string | null | undefined): role is Role {
-  return role === "admin" || role === "super_admin" || role === "diretor_executivo";
+  return dashboardRoles.includes(role as Role);
+}
+
+export const dashboardRoles: Role[] = [
+  "admin",
+  "super_admin",
+  "diretor_executivo",
+];
+
+export const projectManagerRoles: Role[] = [
+  "admin",
+  "super_admin",
+];
+
+export function canAccessEveryProject(role: Role) {
+  return projectManagerRoles.includes(role);
 }

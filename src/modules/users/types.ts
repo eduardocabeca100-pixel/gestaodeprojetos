@@ -11,3 +11,10 @@ export type Profile = {
   created_at: string;
   updated_at: string;
 };
+
+export type UserProjectAccess = Pick<
+  Profile,
+  "id" | "name" | "email" | "role" | "is_active"
+> & {
+  projectIds: string[];
+};

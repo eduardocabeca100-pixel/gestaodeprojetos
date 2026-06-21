@@ -52,6 +52,16 @@ create table public.projects (
   updated_at timestamptz not null default now()
 );
 
+create table public.project_memberships (
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  project_id uuid not null references public.projects(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (profile_id, project_id)
+);
+
+create index project_memberships_project_id_idx
+  on public.project_memberships(project_id);
+
 create table public.project_stages (
   id uuid primary key default gen_random_uuid(),
   project_id uuid not null references public.projects(id) on delete cascade,
@@ -454,7 +464,17 @@ security definer
 set search_path = public
 stable
 as $$
-  select public.current_profile_role() = 'admin'
+  select public.current_profile_role() in ('admin', 'super_admin')
+$$;
+
+create or replace function public.is_super_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select public.current_profile_role() = 'super_admin'
 $$;
 
 create or replace function public.is_operator()
@@ -464,11 +484,40 @@ security definer
 set search_path = public
 stable
 as $$
-  select public.current_profile_role() in ('admin', 'diretor_executivo')
+  select public.current_profile_role() in ('admin', 'super_admin')
+$$;
+
+create or replace function public.can_access_project(target_project_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select public.is_operator() or exists (
+    select 1
+    from public.project_memberships membership
+    where membership.profile_id = auth.uid()
+      and membership.project_id = target_project_id
+  )
+$$;
+
+create or replace function public.can_edit_project(target_project_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select public.is_operator() or (
+    public.current_profile_role() = 'diretor_executivo'
+    and public.can_access_project(target_project_id)
+  )
 $$;
 
 alter table public.profiles enable row level security;
 alter table public.projects enable row level security;
+alter table public.project_memberships enable row level security;
 alter table public.project_stages enable row level security;
 alter table public.documents enable row level security;
 alter table public.media enable row level security;
@@ -498,7 +547,7 @@ create policy "profiles read own or admin" on public.profiles
   for select using (id = auth.uid() or public.is_admin());
 
 create policy "profiles admin writes" on public.profiles
-  for all using (public.is_admin()) with check (public.is_admin());
+  for all using (public.is_super_admin()) with check (public.is_super_admin());
 
 create policy "operators read projects" on public.projects
   for select using (public.is_operator());
@@ -508,6 +557,174 @@ create policy "operators update projects" on public.projects
   for update using (public.is_operator()) with check (public.is_operator());
 create policy "admin delete projects" on public.projects
   for delete using (public.is_admin());
+
+create policy "members read own project access" on public.project_memberships
+  for select using (profile_id = auth.uid() or public.is_super_admin());
+create policy "admins manage project access" on public.project_memberships
+  for all using (public.is_super_admin()) with check (public.is_super_admin());
+
+create policy "assigned members read projects" on public.projects
+  for select using (public.can_access_project(id));
+create policy "assigned editors update projects" on public.projects
+  for update using (public.can_edit_project(id)) with check (public.can_edit_project(id));
+
+create policy "assigned members read project stages" on public.project_stages
+  for select using (public.can_access_project(project_id));
+create policy "assigned editors write project stages" on public.project_stages
+  for all using (public.can_edit_project(project_id)) with check (public.can_edit_project(project_id));
+
+create policy "assigned members read documents" on public.documents
+  for select using (public.can_access_project(project_id));
+create policy "assigned editors write documents" on public.documents
+  for all using (public.can_edit_project(project_id)) with check (public.can_edit_project(project_id));
+
+create policy "assigned members read media" on public.media
+  for select using (public.can_access_project(project_id));
+create policy "assigned editors write media" on public.media
+  for all using (public.can_edit_project(project_id)) with check (public.can_edit_project(project_id));
+
+create policy "assigned members read activities" on public.activities
+  for select using (public.can_access_project(project_id));
+create policy "assigned editors write activities" on public.activities
+  for all using (public.can_edit_project(project_id)) with check (public.can_edit_project(project_id));
+
+create policy "assigned members read classes" on public.classes
+  for select using (exists (
+    select 1 from public.activities
+    where activities.id = classes.activity_id
+      and public.can_access_project(activities.project_id)
+  ));
+create policy "assigned editors write classes" on public.classes
+  for all using (exists (
+    select 1 from public.activities
+    where activities.id = classes.activity_id
+      and public.can_edit_project(activities.project_id)
+  )) with check (exists (
+    select 1 from public.activities
+    where activities.id = classes.activity_id
+      and public.can_edit_project(activities.project_id)
+  ));
+
+create policy "assigned members read participants" on public.participants
+  for select using (public.can_access_project(project_id));
+create policy "assigned editors write participants" on public.participants
+  for all using (public.can_edit_project(project_id)) with check (public.can_edit_project(project_id));
+
+create policy "assigned members read attendance" on public.attendance
+  for select using (exists (
+    select 1 from public.participants
+    where participants.id = attendance.participant_id
+      and public.can_access_project(participants.project_id)
+  ));
+create policy "assigned editors write attendance" on public.attendance
+  for all using (exists (
+    select 1 from public.participants
+    where participants.id = attendance.participant_id
+      and public.can_edit_project(participants.project_id)
+  )) with check (exists (
+    select 1 from public.participants
+    where participants.id = attendance.participant_id
+      and public.can_edit_project(participants.project_id)
+  ));
+
+create policy "assigned members read team" on public.team_members
+  for select using (public.can_access_project(project_id));
+create policy "assigned editors write team" on public.team_members
+  for all using (public.can_edit_project(project_id)) with check (public.can_edit_project(project_id));
+
+create policy "assigned members read budget" on public.budget_items
+  for select using (public.can_access_project(project_id));
+create policy "assigned editors write budget" on public.budget_items
+  for all using (public.can_edit_project(project_id)) with check (public.can_edit_project(project_id));
+
+create policy "assigned members read expenses" on public.expenses
+  for select using (public.can_access_project(project_id));
+create policy "assigned editors write expenses" on public.expenses
+  for all using (public.can_edit_project(project_id)) with check (public.can_edit_project(project_id));
+
+create policy "assigned members read reports" on public.reports
+  for select using (public.can_access_project(project_id));
+create policy "assigned editors write reports" on public.reports
+  for all using (public.can_edit_project(project_id)) with check (public.can_edit_project(project_id));
+
+create policy "assigned members read official documents" on public.official_documents
+  for select using (public.can_access_project(project_id));
+create policy "assigned editors write official documents" on public.official_documents
+  for all using (public.can_edit_project(project_id)) with check (public.can_edit_project(project_id));
+
+create policy "assigned members read certificate templates" on public.certificate_templates
+  for select using (project_id is not null and public.can_access_project(project_id));
+create policy "assigned editors write certificate templates" on public.certificate_templates
+  for all using (project_id is not null and public.can_edit_project(project_id))
+  with check (project_id is not null and public.can_edit_project(project_id));
+
+create policy "assigned members read certificate signatures" on public.certificate_signatures
+  for select using (exists (
+    select 1 from public.certificate_templates
+    where certificate_templates.id = certificate_signatures.template_id
+      and certificate_templates.project_id is not null
+      and public.can_access_project(certificate_templates.project_id)
+  ));
+create policy "assigned directors write certificate signatures" on public.certificate_signatures
+  for all using (exists (
+    select 1 from public.certificate_templates
+    where certificate_templates.id = certificate_signatures.template_id
+      and certificate_templates.project_id is not null
+      and public.can_edit_project(certificate_templates.project_id)
+  )) with check (exists (
+    select 1 from public.certificate_templates
+    where certificate_templates.id = certificate_signatures.template_id
+      and certificate_templates.project_id is not null
+      and public.can_edit_project(certificate_templates.project_id)
+  ));
+
+create policy "assigned members read certificate sponsor logos" on public.certificate_sponsor_logos
+  for select using (exists (
+    select 1 from public.certificate_templates
+    where certificate_templates.id = certificate_sponsor_logos.template_id
+      and certificate_templates.project_id is not null
+      and public.can_access_project(certificate_templates.project_id)
+  ));
+create policy "assigned directors write certificate sponsor logos" on public.certificate_sponsor_logos
+  for all using (exists (
+    select 1 from public.certificate_templates
+    where certificate_templates.id = certificate_sponsor_logos.template_id
+      and certificate_templates.project_id is not null
+      and public.can_edit_project(certificate_templates.project_id)
+  )) with check (exists (
+    select 1 from public.certificate_templates
+    where certificate_templates.id = certificate_sponsor_logos.template_id
+      and certificate_templates.project_id is not null
+      and public.can_edit_project(certificate_templates.project_id)
+  ));
+
+create policy "assigned members read certificate footer logos" on public.certificate_footer_logos
+  for select using (project_id is not null and public.can_access_project(project_id));
+create policy "assigned editors write certificate footer logos" on public.certificate_footer_logos
+  for all using (project_id is not null and public.can_edit_project(project_id))
+  with check (project_id is not null and public.can_edit_project(project_id));
+
+create policy "assigned members read certificate back images" on public.certificate_back_final_images
+  for select using (project_id is not null and public.can_access_project(project_id));
+create policy "assigned editors write certificate back images" on public.certificate_back_final_images
+  for all using (project_id is not null and public.can_edit_project(project_id))
+  with check (project_id is not null and public.can_edit_project(project_id));
+
+create policy "assigned members read certificate footer settings" on public.certificate_footer_settings
+  for select using (project_id is not null and public.can_access_project(project_id));
+create policy "assigned editors write certificate footer settings" on public.certificate_footer_settings
+  for all using (project_id is not null and public.can_edit_project(project_id))
+  with check (project_id is not null and public.can_edit_project(project_id));
+
+create policy "assigned members read certificates" on public.certificates
+  for select using (public.can_access_project(project_id));
+create policy "assigned editors write certificates" on public.certificates
+  for all using (public.can_edit_project(project_id)) with check (public.can_edit_project(project_id));
+
+create policy "assigned members read certificate batches" on public.certificate_batches
+  for select using (public.can_access_project(project_id));
+create policy "assigned editors write certificate batches" on public.certificate_batches
+  for all using (public.can_edit_project(project_id)) with check (public.can_edit_project(project_id));
 
 create policy "operators read project children" on public.project_stages
   for select using (public.is_operator());
@@ -570,12 +787,12 @@ create policy "operators write official documents" on public.official_documents
   for all using (public.is_operator()) with check (public.is_operator());
 
 create policy "operators read settings" on public.settings
-  for select using (public.is_operator());
+  for select using (public.is_super_admin());
 create policy "admin writes sensitive settings" on public.settings
-  for all using (public.is_admin()) with check (public.is_admin());
+  for all using (public.is_super_admin()) with check (public.is_super_admin());
 
 create policy "admin permissions" on public.user_permissions
-  for all using (public.is_admin()) with check (public.is_admin());
+  for all using (public.is_super_admin()) with check (public.is_super_admin());
 
 create policy "operators read audit logs" on public.audit_logs
   for select using (public.is_operator());

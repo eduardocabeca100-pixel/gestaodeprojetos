@@ -9,7 +9,11 @@ export function Topbar({ profile }: { profile: CurrentProfile }) {
       ? "Super Admin"
       : profile.role === "admin"
         ? "Administrador Geral"
-        : "Direção Executiva";
+        : profile.role === "diretor_executivo"
+          ? "Direção Executiva"
+          : profile.role === "editor_projeto"
+            ? "Produtor"
+            : "Equipe do projeto";
 
   return (
     <header className="sticky top-0 z-20 border-b border-border bg-background/92 backdrop-blur">

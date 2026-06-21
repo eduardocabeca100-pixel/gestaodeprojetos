@@ -1,8 +1,18 @@
 "use server";
 
 import { settingsSectionSchema } from "./schemas";
+import { getCurrentProfile } from "@/lib/auth/require-role";
 
 export async function saveSettings(formData: FormData) {
+  const profile = await getCurrentProfile();
+
+  if (!profile || profile.role !== "super_admin") {
+    return {
+      ok: false,
+      message: "Somente o Super Admin pode alterar configurações.",
+    };
+  }
+
   const fields = String(formData.get("fields") ?? "[]");
   const parsed = settingsSectionSchema.safeParse({
     title: formData.get("title"),

@@ -35,6 +35,33 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["profiles"]["Insert"]>;
+        Relationships: [];
+      };
+      projects: {
+        Row: {
+          id: string;
+          slug: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["projects"]["Insert"]>;
+        Relationships: [];
+      };
+      project_memberships: {
+        Row: {
+          profile_id: string;
+          project_id: string;
+          created_at: string;
+        };
+        Insert: {
+          profile_id: string;
+          project_id: string;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["project_memberships"]["Insert"]>;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

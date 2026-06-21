@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
@@ -32,6 +33,7 @@ export type CreateUserState = {
     role?: string[];
     tempPassword?: string[];
     confirmPassword?: string[];
+    projectIds?: string[];
   };
   user?: {
     id: string;
@@ -40,8 +42,73 @@ export type CreateUserState = {
     role: string;
     mustChangePassword: boolean;
     isActive: boolean;
+    projectIds: string[];
   };
 };
+
+export type ProjectAccessActionState = {
+  ok: boolean;
+  message: string;
+};
+
+const userManagerRoles = ["super_admin"];
+
+async function resolveProjectIds(projectKeys: string[]) {
+  const admin = createAdminClient();
+
+  if (!admin || projectKeys.length === 0) {
+    return [];
+  }
+
+  const result = await admin
+    .from("projects")
+    .select("id, slug")
+    .in("slug", projectKeys);
+
+  if (result.error) {
+    throw new Error(result.error.message);
+  }
+
+  return result.data.map((project) => project.id);
+}
+
+async function replaceProjectMemberships(profileId: string, projectKeys: string[]) {
+  const admin = createAdminClient();
+
+  if (!admin) {
+    throw new Error("Configure SUPABASE_SERVICE_ROLE_KEY para salvar os acessos.");
+  }
+
+  const projectIds = await resolveProjectIds(projectKeys);
+
+  if (projectKeys.length > 0 && projectIds.length !== projectKeys.length) {
+    throw new Error("Um dos projetos selecionados não foi encontrado no Supabase.");
+  }
+
+  const deleteResult = await admin
+    .from("project_memberships")
+    .delete()
+    .eq("profile_id", profileId);
+
+  if (deleteResult.error) {
+    throw new Error(deleteResult.error.message);
+  }
+
+  if (projectIds.length === 0) {
+    return;
+  }
+
+  const insertResult = await admin.from("project_memberships").insert(
+    projectIds.map((projectId) => ({
+      profile_id: profileId,
+      project_id: projectId,
+    })),
+  );
+
+  if (insertResult.error) {
+    throw new Error(insertResult.error.message);
+  }
+}
 
 export async function login(
   _state: LoginState | undefined,
@@ -169,7 +236,7 @@ export async function createUser(
   try {
     const currentProfile = await getCurrentProfile();
 
-    if (!currentProfile || !["admin", "super_admin"].includes(currentProfile.role)) {
+    if (!currentProfile || !userManagerRoles.includes(currentProfile.role)) {
       return {
         message: "Você não tem permissão para criar usuários.",
       };
@@ -182,6 +249,7 @@ export async function createUser(
       tempPassword: formData.get("tempPassword"),
       confirmPassword: formData.get("confirmPassword"),
       mustChangePassword: formData.get("mustChangePassword"),
+      projectIds: formData.getAll("projectIds"),
     });
 
     if (!parsed.success) {
@@ -223,8 +291,23 @@ export async function createUser(
     } as never);
 
     if (profileError) {
+      await admin.auth.admin.deleteUser(data.user.id);
       return {
         message: profileError.message,
+      };
+    }
+
+    try {
+      await replaceProjectMemberships(data.user.id, parsed.data.projectIds);
+    } catch (membershipError) {
+      await admin.from("profiles").delete().eq("id", data.user.id);
+      await admin.auth.admin.deleteUser(data.user.id);
+
+      return {
+        message:
+          membershipError instanceof Error
+            ? membershipError.message
+            : "Não foi possível definir os projetos deste usuário.",
       };
     }
 
@@ -237,6 +320,7 @@ export async function createUser(
         role: parsed.data.role,
         mustChangePassword: parsed.data.mustChangePassword,
         isActive: true,
+        projectIds: parsed.data.projectIds,
       },
     };
   } catch (error) {
@@ -244,6 +328,40 @@ export async function createUser(
 
     return {
       message: error instanceof Error ? error.message : "Erro inesperado ao criar o usuário.",
+    };
+  }
+}
+
+export async function updateUserProjectAccess(
+  _state: ProjectAccessActionState,
+  formData: FormData,
+): Promise<ProjectAccessActionState> {
+  try {
+    const currentProfile = await getCurrentProfile();
+
+    if (!currentProfile || !userManagerRoles.includes(currentProfile.role)) {
+      return { ok: false, message: "Você não tem permissão para alterar acessos." };
+    }
+
+    const profileId = String(formData.get("profileId") ?? "");
+    const projectIds = formData.getAll("projectIds").map(String);
+
+    if (!profileId) {
+      return { ok: false, message: "Usuário inválido." };
+    }
+
+    if (projectIds.length === 0) {
+      return { ok: false, message: "Selecione ao menos um projeto." };
+    }
+
+    await replaceProjectMemberships(profileId, projectIds);
+    revalidatePath("/configuracoes/usuarios");
+
+    return { ok: true, message: "Acesso aos projetos atualizado." };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Não foi possível atualizar os acessos.",
     };
   }
 }
