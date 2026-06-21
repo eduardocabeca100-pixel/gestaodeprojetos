@@ -5,7 +5,7 @@ import { listProjects } from "@/modules/projects/queries";
 import { listUsersWithProjectAccess } from "@/modules/users/queries";
 
 export default async function UsersSettingsPage() {
-  await requireAuthorizedProfile(["super_admin"]);
+  await requireAuthorizedProfile(["admin", "super_admin"]);
   const [projects, users] = await Promise.all([
     listProjects(),
     listUsersWithProjectAccess(),

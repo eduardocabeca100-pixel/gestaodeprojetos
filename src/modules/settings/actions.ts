@@ -6,10 +6,10 @@ import { getCurrentProfile } from "@/lib/auth/require-role";
 export async function saveSettings(formData: FormData) {
   const profile = await getCurrentProfile();
 
-  if (!profile || profile.role !== "super_admin") {
+  if (!profile || !["admin", "super_admin"].includes(profile.role)) {
     return {
       ok: false,
-      message: "Somente o Super Admin pode alterar configurações.",
+      message: "Somente o Administrador Geral ou Super Admin pode alterar configurações.",
     };
   }
 

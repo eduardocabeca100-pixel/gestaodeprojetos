@@ -51,7 +51,7 @@ export type ProjectAccessActionState = {
   message: string;
 };
 
-const userManagerRoles = ["super_admin"];
+const userManagerRoles = ["admin", "super_admin"];
 
 async function resolveProjectIds(projectKeys: string[]) {
   const admin = createAdminClient();

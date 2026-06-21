@@ -14,10 +14,10 @@ export type CurrentProfile = {
 };
 
 export const demoProfile: CurrentProfile = {
-  id: "demo-super-admin",
-  name: "Super Administrador",
-  email: "superadmin@ciaviva.com",
-  role: "super_admin",
+  id: "demo-admin",
+  name: "Administrador Geral",
+  email: "admin@ciaviva.com",
+  role: "admin",
   avatar_url: null,
   is_active: true,
   must_change_password: false,

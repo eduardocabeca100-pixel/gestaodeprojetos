@@ -83,17 +83,17 @@ create policy "operators update storage objects" on storage.objects
     and lower(name) !~ '\.(mp4|mov|avi|mkv|webm)$'
   );
 
-create policy "super admin manages settings assets" on storage.objects
+create policy "admins manage settings assets" on storage.objects
   for all using (
-    bucket_id = 'settings-assets' and public.is_super_admin()
+    bucket_id = 'settings-assets' and public.is_admin()
   ) with check (
     bucket_id = 'settings-assets'
-    and public.is_super_admin()
+    and public.is_admin()
     and lower(name) !~ '\.(mp4|mov|avi|mkv|webm)$'
   );
 
 create policy "admin delete storage objects" on storage.objects
   for delete using (
     (bucket_id <> 'settings-assets' and public.is_admin())
-    or (bucket_id = 'settings-assets' and public.is_super_admin())
+    or (bucket_id = 'settings-assets' and public.is_admin())
   );

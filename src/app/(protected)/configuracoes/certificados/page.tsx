@@ -5,7 +5,7 @@ import { requireAuthorizedProfile } from "@/lib/auth/require-role";
 import { getCertificateSettings } from "@/modules/certificates/queries";
 
 export default async function CertificateSettingsPage() {
-  await requireAuthorizedProfile(["super_admin"]);
+  await requireAuthorizedProfile(["admin", "super_admin"]);
   const settings = await getCertificateSettings();
 
   return (

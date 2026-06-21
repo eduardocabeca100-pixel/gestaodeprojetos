@@ -66,7 +66,7 @@ export function UserManagementWorkspace({
             <p className="mt-1 text-sm leading-6 text-emerald-800">
               O Diretor/Produtor Executivo enxerga somente os projetos marcados abaixo,
               incluindo o financeiro desses projetos. Novos projetos ficam ocultos até
-              o Super Admin liberar o acesso manualmente.
+              o Administrador Geral ou Super Admin liberar o acesso manualmente.
             </p>
           </div>
         </div>

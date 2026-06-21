@@ -547,7 +547,7 @@ create policy "profiles read own or admin" on public.profiles
   for select using (id = auth.uid() or public.is_admin());
 
 create policy "profiles admin writes" on public.profiles
-  for all using (public.is_super_admin()) with check (public.is_super_admin());
+  for all using (public.is_admin()) with check (public.is_admin());
 
 create policy "operators read projects" on public.projects
   for select using (public.is_operator());
@@ -559,9 +559,9 @@ create policy "admin delete projects" on public.projects
   for delete using (public.is_admin());
 
 create policy "members read own project access" on public.project_memberships
-  for select using (profile_id = auth.uid() or public.is_super_admin());
+  for select using (profile_id = auth.uid() or public.is_admin());
 create policy "admins manage project access" on public.project_memberships
-  for all using (public.is_super_admin()) with check (public.is_super_admin());
+  for all using (public.is_admin()) with check (public.is_admin());
 
 create policy "assigned members read projects" on public.projects
   for select using (public.can_access_project(id));
@@ -787,12 +787,12 @@ create policy "operators write official documents" on public.official_documents
   for all using (public.is_operator()) with check (public.is_operator());
 
 create policy "operators read settings" on public.settings
-  for select using (public.is_super_admin());
+  for select using (public.is_admin());
 create policy "admin writes sensitive settings" on public.settings
-  for all using (public.is_super_admin()) with check (public.is_super_admin());
+  for all using (public.is_admin()) with check (public.is_admin());
 
 create policy "admin permissions" on public.user_permissions
-  for all using (public.is_super_admin()) with check (public.is_super_admin());
+  for all using (public.is_admin()) with check (public.is_admin());
 
 create policy "operators read audit logs" on public.audit_logs
   for select using (public.is_operator());

@@ -41,8 +41,11 @@ const rolePermissions: Record<Role, Permission[]> = {
     "generate_report",
     "view_participants",
     "edit_participants",
+    "manage_users",
+    "change_settings",
     "export_data",
     "generate_dossier",
+    "access_backup",
   ],
   super_admin: [
     "create_project",
