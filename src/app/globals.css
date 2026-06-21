@@ -193,3 +193,12 @@
 .login-form-sem-boas-vindas form {
   margin-top: 0 !important;
 }
+
+
+/* Remove somente o cabeçalho interno do LoginForm: GC / Companhia de Artes Viva / Bem-vindo de volta */
+.login-form-sem-boas-vindas > div > div:first-child,
+.login-form-sem-boas-vindas > section > div:first-child,
+.login-form-sem-boas-vindas form + div,
+.login-form-sem-boas-vindas [data-login-header] {
+  display: none !important;
+}
