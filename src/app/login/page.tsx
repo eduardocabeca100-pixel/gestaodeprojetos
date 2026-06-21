@@ -1,49 +1,79 @@
 import { LoginForm } from "@/components/auth/login-form";
 
+const silhouettes = [92, 122, 104, 138, 110, 128];
+
 export default function LoginPage() {
   return (
-    <main className="grid min-h-screen bg-[#050814] text-white lg:grid-cols-[1.05fr_0.95fr]">
-      <section className="relative hidden min-h-screen overflow-hidden border-r border-white/10 px-10 py-12 lg:flex lg:flex-col lg:justify-between">
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(8,12,30,0.96)_0%,rgba(5,8,20,0.98)_58%,rgba(2,4,10,1)_100%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(52,116,255,0.16),transparent_36%),radial-gradient(ellipse_at_center,rgba(139,92,246,0.12),transparent_28%)]" />
-        <div className="absolute inset-x-0 bottom-0 h-[38%] bg-[repeating-linear-gradient(160deg,transparent_0_24px,rgba(126,34,206,0.08)_24px_25px,transparent_25px_62px)] opacity-45" />
-        <div className="relative z-10 flex items-center justify-start">
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 px-6 py-5 shadow-[0_0_80px_rgba(76,88,255,0.12)] backdrop-blur-sm">
-            <p className="text-5xl font-black leading-none tracking-tight text-white">Gestão Cultural</p>
-            <p className="mt-2 text-sm font-semibold uppercase tracking-[0.28em] text-sky-200/80">
-              Companhia de Artes Viva
-            </p>
-          </div>
+    <main className="min-h-screen overflow-hidden bg-[#060814] text-white">
+      <div className="relative min-h-screen">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_15%,rgba(129,92,255,0.20),transparent_32%),radial-gradient(circle_at_70%_50%,rgba(68,46,150,0.18),transparent_34%),linear-gradient(115deg,#05070f_0%,#0b1020_45%,#05060c_100%)]" />
+
+        <div className="absolute inset-0 opacity-60">
+          <div className="absolute left-[5%] top-0 h-[42%] w-[11%] bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.34),transparent_68%)] blur-sm" />
+          <div className="absolute left-[18%] top-0 h-[46%] w-[10%] bg-[radial-gradient(ellipse_at_top,rgba(180,198,255,0.28),transparent_70%)] blur-sm" />
+          <div className="absolute left-[32%] top-0 h-[44%] w-[10%] bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.23),transparent_70%)] blur-sm" />
+          <div className="absolute left-[47%] top-0 h-[40%] w-[11%] bg-[radial-gradient(ellipse_at_top,rgba(170,170,255,0.18),transparent_70%)] blur-sm" />
         </div>
-        <div className="relative z-10 max-w-xl pl-2">
-          <p className="text-[0.95rem] leading-8 text-slate-300">
-            Plataforma privada para administração, acompanhamento e organização de projetos culturais.
-          </p>
-        </div>
-        <p className="relative z-10 text-sm text-sky-200/80">www.ciaviva.com</p>
-      </section>
-      <section className="flex items-center justify-center px-6 py-10">
-        <div className="w-full max-w-[640px] rounded-[2rem] border border-white/10 bg-white/5 p-6 shadow-[0_0_80px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:p-8 lg:p-10">
-          <div className="mb-8 lg:hidden">
-            <div className="mb-4 inline-flex size-12 items-center justify-center rounded-2xl border border-white/10 bg-white/10 text-sm font-black text-white">
-              GC
+
+        <div className="absolute inset-x-0 bottom-0 h-[48%] bg-[radial-gradient(ellipse_at_32%_100%,rgba(255,255,255,0.20),transparent_42%),linear-gradient(to_top,#03040a_12%,transparent)]" />
+
+        <div className="absolute bottom-[12%] left-[8%] hidden items-end gap-7 opacity-80 md:flex">
+          {silhouettes.map((height, index) => (
+            <div key={index} className="relative w-9">
+              <div className="mx-auto size-7 rounded-full bg-black/90 shadow-[0_0_35px_rgba(255,255,255,0.22)]" />
+              <div
+                className="mx-auto mt-1 w-6 rounded-t-full bg-black/90 shadow-[0_20px_70px_rgba(0,0,0,0.9)]"
+                style={{ height }}
+              />
+              <div className="absolute -bottom-5 left-1/2 h-8 w-px -translate-x-1/2 bg-black/90" />
             </div>
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-sky-200/70">
-              Companhia de Artes Viva
-            </p>
-            <h2 className="mt-3 text-3xl font-black tracking-tight">Faça seu login</h2>
-            <p className="mt-3 text-sm leading-6 text-slate-300">
-              Acesse a plataforma para gerir projetos, documentos, financeiro e prestação de contas.
-            </p>
-          </div>
-          <div className="hidden lg:mb-8 lg:block">
-            <h2 className="text-4xl font-black tracking-tight">
-              Faça seu <span className="bg-gradient-to-r from-violet-400 via-sky-300 to-blue-400 bg-clip-text text-transparent">login</span>
-            </h2>
-          </div>
-          <LoginForm />
+          ))}
         </div>
-      </section>
+
+        <section className="relative z-10 grid min-h-screen grid-cols-1 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="flex min-h-[42vh] flex-col justify-between px-6 py-8 sm:px-10 lg:min-h-screen lg:px-14 lg:py-12">
+            <div>
+              <h1 className="max-w-3xl text-4xl font-black uppercase leading-[0.95] tracking-[-0.06em] text-white sm:text-6xl lg:text-7xl">
+                Sistema de Gestão de Projetos
+              </h1>
+
+              <p className="mt-5 text-xs font-black uppercase tracking-[0.42em] text-violet-300 sm:text-sm">
+                Cia de Artes Viva
+              </p>
+            </div>
+
+            <div className="hidden max-w-md lg:block">
+              <p className="text-sm leading-7 text-slate-300">
+                Painel administrativo para organizar projetos, equipe, documentos,
+                financeiro, produção e acompanhamento cultural da companhia.
+              </p>
+            </div>
+
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+              WWW.CIAVIVA.COM
+            </p>
+          </div>
+
+          <div className="flex items-center justify-center px-6 pb-10 pt-0 sm:px-10 lg:min-h-screen lg:py-12">
+            <div className="w-full max-w-[460px] rounded-[1.8rem] border border-white/10 bg-[#08101f]/80 p-6 shadow-[0_40px_120px_rgba(0,0,0,0.65)] backdrop-blur-2xl sm:p-8">
+              <div className="mb-7">
+                <p className="text-xs font-black uppercase tracking-[0.28em] text-violet-300">
+                  Bem-vindo de volta!
+                </p>
+                <h2 className="mt-3 text-2xl font-black tracking-[-0.04em] text-white">
+                  Faça login para acessar sua conta
+                </h2>
+              </div>
+
+              <LoginForm />
+
+              <div className="mt-7 text-center text-xs text-slate-500">
+                Acesso restrito aos responsáveis autorizados.
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </main>
   );
 }
