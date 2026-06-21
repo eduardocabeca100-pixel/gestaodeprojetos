@@ -22,6 +22,7 @@ export const teamRosterMemberSchema = z.object({
   email: z.string().email().optional(),
   document: z.string().optional(),
   bio: z.string().optional(),
+  avatarUrl: z.string().url().nullable().optional(),
   notes: z.string().optional(),
 });
 

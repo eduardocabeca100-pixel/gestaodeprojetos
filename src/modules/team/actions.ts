@@ -42,7 +42,12 @@ export async function createTeamRoster(formData: FormData) {
       };
     }
 
-    const member = await createTeamRosterMember(parsed.data);
+    const payload = {
+      ...parsed.data,
+      avatarUrl: parsed.data.avatarUrl ?? null,
+    };
+
+    const member = await createTeamRosterMember(payload as any);
 
     return {
       ok: true,

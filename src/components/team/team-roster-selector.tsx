@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { assignTeamToProject } from "@/modules/team/actions";
 import type { TeamRosterMember, PaymentStatus } from "@/modules/team/types";
@@ -36,6 +36,7 @@ export function TeamRosterSelector({
   projectId,
   onSuccess,
 }: TeamRosterSelectorProps) {
+  const formRef = useRef<HTMLFormElement | null>(null);
   const [selectedMemberId, setSelectedMemberId] = useState("");
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState<PaymentStatus>("Previsto");
 
@@ -50,7 +51,7 @@ export function TeamRosterSelector({
     if (result.ok) {
       setSelectedMemberId("");
       setSelectedPaymentStatus("Previsto");
-      (formData.get("expectedAmount") as HTMLInputElement)?.reset?.();
+      formRef.current?.reset();
       onSuccess?.();
     }
   }
@@ -58,7 +59,7 @@ export function TeamRosterSelector({
   const selectedMember = rosterMembers.find((m) => m.id === selectedMemberId);
 
   return (
-    <form action={handleSubmit} className="space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
+    <form ref={formRef} action={handleSubmit} className="space-y-4 rounded-lg border border-slate-200 bg-slate-50 p-4">
       <h3 className="font-semibold text-slate-900">Adicionar membro da equipe</h3>
 
       <div>

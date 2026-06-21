@@ -42,12 +42,12 @@ export type TeamRosterMember = {
   id: string;
   name: string;
   role: TeamRole;
-  phone: string;
-  email: string;
-  document: string;
-  bio: string;
+  phone?: string | null;
+  email?: string | null;
+  document?: string | null;
+  bio?: string | null;
   avatarUrl: string | null;
-  notes: string;
+  notes?: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -61,7 +61,7 @@ export type TeamRosterAssignment = {
   expectedAmount: number;
   paidAmount: number;
   paymentStatus: PaymentStatus;
-  notes: string;
+  notes?: string | null;
   assignedAt: string;
   rosterMember?: TeamRosterMember; // Optional nested member data
 };

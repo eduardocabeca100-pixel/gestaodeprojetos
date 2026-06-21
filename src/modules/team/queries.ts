@@ -74,6 +74,7 @@ export async function listTeamMembers(projectId?: string) {
 // Team roster functions - global team management
 export async function listTeamRoster() {
   const supabase = await createClient();
+    if (!supabase) throw new Error("Supabase server env not configured");
 
   const { data, error } = await supabase
     .from("team_roster")
@@ -83,7 +84,9 @@ export async function listTeamRoster() {
 
   if (error) throw error;
 
-  return (data || []).map((member) => ({
+  const rows = (data || []) as any[];
+
+  return rows.map((member) => ({
     id: member.id,
     name: member.name,
     role: member.role,
@@ -101,6 +104,7 @@ export async function listTeamRoster() {
 
 export async function getTeamRosterMember(id: string) {
   const supabase = await createClient();
+    if (!supabase) throw new Error("Supabase server env not configured");
 
   const { data, error } = await supabase
     .from("team_roster")
@@ -109,20 +113,21 @@ export async function getTeamRosterMember(id: string) {
     .single();
 
   if (error) throw error;
+  const row = data as any;
 
   return {
-    id: data.id,
-    name: data.name,
-    role: data.role,
-    phone: data.phone || "",
-    email: data.email || "",
-    document: data.document || "",
-    bio: data.bio || "",
-    avatarUrl: data.avatar_url,
-    notes: data.notes || "",
-    isActive: data.is_active,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
+    id: row.id,
+    name: row.name,
+    role: row.role,
+    phone: row.phone || "",
+    email: row.email || "",
+    document: row.document || "",
+    bio: row.bio || "",
+    avatarUrl: row.avatar_url,
+    notes: row.notes || "",
+    isActive: row.is_active,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   } as TeamRosterMember;
 }
 
@@ -130,6 +135,7 @@ export async function createTeamRosterMember(
   data: Omit<TeamRosterMember, "id" | "createdAt" | "updatedAt" | "isActive">
 ) {
   const supabase = await createClient();
+    if (!supabase) throw new Error("Supabase server env not configured");
 
   const { data: created, error } = await supabase
     .from("team_roster")
@@ -142,25 +148,26 @@ export async function createTeamRosterMember(
       bio: data.bio || null,
       notes: data.notes || null,
       is_active: true,
-    })
+    } as any)
     .select()
     .single();
 
   if (error) throw error;
+  const createdRow = created as any;
 
   return {
-    id: created.id,
-    name: created.name,
-    role: created.role,
-    phone: created.phone || "",
-    email: created.email || "",
-    document: created.document || "",
-    bio: created.bio || "",
-    avatarUrl: created.avatar_url,
-    notes: created.notes || "",
-    isActive: created.is_active,
-    createdAt: created.created_at,
-    updatedAt: created.updated_at,
+    id: createdRow.id,
+    name: createdRow.name,
+    role: createdRow.role,
+    phone: createdRow.phone || "",
+    email: createdRow.email || "",
+    document: createdRow.document || "",
+    bio: createdRow.bio || "",
+    avatarUrl: createdRow.avatar_url,
+    notes: createdRow.notes || "",
+    isActive: createdRow.is_active,
+    createdAt: createdRow.created_at,
+    updatedAt: createdRow.updated_at,
   } as TeamRosterMember;
 }
 
@@ -169,6 +176,7 @@ export async function updateTeamRosterMember(
   data: Partial<Omit<TeamRosterMember, "id" | "createdAt" | "updatedAt">>
 ) {
   const supabase = await createClient();
+    if (!supabase) throw new Error("Supabase server env not configured");
 
   const updateData: Record<string, unknown> = {};
   if (data.name !== undefined) updateData.name = data.name;
@@ -180,7 +188,7 @@ export async function updateTeamRosterMember(
   if (data.notes !== undefined) updateData.notes = data.notes || null;
   if (data.isActive !== undefined) updateData.is_active = data.isActive;
 
-  const { data: updated, error } = await supabase
+  const { data: updated, error } = await (supabase as any)
     .from("team_roster")
     .update(updateData)
     .eq("id", id)
@@ -188,25 +196,27 @@ export async function updateTeamRosterMember(
     .single();
 
   if (error) throw error;
+  const updatedRow = updated as any;
 
   return {
-    id: updated.id,
-    name: updated.name,
-    role: updated.role,
-    phone: updated.phone || "",
-    email: updated.email || "",
-    document: updated.document || "",
-    bio: updated.bio || "",
-    avatarUrl: updated.avatar_url,
-    notes: updated.notes || "",
-    isActive: updated.is_active,
-    createdAt: updated.created_at,
-    updatedAt: updated.updated_at,
+    id: updatedRow.id,
+    name: updatedRow.name,
+    role: updatedRow.role,
+    phone: updatedRow.phone || "",
+    email: updatedRow.email || "",
+    document: updatedRow.document || "",
+    bio: updatedRow.bio || "",
+    avatarUrl: updatedRow.avatar_url,
+    notes: updatedRow.notes || "",
+    isActive: updatedRow.is_active,
+    createdAt: updatedRow.created_at,
+    updatedAt: updatedRow.updated_at,
   } as TeamRosterMember;
 }
 
 export async function deleteTeamRosterMember(id: string) {
   const supabase = await createClient();
+    if (!supabase) throw new Error("Supabase server env not configured");
 
   const { error } = await supabase
     .from("team_roster")
@@ -219,6 +229,7 @@ export async function deleteTeamRosterMember(id: string) {
 // Team roster assignments - link roster members to projects
 export async function listTeamRosterAssignments(projectId: string) {
   const supabase = await createClient();
+    if (!supabase) throw new Error("Supabase server env not configured");
 
   const { data, error } = await supabase
     .from("team_roster_assignments")
@@ -233,7 +244,9 @@ export async function listTeamRosterAssignments(projectId: string) {
 
   if (error) throw error;
 
-  return (data || []).map((assignment) => ({
+  const rows = (data || []) as any[];
+
+  return rows.map((assignment) => ({
     id: assignment.id,
     teamRosterId: assignment.team_roster_id,
     projectId: assignment.project_id,
@@ -265,6 +278,7 @@ export async function assignTeamRosterMember(
   data: Omit<TeamRosterAssignment, "id" | "assignedAt" | "rosterMember">
 ) {
   const supabase = await createClient();
+    if (!supabase) throw new Error("Supabase server env not configured");
 
   const { data: created, error } = await supabase
     .from("team_roster_assignments")
@@ -275,21 +289,22 @@ export async function assignTeamRosterMember(
       paid_amount: data.paidAmount,
       payment_status: data.paymentStatus,
       notes: data.notes || null,
-    })
+    } as any)
     .select()
     .single();
 
   if (error) throw error;
+  const createdRow = created as any;
 
   return {
-    id: created.id,
-    teamRosterId: created.team_roster_id,
-    projectId: created.project_id,
-    expectedAmount: created.expected_amount,
-    paidAmount: created.paid_amount,
-    paymentStatus: created.payment_status,
-    notes: created.notes || "",
-    assignedAt: created.assigned_at,
+    id: createdRow.id,
+    teamRosterId: createdRow.team_roster_id,
+    projectId: createdRow.project_id,
+    expectedAmount: createdRow.expected_amount,
+    paidAmount: createdRow.paid_amount,
+    paymentStatus: createdRow.payment_status,
+    notes: createdRow.notes || "",
+    assignedAt: createdRow.assigned_at,
   } as TeamRosterAssignment;
 }
 
@@ -300,6 +315,7 @@ export async function updateTeamRosterAssignment(
   >
 ) {
   const supabase = await createClient();
+    if (!supabase) throw new Error("Supabase server env not configured");
 
   const updateData: Record<string, unknown> = {};
   if (data.expectedAmount !== undefined)
@@ -309,7 +325,7 @@ export async function updateTeamRosterAssignment(
     updateData.payment_status = data.paymentStatus;
   if (data.notes !== undefined) updateData.notes = data.notes || null;
 
-  const { data: updated, error } = await supabase
+  const { data: updated, error } = await (supabase as any)
     .from("team_roster_assignments")
     .update(updateData)
     .eq("id", id)
@@ -332,6 +348,7 @@ export async function updateTeamRosterAssignment(
 
 export async function unassignTeamRosterMember(id: string) {
   const supabase = await createClient();
+    if (!supabase) throw new Error("Supabase server env not configured");
 
   const { error } = await supabase
     .from("team_roster_assignments")
