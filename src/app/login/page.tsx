@@ -31,25 +31,23 @@ export default function LoginPage() {
         </div>
 
         <section className="relative z-10 grid min-h-screen grid-cols-1 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="flex min-h-[42vh] flex-col justify-between px-6 py-8 sm:px-10 lg:min-h-screen lg:px-14 lg:py-12">
-            <div>
-              <h1 className="max-w-3xl text-4xl font-black uppercase leading-[0.95] tracking-[-0.06em] text-white sm:text-6xl lg:text-7xl">
+          <div className="relative flex min-h-[42vh] flex-col items-center justify-center px-6 py-8 text-center sm:px-10 lg:min-h-screen lg:px-14 lg:py-12">
+            <div className="mx-auto max-w-3xl">
+              <h1 className="text-4xl font-black uppercase leading-[0.95] tracking-[-0.06em] text-white sm:text-6xl lg:text-7xl">
                 Sistema de Gestão de Projetos
               </h1>
 
-              <p className="mt-5 text-xs font-black uppercase tracking-[0.42em] text-violet-300 sm:text-sm">
+              <p className="mt-6 text-xs font-black uppercase tracking-[0.42em] text-violet-300 sm:text-sm">
                 Cia de Artes Viva
               </p>
-            </div>
 
-            <div className="hidden max-w-md lg:block">
-              <p className="text-sm leading-7 text-slate-300">
+              <p className="mx-auto mt-8 max-w-md text-sm leading-7 text-slate-300">
                 Painel administrativo para organizar projetos, equipe, documentos,
                 financeiro, produção e acompanhamento cultural da companhia.
               </p>
             </div>
 
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+            <p className="absolute bottom-8 left-1/2 -translate-x-1/2 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
               WWW.CIAVIVA.COM
             </p>
           </div>
