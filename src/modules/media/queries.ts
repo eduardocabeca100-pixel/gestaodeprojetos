@@ -17,9 +17,9 @@ function buildMediaItems(project: Project): MediaItem[] {
       type: "Foto",
       projectId: project.id,
       activityId: `${project.id}-atividade-1`,
-      registeredAt: project.id === "prazer-laodiceia" ? "2026-09-10" : "2026-08-05",
+      registeredAt: "2026-08-05",
       location: "Cia de Artes Viva",
-      description: "Registro inicial das atividades do projeto.",
+      description: "Registro inicial das atividades do projeto Reféns.",
       url: "/globe.svg",
       category: "Aulas",
       selectedForDossier: true,
@@ -56,5 +56,5 @@ function buildMediaItems(project: Project): MediaItem[] {
 export async function listMediaItems(projectId?: string) {
   const project = await getScopedProject(projectId);
 
-  return buildMediaItems(project);
+  return project.id === "refens" ? buildMediaItems(project) : [];
 }

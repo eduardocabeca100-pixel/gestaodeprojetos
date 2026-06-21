@@ -45,13 +45,13 @@ export function CertificateSettingsForm({
   const [signatures, setSignatures] = useState<SignatureDraft[]>([
     {
       id: "director",
-      name: "Direção Viva",
+      name: "Marcel Eduardo Cabeça Domingues",
       role: "Diretor geral",
       fileName: null,
     },
     {
       id: "executive",
-      name: "Produção executiva",
+      name: "Kaique",
       role: "Diretor executivo",
       fileName: null,
     },

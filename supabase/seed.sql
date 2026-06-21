@@ -23,8 +23,8 @@ insert into public.projects (
   'Reféns',
   'Formação de Artistas de Rua e Montagem do Espetáculo Reféns',
   'formacao-artistas-rua-espetaculo-refens',
-  'Projeto de formação cênica e montagem teatral com artistas de rua.',
-  'Formação organizada em aulas, ensaios, registros documentais, mídia e prestação de contas final.',
+  'Projeto de formação em teatro de rua com diário de classe, documentação oficial, execução financeira e montagem do espetáculo Reféns.',
+  'Projeto de formação em teatro de rua com 11 encontros, controle de presença, documentação do edital, planilha orçamentária e prestação de contas.',
   'Circuito Catarinense de Cultura PNAB SC 2026',
   '000937',
   50000,
@@ -33,9 +33,9 @@ insert into public.projects (
   'Habilitação em andamento',
   'Ações de Qualificação e Formação',
   'Classe II',
-  'Cia de Artes Viva',
-  '00.000.000/0001-00',
-  'Florianópolis',
+  'Marcel Eduardo Cabeça Domingues',
+  '59.053.899/0001-53',
+  'Jaraguá do Sul',
   'SC',
   '2026-08-01',
   '2027-07-31',
@@ -79,17 +79,17 @@ activities_seed (
   notes
 ) as (
   values
-    ('11111111-1111-1111-1111-000000000101', 'Acolhimento e integração', 'Aula', '2026-08-05'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Direção executiva', 'Aula inicial de acolhimento e integração do grupo.', 'Realizada', 'Registrar presença e autorização de imagem.'),
-    ('11111111-1111-1111-1111-000000000102', 'História do teatro e linguagens cênicas', 'Aula', '2026-08-08'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Direção executiva', 'Base histórica e referências para o processo artístico.', 'Realizada', 'Inserir conteúdo programático no diário de classe.'),
-    ('11111111-1111-1111-1111-000000000103', 'Leitura do roteiro Reféns', 'Aula', '2026-08-11'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Direção executiva', 'Leitura e conversa sobre o roteiro do espetáculo.', 'Agendada', 'Pode ser remarcada conforme agenda do grupo.'),
-    ('11111111-1111-1111-1111-000000000104', 'Corpo, expressão e presença', 'Aula', '2026-08-14'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Direção executiva', 'Aquecimento corporal e presença cênica.', 'Agendada', 'Usar para certificação com conteúdo programado.'),
-    ('11111111-1111-1111-1111-000000000105', 'Voz, respiração e projeção', 'Aula', '2026-08-17'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Direção executiva', 'Trabalho de voz e articulação do elenco.', 'Agendada', 'Anexar fotos e lista de presença.'),
-    ('11111111-1111-1111-1111-000000000106', 'Improvisação e jogo teatral', 'Aula', '2026-08-20'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Direção executiva', 'Jogos teatrais e improvisação orientada.', 'Agendada', 'Aula formativa com foco em criação.'),
-    ('11111111-1111-1111-1111-000000000107', 'Montagem das primeiras cenas', 'Ensaio', '2026-08-23'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Direção executiva', 'Organização das primeiras cenas do espetáculo.', 'Agendada', 'Apoio para relatório parcial.'),
-    ('11111111-1111-1111-1111-000000000108', 'Cenas centrais e ritmo', 'Ensaio', '2026-08-26'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Direção executiva', 'Ajustes de ritmo e relação de cena.', 'Agendada', 'Usar para avaliação de frequência.'),
-    ('11111111-1111-1111-1111-000000000109', 'Final, coro e cenas coletivas', 'Ensaio', '2026-08-29'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Direção executiva', 'Fechamento de cenas coletivas.', 'Agendada', 'Gerar certificado com conteúdo programático.'),
-    ('11111111-1111-1111-1111-000000000110', 'Ensaio corrido e ajustes de direção', 'Ensaio geral', '2026-09-01'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Direção executiva', 'Ensaio corrido para alinhamento final.', 'Agendada', 'Etapa de revisão final da cena.'),
-    ('11111111-1111-1111-1111-000000000111', 'Ensaio geral pedagógico e fechamento', 'Ensaio geral', '2026-09-04'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Direção executiva', 'Fechamento pedagógico e documentação final.', 'Agendada', 'Encerrar com diário completo e certificado.')
+    ('11111111-1111-1111-1111-000000000101', 'Acolhimento e integração', 'Aula', '2026-08-05'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Marcel Eduardo Cabeça Domingues', 'Aula inicial de acolhimento e integração do grupo.', 'Realizada', 'Registrar presença e autorização de imagem.'),
+    ('11111111-1111-1111-1111-000000000102', 'História do teatro e linguagens cênicas', 'Aula', '2026-08-08'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Marcel Eduardo Cabeça Domingues', 'Base histórica e referências para o processo artístico.', 'Realizada', 'Inserir conteúdo programático no diário de classe.'),
+    ('11111111-1111-1111-1111-000000000103', 'Leitura do roteiro Reféns', 'Aula', '2026-08-11'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Marcel Eduardo Cabeça Domingues', 'Leitura e conversa sobre o roteiro do espetáculo.', 'Agendada', 'Pode ser remarcada conforme agenda do grupo.'),
+    ('11111111-1111-1111-1111-000000000104', 'Corpo, expressão e presença', 'Aula', '2026-08-14'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Marcel Eduardo Cabeça Domingues', 'Aquecimento corporal e presença cênica.', 'Agendada', 'Usar para certificação com conteúdo programado.'),
+    ('11111111-1111-1111-1111-000000000105', 'Voz, respiração e projeção', 'Aula', '2026-08-17'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Marcel Eduardo Cabeça Domingues', 'Trabalho de voz e articulação do elenco.', 'Agendada', 'Anexar fotos e lista de presença.'),
+    ('11111111-1111-1111-1111-000000000106', 'Improvisação e jogo teatral', 'Aula', '2026-08-20'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Marcel Eduardo Cabeça Domingues', 'Jogos teatrais e improvisação orientada.', 'Agendada', 'Aula formativa com foco em criação.'),
+    ('11111111-1111-1111-1111-000000000107', 'Montagem das primeiras cenas', 'Ensaio', '2026-08-23'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Marcel Eduardo Cabeça Domingues', 'Organização das primeiras cenas do espetáculo.', 'Agendada', 'Apoio para relatório parcial.'),
+    ('11111111-1111-1111-1111-000000000108', 'Cenas centrais e ritmo', 'Ensaio', '2026-08-26'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Marcel Eduardo Cabeça Domingues', 'Ajustes de ritmo e relação de cena.', 'Agendada', 'Usar para avaliação de frequência.'),
+    ('11111111-1111-1111-1111-000000000109', 'Final, coro e cenas coletivas', 'Ensaio', '2026-08-29'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Marcel Eduardo Cabeça Domingues', 'Fechamento de cenas coletivas.', 'Agendada', 'Gerar certificado com conteúdo programático.'),
+    ('11111111-1111-1111-1111-000000000110', 'Ensaio corrido e ajustes de direção', 'Ensaio geral', '2026-09-01'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Marcel Eduardo Cabeça Domingues', 'Ensaio corrido para alinhamento final.', 'Agendada', 'Etapa de revisão final da cena.'),
+    ('11111111-1111-1111-1111-000000000111', 'Ensaio geral pedagógico e fechamento', 'Ensaio geral', '2026-09-04'::date, '19:00'::time, '22:00'::time, 'Cia de Artes Viva', 'Marcel Eduardo Cabeça Domingues', 'Fechamento pedagógico e documentação final.', 'Agendada', 'Encerrar com diário completo e certificado.')
 )
 insert into public.activities (
   id,
@@ -133,17 +133,17 @@ with classes_seed (
   pedagogical_notes
 ) as (
   values
-    ('11111111-1111-1111-1111-000000000101', 1, 'Acolhimento e integração', 'Integrar o grupo e apresentar o projeto.', 'Dinâmica de apresentação e combinados do grupo.', 'Roda de conversa e acolhimento.', 'Todos os participantes integrados.', 'Profissional responsável', 'Campo livre para observações pedagógicas.'),
-    ('11111111-1111-1111-1111-000000000102', 2, 'História do teatro e linguagens cênicas', 'Apresentar referências cênicas.', 'Linha do tempo e movimentos teatrais.', 'Leitura e debate.', 'Ampliação de repertório.', 'Profissional responsável', 'Registrar referências discutidas.'),
-    ('11111111-1111-1111-1111-000000000103', 3, 'Leitura do roteiro Reféns', 'Compreender a dramaturgia.', 'Leitura de texto e discussão de cenas.', 'Leitura guiada.', 'Primeiro contato com a obra.', 'Profissional responsável', 'Observar dúvidas e sugestões.'),
-    ('11111111-1111-1111-1111-000000000104', 4, 'Corpo, expressão e presença', 'Trabalhar presença cênica.', 'Exercícios corporais e expressão.', 'Treino corporal.', 'Maior consciência do corpo em cena.', 'Profissional responsável', 'Anotar evolução individual.'),
-    ('11111111-1111-1111-1111-000000000105', 5, 'Voz, respiração e projeção', 'Fortalecer voz e projeção.', 'Exercícios respiratórios e projeção vocal.', 'Prática vocal.', 'Expressividade e projeção adequadas.', 'Profissional responsável', 'Acompanhar articulação e ritmo.'),
-    ('11111111-1111-1111-1111-000000000106', 6, 'Improvisação e jogo teatral', 'Estimular criação cênica.', 'Jogos e improvisação orientada.', 'Laboratório criativo.', 'Mais autonomia na cena.', 'Profissional responsável', 'Registrar respostas do grupo.'),
-    ('11111111-1111-1111-1111-000000000107', 7, 'Montagem das primeiras cenas', 'Organizar blocos de cena.', 'Primeira construção de cenas.', 'Ensaio prático.', 'Cenas iniciais encaminhadas.', 'Profissional responsável', 'Guardar fotos de bastidores.'),
-    ('11111111-1111-1111-1111-000000000108', 8, 'Cenas centrais e ritmo', 'Ajustar ritmo e transições.', 'Cenas centrais e continuidade.', 'Ensaio com marcação.', 'Ritmo cênico consistente.', 'Profissional responsável', 'Relacionar com diário de classe.'),
-    ('11111111-1111-1111-1111-000000000109', 9, 'Final, coro e cenas coletivas', 'Fechar a estrutura dramática.', 'Fechamento coletivo e coro.', 'Ensaio coletivo.', 'Estrutura geral consolidada.', 'Profissional responsável', 'Pode gerar certificado parcial.'),
-    ('11111111-1111-1111-1111-000000000110', 10, 'Ensaio corrido e ajustes de direção', 'Ajustar direção final.', 'Ensaio corrido do espetáculo.', 'Ensaio geral.', 'Correções de cena e fluxo.', 'Profissional responsável', 'Registrar notas da direção.'),
-    ('11111111-1111-1111-1111-000000000111', 11, 'Ensaio geral pedagógico e fechamento', 'Fechar o ciclo formativo.', 'Síntese do processo e avaliação.', 'Avaliação final.', 'Documentação completa do percurso.', 'Profissional responsável', 'Finalização com lista de presença.')
+    ('11111111-1111-1111-1111-000000000101', 1, 'Acolhimento e integração', 'Integrar o grupo e apresentar o projeto.', 'Dinâmica de apresentação e combinados do grupo.', 'Roda de conversa e acolhimento.', 'Todos os participantes integrados.', 'Professor / formador', 'Campo livre para observações pedagógicas.'),
+    ('11111111-1111-1111-1111-000000000102', 2, 'História do teatro e linguagens cênicas', 'Apresentar referências cênicas.', 'Linha do tempo e movimentos teatrais.', 'Leitura e debate.', 'Ampliação de repertório.', 'Professor / formador', 'Registrar referências discutidas.'),
+    ('11111111-1111-1111-1111-000000000103', 3, 'Leitura do roteiro Reféns', 'Compreender a dramaturgia.', 'Leitura de texto e discussão de cenas.', 'Leitura guiada.', 'Primeiro contato com a obra.', 'Professor / formador', 'Observar dúvidas e sugestões.'),
+    ('11111111-1111-1111-1111-000000000104', 4, 'Corpo, expressão e presença', 'Trabalhar presença cênica.', 'Exercícios corporais e expressão.', 'Treino corporal.', 'Maior consciência do corpo em cena.', 'Professor / formador', 'Anotar evolução individual.'),
+    ('11111111-1111-1111-1111-000000000105', 5, 'Voz, respiração e projeção', 'Fortalecer voz e projeção.', 'Exercícios respiratórios e projeção vocal.', 'Prática vocal.', 'Expressividade e projeção adequadas.', 'Professor / formador', 'Acompanhar articulação e ritmo.'),
+    ('11111111-1111-1111-1111-000000000106', 6, 'Improvisação e jogo teatral', 'Estimular criação cênica.', 'Jogos e improvisação orientada.', 'Laboratório criativo.', 'Mais autonomia na cena.', 'Professor / formador', 'Registrar respostas do grupo.'),
+    ('11111111-1111-1111-1111-000000000107', 7, 'Montagem das primeiras cenas', 'Organizar blocos de cena.', 'Primeira construção de cenas.', 'Ensaio prático.', 'Cenas iniciais encaminhadas.', 'Professor / formador', 'Guardar fotos de bastidores.'),
+    ('11111111-1111-1111-1111-000000000108', 8, 'Cenas centrais e ritmo', 'Ajustar ritmo e transições.', 'Cenas centrais e continuidade.', 'Ensaio com marcação.', 'Ritmo cênico consistente.', 'Professor / formador', 'Relacionar com diário de classe.'),
+    ('11111111-1111-1111-1111-000000000109', 9, 'Final, coro e cenas coletivas', 'Fechar a estrutura dramática.', 'Fechamento coletivo e coro.', 'Ensaio coletivo.', 'Estrutura geral consolidada.', 'Professor / formador', 'Pode gerar certificado parcial.'),
+    ('11111111-1111-1111-1111-000000000110', 10, 'Ensaio corrido e ajustes de direção', 'Ajustar direção final.', 'Ensaio corrido do espetáculo.', 'Ensaio geral.', 'Correções de cena e fluxo.', 'Professor / formador', 'Registrar notas da direção.'),
+    ('11111111-1111-1111-1111-000000000111', 11, 'Ensaio geral pedagógico e fechamento', 'Fechar o ciclo formativo.', 'Síntese do processo e avaliação.', 'Avaliação final.', 'Documentação completa do percurso.', 'Professor / formador', 'Finalização com lista de presença.')
 )
 insert into public.classes (
   activity_id,
@@ -190,10 +190,22 @@ participants_seed (
   pedagogical_notes,
   status
 ) as (
-  values
-    ('11111111-1111-1111-1111-000000000201', 'Participante Reféns 01', '000.000.000-00', '2001-04-12'::date, '(48) 98888-1001', 'participante01@email.com', 'Centro', 'Rua das Artes, 100', null, null, true, true, 'Boa presença corporal nas atividades do projeto.', 'Ativo'),
-    ('11111111-1111-1111-1111-000000000202', 'Participante Reféns 02', '000.000.000-00', '2007-09-20'::date, '(48) 98888-1002', 'participante02@email.com', 'Serraria', 'Rua da Cultura, 230', 'Responsável legal', '(48) 98888-2002', true, true, 'Menor de idade; manter autorização do responsável anexada.', 'Ativo'),
-    ('11111111-1111-1111-1111-000000000203', 'Participante Reféns 03', null, '1998-02-03'::date, '(48) 98888-1003', null, 'Campinas', 'Avenida Viva, 45', null, null, false, true, 'Pendente autorização de imagem.', 'Selecionado')
+  select
+    null::uuid,
+    null::text,
+    null::text,
+    null::date,
+    null::text,
+    null::text,
+    null::text,
+    null::text,
+    null::text,
+    null::text,
+    null::boolean,
+    null::boolean,
+    null::text,
+    null::text
+  where false
 )
 insert into public.participants (
   id,
@@ -296,15 +308,28 @@ budget_items_seed (
   notes
 ) as (
   values
-    ('11111111-1111-1111-1111-000000000401', 'Direção executiva', 'Coordenação e direção', 6000::numeric(12,2), 700::numeric(12,2), 'Gestão geral, coordenação e direção executiva do projeto.'),
-    ('11111111-1111-1111-1111-000000000402', 'Formação / oficinas', 'Oficinas e aulas', 13000::numeric(12,2), 3000::numeric(12,2), 'Aulas, oficinas, preparação pedagógica e conteúdo formativo.'),
-    ('11111111-1111-1111-1111-000000000403', 'Atuação / elenco', 'Elenco e participação artística', 10000::numeric(12,2), 1500::numeric(12,2), 'Atuação, presença artística, ensaios e participação do elenco.'),
-    ('11111111-1111-1111-1111-000000000404', 'Técnica e operação', 'Assistência técnica e operação', 8000::numeric(12,2), 1200::numeric(12,2), 'Som, luz, montagem, operação e suporte técnico.'),
-    ('11111111-1111-1111-1111-000000000405', 'Registro fotográfico e vídeo', 'Registro e documentação visual', 5000::numeric(12,2), 1000::numeric(12,2), 'Fotos, vídeos, bastidores e comprovação documental.'),
-    ('11111111-1111-1111-1111-000000000406', 'Divulgação e design', 'Comunicação visual', 4000::numeric(12,2), 500::numeric(12,2), 'Peças gráficas, identidade visual e divulgação do projeto.'),
-    ('11111111-1111-1111-1111-000000000407', 'Transporte e logística', 'Deslocamento e apoio', 2000::numeric(12,2), 300::numeric(12,2), 'Transporte, logística e apoio operacional às atividades.'),
-    ('11111111-1111-1111-1111-000000000408', 'Documentação e prestação de contas', 'Organização financeira', 1000::numeric(12,2), 200::numeric(12,2), 'Arquivamento, relatórios, anexos e prestação de contas.'),
-    ('11111111-1111-1111-1111-000000000409', 'Acessibilidade', 'Recursos de acessibilidade', 1000::numeric(12,2), 0::numeric(12,2), 'Adequações e recursos de acesso conforme necessidade do projeto.')
+    ('11111111-1111-1111-1111-000000000401', 'Pré-produção', 'Diretor geral + produtor', 6000::numeric(12,2), 3000::numeric(12,2), 'Gestão geral, direção e produção do projeto.'),
+    ('11111111-1111-1111-1111-000000000402', 'Pré-produção', 'Professor / formador', 2000::numeric(12,2), 2000::numeric(12,2), 'Formação e preparação pedagógica inicial.'),
+    ('11111111-1111-1111-1111-000000000403', 'Pré-produção', 'Produção executiva', 6000::numeric(12,2), 3500::numeric(12,2), 'Coordenação da produção e documentação do projeto.'),
+    ('11111111-1111-1111-1111-000000000404', 'Produção / Execução', 'Ator experiente', 5400::numeric(12,2), 0::numeric(12,2), 'Participação artística e orientação de cena.'),
+    ('11111111-1111-1111-1111-000000000405', 'Produção / Execução', 'Alunos novos', 1800::numeric(12,2), 0::numeric(12,2), 'Bolsas e participação dos estudantes no processo formativo.'),
+    ('11111111-1111-1111-1111-000000000406', 'Produção / Execução', 'Técnico de som', 1500::numeric(12,2), 0::numeric(12,2), 'Operação de som em aulas, ensaios e apresentações.'),
+    ('11111111-1111-1111-1111-000000000407', 'Produção / Execução', 'Técnico de iluminação', 500::numeric(12,2), 0::numeric(12,2), 'Operação e ajuste de luz cênica.'),
+    ('11111111-1111-1111-1111-000000000408', 'Produção / Execução', 'Tecladista / músico', 1000::numeric(12,2), 0::numeric(12,2), 'Acompanhamento musical e apoio sonoro ao espetáculo.'),
+    ('11111111-1111-1111-1111-000000000409', 'Produção / Execução', 'Figurino e maquiagem', 4500::numeric(12,2), 0::numeric(12,2), 'Criação, ajuste e finalização de figurino e maquiagem.'),
+    ('11111111-1111-1111-1111-000000000410', 'Produção / Execução', 'Cenografia', 1500::numeric(12,2), 0::numeric(12,2), 'Elementos cenográficos e ambientação do espetáculo.'),
+    ('11111111-1111-1111-1111-000000000411', 'Produção / Execução', 'Material de divulgação', 1800::numeric(12,2), 0::numeric(12,2), 'Peças gráficas, comunicação e divulgação do projeto.'),
+    ('11111111-1111-1111-1111-000000000412', 'Produção / Execução', 'Transporte e logística', 1000::numeric(12,2), 0::numeric(12,2), 'Deslocamento e apoio operacional.'),
+    ('11111111-1111-1111-1111-000000000413', 'Produção / Execução', 'Lanche / alunos e equipe', 3500::numeric(12,2), 0::numeric(12,2), 'Alimentação de alunos e equipe durante as ações.'),
+    ('11111111-1111-1111-1111-000000000414', 'Produção / Execução', 'Sonorização', 3000::numeric(12,2), 0::numeric(12,2), 'Estrutura de som e operação técnica.'),
+    ('11111111-1111-1111-1111-000000000415', 'Produção / Execução', 'Registro fotográfico', 2000::numeric(12,2), 0::numeric(12,2), 'Fotos e documentação visual para prestação de contas.'),
+    ('11111111-1111-1111-1111-000000000416', 'Produção / Execução', 'Técnica vocal', 1300::numeric(12,2), 0::numeric(12,2), 'Apoio à voz, projeção e preparação vocal.'),
+    ('11111111-1111-1111-1111-000000000417', 'Acessibilidade', 'Intérprete de Libras', 1200::numeric(12,2), 0::numeric(12,2), 'Acessibilidade comunicacional nas atividades do projeto.'),
+    ('11111111-1111-1111-1111-000000000418', 'Acessibilidade', 'Capacitação de equipe', 1000::numeric(12,2), 0::numeric(12,2), 'Formação da equipe para atendimento acessível.'),
+    ('11111111-1111-1111-1111-000000000419', 'Acessibilidade', 'Espaço para a capacitação', 500::numeric(12,2), 0::numeric(12,2), 'Reserva de espaço físico para a ação acessível.'),
+    ('11111111-1111-1111-1111-000000000420', 'Acessibilidade', 'Materiais acessíveis', 2300::numeric(12,2), 0::numeric(12,2), 'Recursos e materiais de apoio para acessibilidade.'),
+    ('11111111-1111-1111-1111-000000000421', 'Pós-produção', 'Prestação de contas', 1000::numeric(12,2), 0::numeric(12,2), 'Organização documental e entrega final.'),
+    ('11111111-1111-1111-1111-000000000422', 'Pós-produção', 'Contingências / imprevistos', 1200::numeric(12,2), 0::numeric(12,2), 'Reserva para ajustes e imprevistos do projeto.')
 )
 insert into public.budget_items (
   id,
@@ -346,9 +371,9 @@ expenses_seed (
   notes
 ) as (
   values
-    ('11111111-1111-1111-1111-000000000501', '11111111-1111-1111-1111-000000000403', 'Pagamento artístico - Reféns', 'Profissional pessoa física', '000.000.000-00', 4800::numeric(12,2), '2026-08-10'::date, 'PIX', '11111111-1111-1111-1111-000000000304', null::uuid, 'Pago', 'Recibo obrigatório quando o prestador não emitir nota fiscal.'),
-    ('11111111-1111-1111-1111-000000000502', '11111111-1111-1111-1111-000000000405', 'Comprovação visual e materiais - Reféns', 'Fornecedor/prestador vinculado', '00.000.000/0001-00', 2200::numeric(12,2), '2026-08-18'::date, 'Transferência', '11111111-1111-1111-1111-000000000303', '11111111-1111-1111-1111-000000000302', 'Pago', 'Anexar nota fiscal, cupom fiscal ou recibo conforme o caso.'),
-    ('11111111-1111-1111-1111-000000000503', '11111111-1111-1111-1111-000000000401', 'Organização financeira e documentação - Reféns', 'Direção executiva', '00.000.000/0001-00', 1500::numeric(12,2), '2026-08-22'::date, 'Transferência', '11111111-1111-1111-1111-000000000301', null::uuid, 'Pago', 'Registro de aprovação, transferência e arquivo financeiro do projeto.')
+    ('11111111-1111-1111-1111-000000000501', '11111111-1111-1111-1111-000000000401', 'Direção geral e produção - Reféns', 'Direção do projeto', '', 3000::numeric(12,2), '2026-08-10'::date, 'PIX', '11111111-1111-1111-1111-000000000304', null::uuid, 'Pago', 'Recibo obrigatório quando o prestador não emitir nota fiscal.'),
+    ('11111111-1111-1111-1111-000000000502', '11111111-1111-1111-1111-000000000403', 'Produção executiva e documentação - Reféns', 'Produção executiva', '', 3500::numeric(12,2), '2026-08-18'::date, 'Transferência', '11111111-1111-1111-1111-000000000303', '11111111-1111-1111-1111-000000000302', 'Pago', 'Anexar nota fiscal, cupom fiscal ou recibo conforme o caso.'),
+    ('11111111-1111-1111-1111-000000000503', '11111111-1111-1111-1111-000000000402', 'Formação pedagógica - Reféns', 'Formador', '', 2000::numeric(12,2), '2026-08-22'::date, 'Transferência', '11111111-1111-1111-1111-000000000301', null::uuid, 'Pago', 'Registro de aprovação, transferência e arquivo financeiro do projeto.')
 )
 insert into public.expenses (
   id,
@@ -405,7 +430,7 @@ official_documents_seed (
   content
 ) as (
   values
-    ('11111111-1111-1111-1111-000000000601', 'Ofício', 'Solicitação de documentação - Reféns', 'OFC-000937/2026', '2026-06-19'::date, 'Documentação do projeto Reféns', 'Rascunho', 'Setor responsável', 'Comissão de análise', 'Circuito Catarinense de Cultura PNAB SC 2026', 'Eduardo', 'Diretor Presidente', 'Marcel', 'Diretor Executivo', 'Solicitamos a conferência dos documentos anexados para continuidade do projeto Reféns.'),
+    ('11111111-1111-1111-1111-000000000601', 'Ofício', 'Solicitação de documentação - Reféns', 'OFC-000937/2026', '2026-06-19'::date, 'Documentação do projeto Reféns', 'Rascunho', 'Setor responsável', 'Comissão de análise', 'Circuito Catarinense de Cultura PNAB SC 2026', 'Marcel Eduardo Cabeça Domingues', 'Diretor geral', 'Kaique', 'Diretor executivo', 'Solicitamos a conferência dos documentos anexados para continuidade do projeto Reféns.'),
     ('11111111-1111-1111-1111-000000000602', 'Autorização de Imagem', 'Autorização de uso de imagem - Reféns', 'AUT-000937/2026', '2026-06-19'::date, 'Autorização para participantes', 'Rascunho', 'Participante do projeto', 'Aluno/participante', 'Cia de Artes Viva', 'Participante', 'Autorizante', 'Responsável legal', 'Quando menor de idade', 'Autorizo a utilização de imagem, voz e registro fotográfico para fins de divulgação, prestação de contas e memória institucional do projeto.')
 )
 insert into public.official_documents (

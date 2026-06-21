@@ -17,24 +17,6 @@ const projectLessons: Record<string, string[]> = {
     "Ensaio corrido e ajustes de direção",
     "Ensaio geral pedagógico e fechamento",
   ],
-  "noiva-amor-tempo": [
-    "Reunião de produção e agenda",
-    "Revisão dramatúrgica",
-    "Ensaio de marcação",
-    "Ensaio técnico de luz e som",
-    "Ação de mediação cultural",
-    "Apresentação 1",
-    "Apresentação 2",
-    "Registro fotográfico e depoimentos",
-  ],
-  "prazer-laodiceia": [
-    "Pesquisa de referências",
-    "Leitura de mesa",
-    "Laboratório corporal",
-    "Criação de cenas",
-    "Reunião de orçamento",
-    "Planejamento de produção",
-  ],
 };
 
 const projectStartDates: Record<string, string[]> = {
@@ -50,24 +32,6 @@ const projectStartDates: Record<string, string[]> = {
     "2026-08-29",
     "2026-09-01",
     "2026-09-04",
-  ],
-  "noiva-amor-tempo": [
-    "2026-06-24",
-    "2026-07-01",
-    "2026-07-08",
-    "2026-07-15",
-    "2026-07-22",
-    "2026-08-03",
-    "2026-08-10",
-    "2026-08-18",
-  ],
-  "prazer-laodiceia": [
-    "2026-09-10",
-    "2026-09-17",
-    "2026-09-24",
-    "2026-10-01",
-    "2026-10-08",
-    "2026-10-15",
   ],
 };
 
@@ -95,7 +59,7 @@ function buildActivities(project: Project): Activity[] {
     startTime: "19:00",
     endTime: "22:00",
     location: "Cia de Artes Viva",
-    responsible: "Direção executiva",
+    responsible: "Marcel Eduardo Cabeça Domingues",
     description: `Atividade ${index + 1} vinculada ao projeto ${project.name}.`,
     status: index < 2 && project.executedAmount > 0 ? "Realizada" : "Agendada",
     attendanceCount: index < 2 && project.executedAmount > 0 ? 18 : 0,
@@ -109,7 +73,7 @@ function buildActivities(project: Project): Activity[] {
       content: "Conteúdo programático a ser ajustado pela direção executiva.",
       practice: "Prática artística, ensaio, mediação ou registro conforme a atividade.",
       expectedResult: "Registro completo para relatório e prestação de contas.",
-      teacher: "Profissional responsável",
+      teacher: "Professor / formador",
       pedagogicalNotes: "Campo livre para observações pedagógicas.",
     },
   }));

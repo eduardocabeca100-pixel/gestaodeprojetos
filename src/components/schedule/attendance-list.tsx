@@ -7,12 +7,9 @@ export function AttendanceList() {
         <FileText className="size-4 text-primary" />
         <p className="text-sm font-semibold">Lista de presença</p>
       </div>
-      {["Participante 01", "Participante 02", "Participante 03"].map((name) => (
-        <div key={name} className="flex items-center justify-between text-sm">
-          <span>{name}</span>
-          <CheckCircle2 className="size-4 text-emerald-600" />
-        </div>
-      ))}
+      <div className="rounded-lg border border-dashed border-border bg-muted/20 px-3 py-4 text-sm text-muted-foreground">
+        Nenhum participante cadastrado ainda. Assim que os alunos forem adicionados, a chamada aparece aqui.
+      </div>
     </div>
   );
 }

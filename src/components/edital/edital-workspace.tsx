@@ -40,7 +40,7 @@ function getDraftFromAttachment(item?: EditalAttachment | null): AttachmentDraft
     kind: item?.kind ?? "Edital principal",
     title: item?.title ?? "",
     fileName: item?.fileName ?? "",
-    uploadedBy: item?.uploadedBy ?? "Direção executiva",
+    uploadedBy: item?.uploadedBy ?? "Kaique",
     notes: item?.notes ?? "",
     status: item?.status ?? "Pendente",
   };

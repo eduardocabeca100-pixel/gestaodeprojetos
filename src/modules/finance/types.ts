@@ -1,15 +1,8 @@
 export const budgetCategories = [
-  "Direção executiva",
-  "Formação / oficinas",
-  "Atuação / elenco",
-  "Técnica e operação",
-  "Registro fotográfico e vídeo",
-  "Divulgação e design",
+  "Pré-produção",
+  "Produção / Execução",
   "Acessibilidade",
-  "Transporte e logística",
-  "Alimentação",
-  "Documentação e prestação de contas",
-  "Outros",
+  "Pós-produção",
 ] as const;
 
 export const expenseStatuses = [

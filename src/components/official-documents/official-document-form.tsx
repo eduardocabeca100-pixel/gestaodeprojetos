@@ -61,8 +61,8 @@ export function OfficialDocumentForm() {
             <input className="form-input" placeholder="Instituição" />
             <input className="form-input" placeholder="Endereço" />
             <div className="grid gap-3 sm:grid-cols-2">
-              <input className="form-input" defaultValue="Eduardo" placeholder="Assinante 1" />
-              <input className="form-input" defaultValue="Diretor Presidente" placeholder="Cargo 1" />
+              <input className="form-input" defaultValue="Marcel Eduardo Cabeça Domingues" placeholder="Assinante 1" />
+              <input className="form-input" defaultValue="Diretor geral" placeholder="Cargo 1" />
               <input className="form-input" placeholder="Assinante 2" />
               <input className="form-input" placeholder="Cargo 2" />
             </div>
@@ -118,7 +118,7 @@ export function OfficialDocumentForm() {
           <textarea
             className="form-input min-h-[520px] resize-y"
             placeholder="Digite o conteúdo do documento aqui..."
-            defaultValue={"À quem interessar possa,\n\nA Cia de Artes Viva declara, para os devidos fins, que este documento integra a organização institucional e a prestação de contas do projeto cultural selecionado.\n\nAssinaturas:\n\n____________________________________\nEduardo - Diretor Presidente"}
+            defaultValue={"À quem interessar possa,\n\nA Cia de Artes Viva declara, para os devidos fins, que este documento integra a organização institucional e a prestação de contas do projeto cultural selecionado.\n\nAssinaturas:\n\n____________________________________\nMarcel Eduardo Cabeça Domingues - Diretor geral"}
           />
         </label>
         <div className="mt-4 flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-3 text-sm text-muted-foreground">

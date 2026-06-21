@@ -131,16 +131,16 @@ export function CertificateTemplatePreview({
 
             <div className="space-y-3">
               <MetricPill label="Carga horária total" value={record.workload} />
-              <MetricPill label="Professor/formador" value={record.modality === "Oficina" ? "Professor responsável" : "Formador responsável"} />
+              <MetricPill label="Professor/formador" value="Professor / formador" />
               <MetricPill label="Código" value={record.certificateNumber} />
               <MetricPill label="Livro / folhas" value={settings.bookLabel} />
             </div>
           </div>
 
           <div className="mt-6 grid gap-3 md:grid-cols-3">
-            <SignatureBlock title="Direção geral" subtitle="Assinatura oficial" />
-            <SignatureBlock title="Direção executiva" subtitle="Assinatura oficial" />
-            <SignatureBlock title="Professor/formador" subtitle="Assinatura oficial" />
+            <SignatureBlock title="Marcel Eduardo Cabeça Domingues" subtitle="Diretor geral" />
+            <SignatureBlock title="Kaique" subtitle="Diretor executivo" />
+            <SignatureBlock title="Professor / formador" subtitle="Assinatura oficial" />
           </div>
 
           {settings.showFooterBack && settings.showFooterLogos && Object.keys(groupedLogos).length > 0 ? (

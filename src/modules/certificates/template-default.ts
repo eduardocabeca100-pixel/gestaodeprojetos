@@ -32,7 +32,7 @@ export const defaultCertificateSettings: CertificateSettings = {
   backgroundImageUrl: null,
   backgroundOpacity: 0.1,
   frontText:
-    "Certificamos que {{nome}} participou do projeto {{projeto}} e concluiu as atividades previstas.",
+    "Certificamos que {{nome}} participou do projeto {{projeto}} e teve sua frequência registrada ao longo do ciclo formativo.",
   conclusionText:
     "A participação foi registrada conforme o diário de classe e os documentos do projeto cultural.",
   showStudentCpf: true,
@@ -54,7 +54,7 @@ export const defaultCertificateSettings: CertificateSettings = {
   footerLogoSize: 32,
   backTitle: "CONTEÚDO PROGRAMÁTICO",
   programContent:
-    "1. Acolhimento e integração\n2. Desenvolvimento artístico e técnico\n3. Práticas de criação\n4. Encerramento e devolutiva",
+    "1. Acolhimento e integração\n2. História do teatro e linguagens cênicas\n3. Leitura do roteiro Reféns\n4. Corpo, expressão e presença\n5. Voz, respiração e projeção\n6. Improvisação e jogo teatral\n7. Montagem das primeiras cenas\n8. Cenas centrais e ritmo\n9. Final, coro e cenas coletivas\n10. Ensaio corrido e ajustes de direção\n11. Ensaio geral pedagógico e fechamento",
   backColumns: 2,
   showBackWorkload: true,
   showBackTeacher: true,
@@ -97,8 +97,8 @@ export function buildDefaultCertificateTemplate(projectId: string | null): Certi
     conclusionText: defaultCertificateSettings.conclusionText,
     backTitle: defaultCertificateSettings.backTitle,
     programContent: defaultCertificateSettings.programContent,
-    workload: "40h",
-    city: "Florianópolis",
+    workload: "33h",
+    city: "Jaraguá do Sul",
     showStudentCpf: defaultCertificateSettings.showStudentCpf,
     showWorkloadFront: defaultCertificateSettings.showWorkloadFront,
     showModality: defaultCertificateSettings.showModality,
@@ -134,7 +134,7 @@ export function buildDefaultSignatures(templateId: string): CertificateSignature
     {
       id: `${templateId}-sig-1`,
       templateId,
-      name: "Marcel Eduardo Domingues do Prado",
+      name: "Marcel Eduardo Cabeça Domingues",
       role: "Diretor geral",
       signatureUrl: null,
       order: 1,
@@ -228,63 +228,19 @@ export function buildDefaultSponsorLogos(templateId: string): CertificateSponsor
 }
 
 export function buildDefaultCertificates(projectId: string): CertificateRecord[] {
-  const year = new Date().getFullYear();
-
   return [
     {
-      id: `${projectId}-cert-1`,
+      id: `${projectId}-cert-draft`,
       projectId,
       templateId: `${projectId}-certificate-template`,
-      participantId: `${projectId}-part-1`,
-      certificateNumber: formatCertificateNumber("CERT", year, 1),
-      studentName: "Participante 01",
-      studentDocument: "000.000.000-00",
-      courseName: "Formação cultural",
-      modality: "Oficina",
-      workload: "40h",
-      city: "Florianópolis",
-      issueDate: "2026-06-19",
-      status: "Emitido",
-      pdfUrl: null,
-      generatedBy: "Sistema",
-      generatedAt: new Date().toISOString(),
-      canceledAt: null,
-      cancelReason: null,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: `${projectId}-cert-2`,
-      projectId,
-      templateId: `${projectId}-certificate-template`,
-      participantId: `${projectId}-part-2`,
-      certificateNumber: formatCertificateNumber("CERT", year, 2),
-      studentName: "Participante 02",
-      studentDocument: "000.000.000-00",
-      courseName: "Formação cultural",
-      modality: "Oficina",
-      workload: "40h",
-      city: "Florianópolis",
-      issueDate: "2026-06-19",
-      status: "Pronto",
-      pdfUrl: null,
-      generatedBy: null,
-      generatedAt: null,
-      canceledAt: null,
-      cancelReason: null,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: `${projectId}-cert-3`,
-      projectId,
-      templateId: `${projectId}-certificate-template`,
-      participantId: `${projectId}-part-3`,
-      certificateNumber: formatCertificateNumber("CERT", year, 3),
-      studentName: "Participante 03",
+      participantId: `${projectId}-participant-draft`,
+      certificateNumber: formatCertificateNumber("CERT", new Date().getFullYear(), 1),
+      studentName: "",
       studentDocument: "",
-      courseName: "Formação cultural",
-      modality: "Oficina",
-      workload: "40h",
-      city: "Florianópolis",
+      courseName: "Formação de Artistas de Rua e Montagem do Espetáculo Reféns",
+      modality: "Ações de Qualificação e Formação",
+      workload: "33h",
+      city: "Jaraguá do Sul",
       issueDate: "2026-06-19",
       status: "Rascunho",
       pdfUrl: null,
@@ -298,18 +254,5 @@ export function buildDefaultCertificates(projectId: string): CertificateRecord[]
 }
 
 export function buildDefaultBatches(projectId: string): CertificateBatch[] {
-  return [
-    {
-      id: `${projectId}-batch-1`,
-      projectId,
-      templateId: `${projectId}-certificate-template`,
-      name: "Lote inicial da turma",
-      totalCertificates: 2,
-      pdfUrl: null,
-      zipUrl: null,
-      generatedBy: "Sistema",
-      generatedAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-    },
-  ];
+  return [];
 }

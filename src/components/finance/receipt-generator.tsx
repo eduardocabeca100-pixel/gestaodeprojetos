@@ -33,7 +33,7 @@ function createInitialReceipt(project: Project): ReceiptState {
     type: "Recibo de ator/artista",
     code: `REC-${project.registrationNumber}/2026`,
     date: "2026-06-19",
-    city: "Araquari/SC",
+    city: "Jaraguá do Sul/SC",
     receiver: "",
     document: "",
     role: "",
@@ -43,9 +43,9 @@ function createInitialReceipt(project: Project): ReceiptState {
     paymentMethod: "PIX",
     bankInfo: "",
     notes: "",
-    signer: "Eduardo",
-    signerRole: "Diretor Presidente",
-    footer: "Companhia de Artes Viva - CNPJ 00.000.000/0001-00",
+    signer: "Marcel Eduardo Cabeça Domingues",
+    signerRole: "Diretor geral",
+    footer: "Companhia de Artes Viva - CNPJ 59.053.899/0001-53",
   };
 }
 

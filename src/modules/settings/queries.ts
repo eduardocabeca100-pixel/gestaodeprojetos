@@ -13,14 +13,14 @@ export const settingsSections: SettingsSection[] = [
       { label: "Logo dos documentos oficiais", value: "", type: "file" },
       { label: "E-mail institucional", value: "contato@ciaviva.local", type: "text" },
       { label: "WhatsApp", value: "(48) 99999-0000", type: "text" },
-      { label: "Cidade", value: "Florianópolis", type: "text" },
+      { label: "Cidade", value: "Jaraguá do Sul", type: "text" },
       { label: "Estado", value: "SC", type: "text" },
       {
         label: "Rodapé padrão dos relatórios",
         value: "Cia de Artes Viva - Gestão Cultural",
         type: "textarea",
       },
-      { label: "Assinatura padrão", value: "Direção executiva", type: "text" },
+      { label: "Assinatura padrão", value: "Marcel Eduardo Cabeça Domingues", type: "text" },
     ],
   },
   {

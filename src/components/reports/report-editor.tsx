@@ -30,7 +30,7 @@ function createDraft(project: Project): ReportDraft {
     documentsNotes: "Documentos anexados e organizados por categoria.",
     financeNotes: "Execução financeira vinculada às rubricas aprovadas.",
     scheduleNotes: "Cronograma editável com aulas, ensaios e atividades.",
-    signature: "Eduardo / Marcel",
+    signature: "Marcel Eduardo Cabeça Domingues",
   };
 }
 

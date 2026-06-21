@@ -22,7 +22,7 @@ function buildEditalAttachments(project: Project): EditalAttachment[] {
         ? "Circuito_Catarinense_de_Cultura_PNAB_SC_2026.pdf"
         : `edital-${project.slug}.pdf`,
       uploadedAt: "2026-06-19",
-      uploadedBy: "Eduardo / Marcel",
+      uploadedBy: "Marcel Eduardo Cabeça Domingues",
       status: "Publicado",
       notes: `Documento principal do projeto ${project.name}.`,
     },
@@ -35,7 +35,7 @@ function buildEditalAttachments(project: Project): EditalAttachment[] {
         ? `refens-habilitacao-documental.pdf`
         : `habilitacao-${project.slug}.pdf`,
       uploadedAt: "2026-06-19",
-      uploadedBy: "Eduardo / Marcel",
+      uploadedBy: "Marcel Eduardo Cabeça Domingues",
       status: "Recebido",
       notes: "Documentos usados para conferência documental e tramitação interna.",
     },
@@ -48,7 +48,7 @@ function buildEditalAttachments(project: Project): EditalAttachment[] {
         ? `refens-anexos-complementares.pdf`
         : `anexos-${project.slug}.pdf`,
       uploadedAt: "2026-06-19",
-      uploadedBy: "Direção executiva",
+      uploadedBy: "Kaique",
       status: "Arquivado",
       notes: "Espaço para anexos, retificações, respostas e documentos de apoio.",
     },

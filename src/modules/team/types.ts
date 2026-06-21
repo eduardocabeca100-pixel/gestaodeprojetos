@@ -2,7 +2,7 @@ export const teamRoles = [
   "Diretor geral",
   "Diretor executivo",
   "Produtor executivo",
-  "Professor/formador",
+  "Professor / formador",
   "Ator",
   "Técnico de som",
   "Técnico de iluminação",
