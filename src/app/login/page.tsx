@@ -63,9 +63,7 @@ export default function LoginPage() {
                 </h2>
               </div>
 
-              <div className="login-form-sem-boas-vindas">
-                <LoginForm />
-              </div>
+              <LoginForm />
 
               <div className="mt-7 text-center text-xs text-slate-500">
                 Acesso restrito aos responsáveis autorizados.

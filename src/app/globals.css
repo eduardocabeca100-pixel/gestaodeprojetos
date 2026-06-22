@@ -184,25 +184,6 @@
   }
 }
 
-
-/* Remove o bloco interno GC / Companhia de Artes Viva / Bem-vindo de volta do LoginForm */
-.login-form-sem-boas-vindas form > div:first-child {
-  display: none !important;
-}
-
-.login-form-sem-boas-vindas form {
-  margin-top: 0 !important;
-}
-
-
-/* Remove somente o cabeçalho interno do LoginForm: GC / Companhia de Artes Viva / Bem-vindo de volta */
-.login-form-sem-boas-vindas > div > div:first-child,
-.login-form-sem-boas-vindas > section > div:first-child,
-.login-form-sem-boas-vindas form + div,
-.login-form-sem-boas-vindas [data-login-header] {
-  display: none !important;
-}
-
 /* === VIVA PANEL TYPOGRAPHY START === */
 :root {
   --viva-font-sans: "Inter", "SF Pro Text", "SF Pro Display", "Aptos", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
