@@ -1,7 +1,8 @@
 export type RefensTeamMember = {
   id: string;
   name: string;
-  role: string;
+  
+  fullName?: string;role: string;
   email: string;
   phone: string;
   document: string;
@@ -15,7 +16,8 @@ export type RefensProjectAssignment = {
   id: string;
   memberId: string;
   name: string;
-  role: string;
+  
+  fullName?: string;role: string;
   rubric: string;
   expectedAmount: string;
   paidAmount: string;
