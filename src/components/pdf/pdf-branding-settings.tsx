@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import Image from "next/image";
+import { useMemo, useState, type ChangeEvent } from "react";
 import { Eye, ImagePlus, RotateCcw, Save, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +12,7 @@ import {
   resetPdfSettings,
   type SystemPdfSettings,
 } from "@/lib/pdf/pdf-template";
+import { useClientReady } from "@/lib/use-client-ready";
 
 const sampleBodyHtml = `
   <h2>Área de conteúdo do documento</h2>
@@ -42,12 +44,22 @@ const sampleBodyHtml = `
 `;
 
 export function PdfBrandingSettings() {
-  const [settings, setSettings] = useState<SystemPdfSettings>(defaultPdfSettings);
-  const [message, setMessage] = useState("");
+  const isClient = useClientReady();
 
-  useEffect(() => {
-    setSettings(getPdfSettings());
-  }, []);
+  if (!isClient) {
+    return (
+      <div className="rounded-[2rem] border border-slate-200 bg-white p-6 text-sm font-semibold text-slate-500 shadow-sm">
+        Carregando configurações do PDF...
+      </div>
+    );
+  }
+
+  return <PdfBrandingSettingsContent />;
+}
+
+function PdfBrandingSettingsContent() {
+  const [settings, setSettings] = useState<SystemPdfSettings>(() => getPdfSettings());
+  const [message, setMessage] = useState("");
 
   const previewHtml = useMemo(() => {
     return buildSystemPdfHtml(
@@ -125,7 +137,14 @@ export function PdfBrandingSettings() {
           <div className="grid gap-4 sm:grid-cols-[130px_1fr]">
             <div className="flex min-h-32 items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-3">
               {settings.logoDataUrl ? (
-                <img src={settings.logoDataUrl} alt="Logo do PDF" className="max-h-28 max-w-full object-contain" />
+                <Image
+                  src={settings.logoDataUrl}
+                  alt="Logo do PDF"
+                  width={112}
+                  height={112}
+                  unoptimized
+                  className="max-h-28 w-auto max-w-full object-contain"
+                />
               ) : (
                 <span className="text-center text-xs font-black uppercase tracking-wide text-slate-400">
                   Área da logo

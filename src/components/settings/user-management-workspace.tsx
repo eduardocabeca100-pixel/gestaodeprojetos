@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { startTransition, useActionState, useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { FolderCheck, LockKeyhole, Save, ShieldCheck, UserPlus } from "lucide-react";
 
 import { SectionCard } from "@/components/layout/section-card";
@@ -9,6 +10,7 @@ import { projectManagerRoles, type Role } from "@/lib/auth/permissions";
 import type { Project } from "@/modules/projects/types";
 import {
   createUser,
+  type CreateUserState,
   updateUserProjectAccess,
 } from "@/modules/users/actions";
 import type { UserProjectAccess } from "@/modules/users/types";
@@ -24,6 +26,13 @@ const roleLabels: Record<Role, string> = {
 };
 
 const availableRoles: Role[] = ["super_admin", "admin", "diretor_executivo"];
+const initialCreateUserForm = {
+  name: "",
+  email: "",
+  role: "diretor_executivo" as Role,
+  tempPassword: "",
+  mustChangePassword: true,
+};
 
 function hasProjectScope(role: Role) {
   return !projectManagerRoles.includes(role);
@@ -36,22 +45,57 @@ export function UserManagementWorkspace({
   projects: Project[];
   users: UserProjectAccess[];
 }) {
-  const [state, action, pending] = useActionState(createUser, undefined);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    role: "diretor_executivo" as Role,
-    tempPassword: "",
-    confirmPassword: "",
-    mustChangePassword: true,
-  });
-  const createdUser = state?.user ?? null;
-  const scopedUsers = users.filter((user) => user.role === "diretor_executivo");
+  const router = useRouter();
+  const [createState, setCreateState] = useState<CreateUserState | undefined>(undefined);
+  const [form, setForm] = useState(initialCreateUserForm);
+  const [createFormVersion, setCreateFormVersion] = useState(0);
+  const [projectAccessOverrides, setProjectAccessOverrides] = useState<Record<string, string[]>>({});
+  const [pending, startCreateTransition] = useTransition();
+  const createdUser = createState?.user ?? null;
+  const managedUsers = useMemo(() => {
+    const nextCreatedUser = createdUser
+      ? {
+          id: createdUser.id,
+          name: createdUser.name,
+          email: createdUser.email,
+          role: createdUser.role as Role,
+          is_active: createdUser.isActive,
+          projectIds: createdUser.projectIds,
+        }
+      : null;
+
+    const baseUsers = nextCreatedUser
+      ? [nextCreatedUser, ...users.filter((user) => user.id !== nextCreatedUser.id)]
+      : users;
+
+    return baseUsers.map((user) => {
+      const projectIds = projectAccessOverrides[user.id];
+
+      return projectIds
+        ? { ...user, projectIds }
+        : user;
+    });
+  }, [createdUser, projectAccessOverrides, users]);
+  const scopedUsers = managedUsers.filter((user) => user.role === "diretor_executivo");
+
+  async function handleCreateUser(formData: FormData) {
+    startCreateTransition(async () => {
+      const result = await createUser(undefined, formData);
+
+      setCreateState(result);
+
+      if (result?.user) {
+        setForm(initialCreateUserForm);
+        setCreateFormVersion((current) => current + 1);
+        startTransition(() => router.refresh());
+      }
+    });
+  }
 
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
-        <StatCard title="Usuários configurados" value={String(users.length)} />
+        <StatCard title="Usuários configurados" value={String(managedUsers.length)} />
         <StatCard title="Acesso limitado" value={String(scopedUsers.length)} />
         <StatCard title="Projetos disponíveis" value={String(projects.length)} />
       </div>
@@ -77,8 +121,25 @@ export function UserManagementWorkspace({
           title="Criar usuário"
           description="Cadastre a pessoa, escolha o perfil e limite o acesso aos projetos necessários."
         >
-          <form id="user-create-form" action={action} className="grid gap-4 md:grid-cols-2">
-            <FormField label="Nome" error={state?.errors?.name?.[0]} wide>
+          <form
+            key={createFormVersion}
+            id="user-create-form"
+            action={handleCreateUser}
+            className="grid gap-4 md:grid-cols-2"
+          >
+            {createState?.message ? (
+              <div
+                className={
+                  createState.errors
+                    ? "md:col-span-2 rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+                    : "md:col-span-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+                }
+              >
+                {createState.message}
+              </div>
+            ) : null}
+
+            <FormField label="Nome" error={createState?.errors?.name?.[0]} wide>
               <input
                 className="form-input"
                 name="name"
@@ -88,7 +149,7 @@ export function UserManagementWorkspace({
               />
             </FormField>
 
-            <FormField label="E-mail" error={state?.errors?.email?.[0]} wide>
+            <FormField label="E-mail" error={createState?.errors?.email?.[0]} wide>
               <input
                 className="form-input"
                 type="email"
@@ -99,7 +160,7 @@ export function UserManagementWorkspace({
               />
             </FormField>
 
-            <FormField label="Perfil" error={state?.errors?.role?.[0]}>
+            <FormField label="Perfil" error={createState?.errors?.role?.[0]}>
               <select
                 className="form-input"
                 name="role"
@@ -114,7 +175,7 @@ export function UserManagementWorkspace({
               </select>
             </FormField>
 
-            <FormField label="Senha temporária" error={state?.errors?.tempPassword?.[0]}>
+            <FormField label="Senha temporária" error={createState?.errors?.tempPassword?.[0]}>
               <input
                 className="form-input"
                 type="password"
@@ -125,17 +186,6 @@ export function UserManagementWorkspace({
               />
             </FormField>
 
-            <FormField label="Confirmar senha" error={state?.errors?.confirmPassword?.[0]} wide>
-              <input
-                className="form-input"
-                type="password"
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={(event) => setForm((current) => ({ ...current, confirmPassword: event.target.value }))}
-                placeholder="Repita a senha temporária"
-              />
-            </FormField>
-
             {hasProjectScope(form.role) ? (
               <fieldset className="rounded-lg border border-primary/20 bg-primary/5 p-4 md:col-span-2">
                 <legend className="px-1 text-sm font-semibold">Projetos que este usuário poderá acessar</legend>
@@ -143,8 +193,8 @@ export function UserManagementWorkspace({
                   Todo projeto não marcado, inclusive os que forem criados depois, permanecerá invisível.
                 </p>
                 <ProjectCheckboxes projects={projects} defaultProjectIds={projects[0] ? [projects[0].slug] : []} />
-                {state?.errors?.projectIds?.[0] ? (
-                  <p className="mt-2 text-xs text-destructive">{state.errors.projectIds[0]}</p>
+                {createState?.errors?.projectIds?.[0] ? (
+                  <p className="mt-2 text-xs text-destructive">{createState.errors.projectIds[0]}</p>
                 ) : null}
               </fieldset>
             ) : (
@@ -193,7 +243,7 @@ export function UserManagementWorkspace({
             </div>
           )}
           <div className="mt-4 rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-            {state?.message ?? "O Diretor/Produtor Executivo receberá somente os projetos escolhidos no cadastro."}
+            {createState?.message ?? "O Diretor/Produtor Executivo receberá somente os projetos escolhidos no cadastro."}
           </div>
         </SectionCard>
       </div>
@@ -202,10 +252,20 @@ export function UserManagementWorkspace({
         title="Acesso da direção executiva"
         description="Revise ou altere os projetos visíveis para cada Diretor/Produtor Executivo."
       >
-        {scopedUsers.length > 0 ? (
+            {scopedUsers.length > 0 ? (
           <div className="grid gap-4 xl:grid-cols-2">
             {scopedUsers.map((user) => (
-              <ProjectAccessEditor key={user.id} user={user} projects={projects} />
+              <ProjectAccessEditor
+                key={user.id}
+                user={user}
+                projects={projects}
+                onUpdated={(profileId, projectIds) => {
+                  setProjectAccessOverrides((current) => ({
+                    ...current,
+                    [profileId]: projectIds,
+                  }));
+                }}
+              />
             ))}
           </div>
         ) : (
@@ -221,17 +281,34 @@ export function UserManagementWorkspace({
 function ProjectAccessEditor({
   user,
   projects,
+  onUpdated,
 }: {
   user: UserProjectAccess;
   projects: Project[];
+  onUpdated: (profileId: string, projectIds: string[]) => void;
 }) {
+  const router = useRouter();
   const [state, action, pending] = useActionState(updateUserProjectAccess, {
     ok: false,
     message: "Marque os projetos permitidos.",
   });
 
+  useEffect(() => {
+    if (!state.ok) {
+      return;
+    }
+
+    startTransition(() => router.refresh());
+  }, [router, state.ok]);
+
   return (
-    <form action={action} className="rounded-lg border border-border bg-white p-4 soft-shadow">
+    <form
+      action={async (formData) => {
+        onUpdated(user.id, formData.getAll("projectIds").map(String));
+        await action(formData);
+      }}
+      className="rounded-lg border border-border bg-white p-4 soft-shadow"
+    >
       <input type="hidden" name="profileId" value={user.id} />
       <div className="flex items-start justify-between gap-3">
         <div>
@@ -275,7 +352,7 @@ function ProjectCheckboxes({
   }
 
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
+    <div key={defaultProjectIds.join("|")} className="grid gap-2 sm:grid-cols-2">
       {projects.map((project) => (
         <label
           key={project.id}

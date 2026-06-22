@@ -47,7 +47,7 @@ export async function createTeamRoster(formData: FormData) {
       avatarUrl: parsed.data.avatarUrl ?? null,
     };
 
-    const member = await createTeamRosterMember(payload as any);
+    const member = await createTeamRosterMember(payload);
 
     return {
       ok: true,

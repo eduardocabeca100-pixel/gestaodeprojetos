@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import {
   AlertTriangle,
   ClipboardList,
@@ -12,6 +12,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { openSystemPdf } from "@/lib/pdf/pdf-template";
+import { useClientReady } from "@/lib/use-client-ready";
 
 type Status = "Pendente" | "Em andamento" | "Concluído";
 type Priority = "Baixa" | "Média" | "Alta";
@@ -122,7 +123,34 @@ function normalizeData(input: Partial<AdvancedManagementData>): AdvancedManageme
 }
 
 export function AdvancedManagementPanel({ project }: AdvancedManagementPanelProps) {
-  const [data, setData] = useState<AdvancedManagementData>(emptyData);
+  const isClient = useClientReady();
+
+  if (!isClient) {
+    return (
+      <div className="rounded-[2rem] border border-slate-200 bg-white p-6 text-sm font-semibold text-slate-500 shadow-sm">
+        Carregando gestão avançada do projeto...
+      </div>
+    );
+  }
+
+  return <AdvancedManagementPanelContent key={project.id} project={project} />;
+}
+
+function readStoredData(projectId: string) {
+  if (typeof window === "undefined") {
+    return emptyData;
+  }
+
+  try {
+    const saved = window.localStorage.getItem(storageKey(projectId));
+    return saved ? normalizeData(JSON.parse(saved)) : emptyData;
+  } catch {
+    return emptyData;
+  }
+}
+
+function AdvancedManagementPanelContent({ project }: AdvancedManagementPanelProps) {
+  const [data, setData] = useState<AdvancedManagementData>(() => readStoredData(project.id));
   const [activeTab, setActiveTab] = useState<"pendencias" | "tarefas" | "rubricas" | "relatorio">("rubricas");
 
   const [pendingDraft, setPendingDraft] = useState({
@@ -149,15 +177,6 @@ export function AdvancedManagementPanel({ project }: AdvancedManagementPanelProp
     executed: "",
     notes: "",
   });
-
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(storageKey(project.id));
-      setData(saved ? normalizeData(JSON.parse(saved)) : emptyData);
-    } catch {
-      setData(emptyData);
-    }
-  }, [project.id]);
 
   function persist(nextData: AdvancedManagementData) {
     const normalized = normalizeData(nextData);

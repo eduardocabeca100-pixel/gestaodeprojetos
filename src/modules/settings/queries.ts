@@ -134,7 +134,6 @@ export const settingsSections: SettingsSection[] = [
     fields: [
       { label: "Senha atual", value: "", type: "password" },
       { label: "Nova senha", value: "", type: "password" },
-      { label: "Confirmar nova senha", value: "", type: "password" },
       { label: "Exigir troca no primeiro login", value: "true", type: "toggle", lockedForDirector: true },
       { label: "Permitir super admin", value: "true", type: "toggle", lockedForDirector: true },
     ],

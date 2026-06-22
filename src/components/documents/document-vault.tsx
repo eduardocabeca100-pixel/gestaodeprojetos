@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import {
   Download,
   FileArchive,
@@ -11,6 +11,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useClientReady } from "@/lib/use-client-ready";
 
 type DocumentCategory =
   | "Orçamento"
@@ -133,6 +134,10 @@ async function deleteFileFromDb(id: string) {
 }
 
 function readMetadata() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
   try {
     const saved = window.localStorage.getItem(METADATA_KEY);
     return saved ? (JSON.parse(saved) as DocumentMeta[]) : [];
@@ -142,11 +147,29 @@ function readMetadata() {
 }
 
 function writeMetadata(items: DocumentMeta[]) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
   window.localStorage.setItem(METADATA_KEY, JSON.stringify(items));
 }
 
 export function DocumentVault({ project }: DocumentVaultProps) {
-  const [items, setItems] = useState<DocumentMeta[]>([]);
+  const isClient = useClientReady();
+
+  if (!isClient) {
+    return (
+      <div className="rounded-[2rem] border border-slate-200 bg-white p-6 text-sm font-semibold text-slate-500 shadow-sm">
+        Carregando cofre de documentos...
+      </div>
+    );
+  }
+
+  return <DocumentVaultContent key={project.id} project={project} />;
+}
+
+function DocumentVaultContent({ project }: DocumentVaultProps) {
+  const [items, setItems] = useState<DocumentMeta[]>(() => readMetadata());
   const [query, setQuery] = useState("");
   const [draft, setDraft] = useState({
     name: "",
@@ -155,10 +178,6 @@ export function DocumentVault({ project }: DocumentVaultProps) {
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    setItems(readMetadata());
-  }, []);
 
   const projectItems = useMemo(() => {
     return items

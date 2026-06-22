@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/require-role";
+import { ensureSeedProjects } from "@/modules/projects/queries";
 
 import { createUserSchema, loginSchema, passwordResetSchema } from "./schemas";
 
@@ -21,7 +22,6 @@ export type PasswordResetState = {
   message?: string;
   errors?: {
     password?: string[];
-    confirmation?: string[];
   };
 };
 
@@ -32,7 +32,6 @@ export type CreateUserState = {
     email?: string[];
     role?: string[];
     tempPassword?: string[];
-    confirmPassword?: string[];
     projectIds?: string[];
   };
   user?: {
@@ -53,12 +52,112 @@ export type ProjectAccessActionState = {
 
 const userManagerRoles = ["admin", "super_admin"];
 
+function getErrorMessage(error: unknown) {
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+
+    if (typeof message === "string") {
+      return message;
+    }
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "";
+}
+
+function normalizeCreateUserError(error: unknown) {
+  const message = getErrorMessage(error);
+
+  if (
+    /already registered|duplicate key value violates unique constraint|profiles_email_key/i.test(
+      message,
+    )
+  ) {
+    return "Já existe um usuário cadastrado com esse e-mail.";
+  }
+
+  if (message) {
+    return message;
+  }
+
+  return "Não foi possível criar o usuário.";
+}
+
+async function findAuthUserByEmail(
+  admin: NonNullable<ReturnType<typeof createAdminClient>>,
+  email: string,
+) {
+  const usersResult = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+
+  if (usersResult.error) {
+    throw new Error(usersResult.error.message);
+  }
+
+  return (
+    usersResult.data.users.find((user) => user.email?.trim().toLowerCase() === email) ??
+    null
+  );
+}
+
+function isProjectMembershipsUnavailable(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const maybeError = error as { code?: string; message?: string };
+
+  return (
+    maybeError.code === "PGRST205" ||
+    maybeError.message?.includes("project_memberships") === true
+  );
+}
+
+async function syncProjectSlugsToUserMetadata(profileId: string, projectKeys: string[]) {
+  const admin = createAdminClient();
+
+  if (!admin) {
+    throw new Error("Configure SUPABASE_SERVICE_ROLE_KEY para salvar o acesso do usuário.");
+  }
+
+  const userResult = await admin.auth.admin.getUserById(profileId);
+
+  if (userResult.error || !userResult.data.user) {
+    throw new Error(userResult.error?.message ?? "Não foi possível carregar o usuário no Auth.");
+  }
+
+  const currentMetadata =
+    userResult.data.user.user_metadata &&
+    typeof userResult.data.user.user_metadata === "object"
+      ? userResult.data.user.user_metadata
+      : {};
+
+  const updateResult = await admin.auth.admin.updateUserById(profileId, {
+    user_metadata: {
+      ...currentMetadata,
+      projectSlugs: projectKeys,
+    },
+  });
+
+  if (updateResult.error) {
+    throw new Error(updateResult.error.message);
+  }
+}
+
 async function resolveProjectIds(projectKeys: string[]) {
   const admin = createAdminClient();
 
   if (!admin || projectKeys.length === 0) {
     return [];
   }
+
+  await ensureSeedProjects();
 
   const result = await admin
     .from("projects")
@@ -107,6 +206,20 @@ async function replaceProjectMemberships(profileId: string, projectKeys: string[
 
   if (insertResult.error) {
     throw new Error(insertResult.error.message);
+  }
+}
+
+async function persistProjectAccess(profileId: string, projectKeys: string[]) {
+  await syncProjectSlugsToUserMetadata(profileId, projectKeys);
+
+  try {
+    await replaceProjectMemberships(profileId, projectKeys);
+  } catch (error) {
+    if (isProjectMembershipsUnavailable(error)) {
+      return;
+    }
+
+    throw error;
   }
 }
 
@@ -167,7 +280,6 @@ export async function updatePassword(
 ): Promise<PasswordResetState | undefined> {
   const parsed = passwordResetSchema.safeParse({
     password: formData.get("password"),
-    confirmation: formData.get("confirmation"),
   });
 
   if (!parsed.success) {
@@ -247,7 +359,6 @@ export async function createUser(
       email: formData.get("email"),
       role: formData.get("role"),
       tempPassword: formData.get("tempPassword"),
-      confirmPassword: formData.get("confirmPassword"),
       mustChangePassword: formData.get("mustChangePassword"),
       projectIds: formData.getAll("projectIds"),
     });
@@ -268,21 +379,77 @@ export async function createUser(
       };
     }
 
-    const { data, error } = await admin.auth.admin.createUser({
-      email: parsed.data.email,
-      password: parsed.data.tempPassword,
-      email_confirm: true,
-      user_metadata: { name: parsed.data.name },
-    });
+    const normalizedEmail = parsed.data.email.trim().toLowerCase();
+    const existingProfile = await admin
+      .from("profiles")
+      .select("id")
+      .eq("email", normalizedEmail)
+      .maybeSingle();
 
-    if (error || !data.user) {
+    if (existingProfile.error) {
       return {
-        message: error?.message ?? "Não foi possível criar o usuário.",
+        message: existingProfile.error.message,
+      };
+    }
+
+    if (existingProfile.data) {
+      return {
+        message: "Já existe um usuário cadastrado com esse e-mail.",
+      };
+    }
+
+    const existingAuthUser = await findAuthUserByEmail(admin, normalizedEmail);
+    let userId = existingAuthUser?.id ?? null;
+    let createdAuthUser = false;
+
+    if (existingAuthUser) {
+      const updateResult = await admin.auth.admin.updateUserById(existingAuthUser.id, {
+        password: parsed.data.tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          ...(existingAuthUser.user_metadata &&
+          typeof existingAuthUser.user_metadata === "object"
+            ? existingAuthUser.user_metadata
+            : {}),
+          name: parsed.data.name,
+          projectSlugs: parsed.data.projectIds,
+        },
+      });
+
+      if (updateResult.error) {
+        return {
+          message: normalizeCreateUserError(updateResult.error),
+        };
+      }
+    } else {
+      const { data, error } = await admin.auth.admin.createUser({
+        email: normalizedEmail,
+        password: parsed.data.tempPassword,
+        email_confirm: true,
+        user_metadata: {
+          name: parsed.data.name,
+          projectSlugs: parsed.data.projectIds,
+        },
+      });
+
+      if (error || !data.user) {
+        return {
+          message: normalizeCreateUserError(error),
+        };
+      }
+
+      userId = data.user.id;
+      createdAuthUser = true;
+    }
+
+    if (!userId) {
+      return {
+        message: "Não foi possível localizar o usuário autenticado criado.",
       };
     }
 
     const { error: profileError } = await admin.from("profiles").insert({
-      id: data.user.id,
+      id: userId,
       name: parsed.data.name,
       email: parsed.data.email,
       role: parsed.data.role,
@@ -291,17 +458,21 @@ export async function createUser(
     } as never);
 
     if (profileError) {
-      await admin.auth.admin.deleteUser(data.user.id);
+      if (createdAuthUser && userId) {
+        await admin.auth.admin.deleteUser(userId);
+      }
       return {
-        message: profileError.message,
+        message: normalizeCreateUserError(profileError),
       };
     }
 
     try {
-      await replaceProjectMemberships(data.user.id, parsed.data.projectIds);
+      await persistProjectAccess(userId, parsed.data.projectIds);
     } catch (membershipError) {
-      await admin.from("profiles").delete().eq("id", data.user.id);
-      await admin.auth.admin.deleteUser(data.user.id);
+      await admin.from("profiles").delete().eq("id", userId);
+      if (createdAuthUser && userId) {
+        await admin.auth.admin.deleteUser(userId);
+      }
 
       return {
         message:
@@ -311,10 +482,12 @@ export async function createUser(
       };
     }
 
+    revalidatePath("/configuracoes/usuarios", "page");
+
     return {
       message: `Usuário ${parsed.data.name} criado no Supabase.`,
       user: {
-        id: data.user.id,
+        id: userId,
         name: parsed.data.name,
         email: parsed.data.email,
         role: parsed.data.role,
@@ -327,7 +500,7 @@ export async function createUser(
     console.error("createUser failed", error);
 
     return {
-      message: error instanceof Error ? error.message : "Erro inesperado ao criar o usuário.",
+      message: normalizeCreateUserError(error),
     };
   }
 }
@@ -354,8 +527,8 @@ export async function updateUserProjectAccess(
       return { ok: false, message: "Selecione ao menos um projeto." };
     }
 
-    await replaceProjectMemberships(profileId, projectIds);
-    revalidatePath("/configuracoes/usuarios");
+    await persistProjectAccess(profileId, projectIds);
+    revalidatePath("/configuracoes/usuarios", "page");
 
     return { ok: true, message: "Acesso aos projetos atualizado." };
   } catch (error) {

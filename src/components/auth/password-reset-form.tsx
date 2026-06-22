@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { KeyRound, LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { updatePassword } from "@/modules/users/actions";
@@ -33,27 +33,6 @@ export function PasswordResetForm() {
         {state?.errors?.password ? (
           <span className="mt-1 block text-xs text-red-600">
             {state.errors.password[0]}
-          </span>
-        ) : null}
-      </label>
-
-      <label className="block">
-        <span className="text-sm font-medium">Confirmar senha</span>
-        <span className="relative mt-1 block">
-          <KeyRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <input
-            className="h-11 w-full rounded-lg border border-input bg-white pl-9 pr-3 text-sm shadow-sm outline-none focus:border-primary focus:ring-3 focus:ring-primary/15"
-            name="confirmation"
-            type="password"
-            autoComplete="new-password"
-            placeholder="Confirme a nova senha"
-            minLength={8}
-            required
-          />
-        </span>
-        {state?.errors?.confirmation ? (
-          <span className="mt-1 block text-xs text-red-600">
-            {state.errors.confirmation[0]}
           </span>
         ) : null}
       </label>

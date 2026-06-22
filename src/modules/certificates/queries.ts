@@ -62,10 +62,9 @@ export async function listCertificates(projectId?: string) {
 }
 
 export async function listCertificateBatches(projectId?: string) {
-  const project = await getScopedProject(projectId);
   const participants = await listParticipants(projectId);
 
-  return buildDefaultBatches(project.id).map((batch) => ({
+  return buildDefaultBatches().map((batch) => ({
     ...batch,
     totalCertificates: participants.filter((participant) => participant.status === "Ativo" || participant.status === "Concluído").length,
   }));

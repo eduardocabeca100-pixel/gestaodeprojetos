@@ -253,6 +253,6 @@ export function buildDefaultCertificates(projectId: string): CertificateRecord[]
   ];
 }
 
-export function buildDefaultBatches(projectId: string): CertificateBatch[] {
+export function buildDefaultBatches(): CertificateBatch[] {
   return [];
 }

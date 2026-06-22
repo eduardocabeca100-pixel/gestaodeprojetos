@@ -21,15 +21,9 @@ export const profileSchema = z.object({
   must_change_password: z.boolean().optional(),
 });
 
-export const passwordResetSchema = z
-  .object({
-    password: z.string().min(8, "Informe uma senha com pelo menos 8 caracteres."),
-    confirmation: z.string().min(8, "Confirme a nova senha."),
-  })
-  .refine((data) => data.password === data.confirmation, {
-    message: "As senhas não coincidem.",
-    path: ["confirmation"],
-  });
+export const passwordResetSchema = z.object({
+  password: z.string().min(8, "Informe uma senha com pelo menos 8 caracteres."),
+});
 
 export const createUserSchema = z
   .object({
@@ -41,13 +35,8 @@ export const createUserSchema = z
       "diretor_executivo",
     ]),
     tempPassword: z.string().min(8, "A senha temporária precisa ter pelo menos 8 caracteres."),
-    confirmPassword: z.string().min(8, "Confirme a senha temporária."),
     mustChangePassword: z.coerce.boolean(),
     projectIds: z.array(z.string()).default([]),
-  })
-  .refine((data) => data.tempPassword === data.confirmPassword, {
-    message: "As senhas não coincidem.",
-    path: ["confirmPassword"],
   })
   .refine(
     (data) =>

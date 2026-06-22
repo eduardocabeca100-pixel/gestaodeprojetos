@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Plus, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SectionCard } from "@/components/layout/section-card";
+import { useClientReady } from "@/lib/use-client-ready";
 import {
   PROJECT_TEAM_DRAFT_STORAGE_KEY,
   readLocalTeamRoster,
@@ -12,22 +13,43 @@ import {
 } from "@/components/team/local-team-store";
 
 export function ProjectTeamPicker() {
+  const isClient = useClientReady();
+
+  if (!isClient) {
+    return (
+      <SectionCard
+        title="Equipe do projeto"
+        description="Selecione a equipe permanente que fará parte deste novo projeto."
+      >
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-5 text-sm font-medium text-slate-500">
+          Carregando equipe cadastrada...
+        </div>
+      </SectionCard>
+    );
+  }
+
+  return <ProjectTeamPickerContent />;
+}
+
+function readSelectedProjectTeamIds() {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    const saved = window.localStorage.getItem(PROJECT_TEAM_DRAFT_STORAGE_KEY);
+    return saved ? (JSON.parse(saved) as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function ProjectTeamPickerContent() {
   const [open, setOpen] = useState(false);
-  const [members, setMembers] = useState<LocalTeamMember[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [members] = useState<LocalTeamMember[]>(() => readLocalTeamRoster());
+  const [selectedIds, setSelectedIds] = useState<string[]>(() => readSelectedProjectTeamIds());
 
   const activeMembers = useMemo(() => members.filter((member) => member.active), [members]);
-
-  useEffect(() => {
-    setMembers(readLocalTeamRoster());
-
-    try {
-      const saved = window.localStorage.getItem(PROJECT_TEAM_DRAFT_STORAGE_KEY);
-      if (saved) setSelectedIds(JSON.parse(saved));
-    } catch {
-      setSelectedIds([]);
-    }
-  }, []);
 
   function toggleMember(memberId: string) {
     setSelectedIds((current) => {
