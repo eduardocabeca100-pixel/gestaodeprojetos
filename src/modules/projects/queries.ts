@@ -22,7 +22,7 @@ export const projects: Project[] = [
     edital: "Circuito Catarinense de Cultura PNAB SC 2026",
     registrationNumber: "000937",
     approvedAmount: 50000,
-    executedAmount: 8500,
+    executedAmount: 0,
     status: "Classificado",
     currentStage: "Habilitação documental e organização de anexos",
     modality: "Ações de Qualificação e Formação",

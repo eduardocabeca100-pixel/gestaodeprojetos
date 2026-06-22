@@ -1,9 +1,9 @@
+import { AdvancedManagementPanel } from "@/components/advanced-management/advanced-management-panel";
 import { PageContainer } from "@/components/layout/page-container";
 import { ProjectScopeBanner } from "@/components/projects/project-scope-banner";
-import { RefensTeamWorkspace } from "@/components/refens/refens-team-bootstrap";
 import { getActiveProject, type PageSearchParams } from "@/lib/utils/search-params";
 
-export default async function TeamPage({
+export default async function AdvancedManagementPage({
   searchParams,
 }: {
   searchParams: PageSearchParams;
@@ -12,15 +12,12 @@ export default async function TeamPage({
 
   return (
     <PageContainer
-      title="Equipe"
-      description="Gerencie equipe do projeto e equipe permanente em uma tela organizada."
+      title="Gestão"
+      description="Central de pendências, tarefas, rubricas e relatório automático do projeto."
     >
       <div className="space-y-6">
         <ProjectScopeBanner project={project} />
-        <RefensTeamWorkspace
-          initialTab="project"
-          activeProject={{ id: project.id, name: project.name }}
-        />
+        <AdvancedManagementPanel project={{ id: project.id, name: project.name }} />
       </div>
     </PageContainer>
   );

@@ -2,6 +2,7 @@ import { PageContainer } from "@/components/layout/page-container";
 import { ProjectBannerUpload } from "@/components/projects/project-banner-upload";
 import { ProjectCoverUpload } from "@/components/projects/project-cover-upload";
 import { ProjectForm } from "@/components/projects/project-form";
+import { ProjectTeamPicker } from "@/components/projects/project-team-picker";
 import { requireAuthorizedProfile } from "@/lib/auth/require-role";
 
 export default async function NewProjectPage() {
@@ -10,11 +11,15 @@ export default async function NewProjectPage() {
   return (
     <PageContainer
       title="Novo projeto"
-      description="Cadastro modular preparado para persistência no Supabase."
+      description="Cadastre os dados principais do projeto e selecione a equipe permanente que fará parte da produção."
     >
-      <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
-        <ProjectForm />
-        <div className="space-y-4">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
+        <div className="space-y-6">
+          <ProjectForm />
+          <ProjectTeamPicker />
+        </div>
+
+        <div className="space-y-6">
           <ProjectCoverUpload />
           <ProjectBannerUpload />
         </div>

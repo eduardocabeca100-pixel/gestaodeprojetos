@@ -4,15 +4,24 @@ import { FolderKanban } from "lucide-react";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
 import { getFeaturedProject, getProjectById } from "@/modules/projects/queries";
+import type { Project } from "@/modules/projects/types";
 
 export async function ProjectScopeBanner({
+  project,
   projectId,
 }: {
+  project?: Project;
   projectId?: string;
 }) {
-  const project = projectId
-    ? (await getProjectById(projectId)) ?? (await getFeaturedProject())
-    : await getFeaturedProject();
+  const resolvedProject =
+    project ??
+    (projectId
+      ? await getProjectById(projectId)
+      : await getFeaturedProject());
+
+  if (!resolvedProject) {
+    return null;
+  }
 
   return (
     <section className="flex flex-col gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -25,10 +34,10 @@ export async function ProjectScopeBanner({
             Projeto ativo
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
-            <h2 className="font-semibold">{project.name}</h2>
-            <StatusBadge value={project.status} />
+            <h2 className="font-semibold">{resolvedProject.name}</h2>
+            <StatusBadge value={resolvedProject.status} />
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">{project.edital}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{resolvedProject.edital}</p>
         </div>
       </div>
       <Button asChild variant="outline">

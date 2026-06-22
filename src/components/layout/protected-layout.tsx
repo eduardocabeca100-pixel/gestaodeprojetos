@@ -1,3 +1,5 @@
+import { UniversalPdfTemplateInterceptor } from "@/components/pdf/universal-pdf-template-interceptor";
+import { FinancialLocalStorageSynchronizer } from "@/components/sync/financial-local-storage-synchronizer";
 import type { ReactNode } from "react";
 
 import { requireAuthorizedProfile } from "@/lib/auth/require-role";
@@ -17,7 +19,9 @@ export async function ProtectedLayout({ children }: { children: ReactNode }) {
         <AppSidebar profile={profile} />
         <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden lg:pl-[var(--viva-sidebar-width)]">
           <Topbar profile={profile} />
-          {children}
+          <FinancialLocalStorageSynchronizer />
+      <UniversalPdfTemplateInterceptor />
+      {children}
         </div>
       </div>
     </PasswordResetGate>

@@ -20,6 +20,8 @@ import {
   Users,
   Wallet,
   X,
+  Database,
+  FileArchive,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -32,7 +34,7 @@ import { logout } from "@/modules/users/actions";
 const navigation = [
   { label: "Dashboard", href: "/dashboard", icon: Home, projectScoped: true },
   { label: "Projetos", href: "/projetos", icon: Folder },
-  { label: "Documentos", href: "/documentos", icon: FileText, projectScoped: true },
+  { label: "Documentos", href: "/documentos", icon: FileText, projectScoped: true }, { label: "Anexos", href: "/anexos", icon: FileArchive, projectScoped: true }, 
   {
     label: "Docs Oficiais",
     href: "/documentos-oficiais",
@@ -46,9 +48,9 @@ const navigation = [
   { label: "Equipe", href: "/equipe", icon: Users, projectScoped: true },
   { label: "Participantes", href: "/participantes", icon: Users, projectScoped: true },
   { label: "Mídia", href: "/midia", icon: ImageIcon, projectScoped: true },
-  { label: "Relatórios", href: "/relatorios", icon: BarChart3, projectScoped: true },
+  { label: "Gestão", href: "/gestao", icon: ClipboardList, projectScoped: true }, { label: "Relatórios", href: "/relatorios", icon: BarChart3, projectScoped: true },
   { label: "Notificações", href: "/notificacoes", icon: Bell, badge: "3" },
-  { label: "Configurações", href: "/configuracoes/geral", icon: Settings },
+  { label: "Modelo de PDF", href: "/configuracoes/pdf", icon: FileText }, { label: "Importar Reféns", href: "/configuracoes/importar-refens", icon: Database },  { label: "Configurações", href: "/configuracoes/geral", icon: Settings },
 ];
 
 function getProjectIdFromPathname(pathname: string) {

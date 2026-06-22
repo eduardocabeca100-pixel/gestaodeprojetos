@@ -202,3 +202,193 @@
 .login-form-sem-boas-vindas [data-login-header] {
   display: none !important;
 }
+
+/* === VIVA PANEL TYPOGRAPHY START === */
+:root {
+  --viva-font-sans: "Inter", "SF Pro Text", "SF Pro Display", "Aptos", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --viva-font-display: "SF Pro Display", "Inter", "Aptos Display", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --viva-font-mono: "SF Mono", "Cascadia Code", "Roboto Mono", ui-monospace, monospace;
+}
+
+/* Base geral: mais limpa e confortável */
+html {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--viva-font-sans);
+  letter-spacing: -0.012em;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Painel interno */
+main,
+aside,
+nav,
+header,
+section,
+article,
+form,
+table,
+dialog,
+[role="dialog"],
+[data-radix-popper-content-wrapper] {
+  font-family: var(--viva-font-sans);
+}
+
+/* Títulos mais elegantes */
+h1,
+h2,
+h3,
+h4,
+.page-title,
+.card-title,
+[class*="text-2xl"],
+[class*="text-3xl"],
+[class*="text-4xl"],
+[class*="text-5xl"],
+[class*="text-6xl"],
+[class*="font-black"] {
+  font-family: var(--viva-font-display);
+  letter-spacing: -0.045em;
+}
+
+/* Textos comuns mais confortáveis */
+p,
+span,
+label,
+small,
+li,
+td,
+th,
+input,
+textarea,
+select,
+button,
+a {
+  font-family: inherit;
+}
+
+/* Inputs, botões e menus mais profissionais */
+input,
+textarea,
+select {
+  letter-spacing: -0.01em;
+  line-height: 1.45;
+}
+
+button,
+[role="button"],
+a {
+  letter-spacing: -0.012em;
+}
+
+/* Tabelas e listas do painel */
+table,
+td,
+th {
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+th {
+  font-weight: 800;
+  letter-spacing: 0.015em;
+}
+
+td {
+  font-weight: 500;
+}
+
+/* Sidebar e menus */
+aside a,
+aside button,
+nav a,
+nav button {
+  font-weight: 700;
+}
+
+/* Badges/status */
+[class*="badge"],
+[class*="Badge"],
+.rounded-full {
+  letter-spacing: -0.005em;
+}
+
+/* Números financeiros e indicadores */
+[data-finance],
+.finance-value,
+.money,
+code,
+pre,
+kbd {
+  font-family: var(--viva-font-mono);
+}
+
+/* Evita textos muito apertados em cards */
+.card,
+[class*="rounded-2xl"],
+[class*="rounded-3xl"] {
+  line-height: 1.48;
+}
+/* === VIVA PANEL TYPOGRAPHY END === */
+
+
+/* === VIVA FORM CONTROLS START === */
+.viva-input,
+.vault-input {
+  width: 100%;
+  border-radius: 1rem;
+  border: 1px solid rgb(226 232 240);
+  background: white;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.viva-input:focus,
+.vault-input:focus {
+  border-color: rgb(124 58 237);
+  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.08);
+}
+
+.viva-button,
+.viva-button-secondary,
+.viva-danger-button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 1rem;
+  padding: 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 900;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.viva-button:hover,
+.viva-button-secondary:hover,
+.viva-danger-button:hover {
+  transform: translateY(-1px);
+}
+
+.viva-button {
+  background: linear-gradient(135deg, rgb(124 58 237), rgb(79 70 229));
+  color: white;
+}
+
+.viva-button-secondary {
+  border: 1px solid rgb(226 232 240);
+  background: white;
+  color: rgb(51 65 85);
+}
+
+.viva-danger-button {
+  background: rgb(220 38 38);
+  color: white;
+}
+/* === VIVA FORM CONTROLS END === */

@@ -1,9 +1,9 @@
+import { DocumentVault } from "@/components/documents/document-vault";
 import { PageContainer } from "@/components/layout/page-container";
 import { ProjectScopeBanner } from "@/components/projects/project-scope-banner";
-import { RefensTeamWorkspace } from "@/components/refens/refens-team-bootstrap";
 import { getActiveProject, type PageSearchParams } from "@/lib/utils/search-params";
 
-export default async function TeamPage({
+export default async function AttachmentsPage({
   searchParams,
 }: {
   searchParams: PageSearchParams;
@@ -12,15 +12,12 @@ export default async function TeamPage({
 
   return (
     <PageContainer
-      title="Equipe"
-      description="Gerencie equipe do projeto e equipe permanente em uma tela organizada."
+      title="Anexos"
+      description="Envie, categorize, consulte e baixe arquivos vinculados ao projeto."
     >
       <div className="space-y-6">
         <ProjectScopeBanner project={project} />
-        <RefensTeamWorkspace
-          initialTab="project"
-          activeProject={{ id: project.id, name: project.name }}
-        />
+        <DocumentVault project={{ id: project.id, name: project.name }} />
       </div>
     </PageContainer>
   );
