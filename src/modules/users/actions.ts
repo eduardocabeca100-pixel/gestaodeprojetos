@@ -101,7 +101,7 @@ async function findAuthUserByEmail(
   }
 
   return (
-    usersResult.data.users.find((user) => user.email?.trim().toLowerCase() === email) ??
+    ((usersResult.data?.users ?? []) as Array<{ email?: string | null; id?: string; user_metadata?: Record<string, unknown> }>).find((user) => user.email?.trim().toLowerCase() === email) ??
     null
   );
 }
