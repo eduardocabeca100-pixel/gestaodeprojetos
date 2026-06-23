@@ -45,7 +45,7 @@ export default async function ProjectDetailPage({
       <ProjectWorkspaceNav project={project} />
 
       <SectionCard title="Timeline de etapas">
-        <ProjectStatusTimeline current={project.currentStage} />
+        <ProjectStatusTimeline projectId={project.id} current={project.currentStage} />
       </SectionCard>
 
       <ProjectSummaryCard project={project} />
