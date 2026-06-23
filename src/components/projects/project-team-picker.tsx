@@ -74,9 +74,19 @@ function ProjectTeamPickerContent() {
       }
     >
       <div className="space-y-4">
+        {selectedIds.map((memberId) => (
+          <input
+            key={memberId}
+            type="hidden"
+            name="selectedTeamRosterIds"
+            value={memberId}
+            form="project-form"
+          />
+        ))}
+
         <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
           <strong>{selectedIds.length}</strong> pessoa(s) selecionada(s) para este projeto.
-          Depois, na aba <strong>Equipe</strong>, você consegue editar rubrica, valor e status de pagamento.
+          Depois de clicar em <strong>Salvar projeto</strong>, elas entram na aba <strong>Equipe</strong> do projeto.
         </div>
 
         {open ? (

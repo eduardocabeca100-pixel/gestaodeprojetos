@@ -1,11 +1,22 @@
 "use client";
 
+import { startTransition, useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
 import { SectionCard } from "@/components/layout/section-card";
 import { Button } from "@/components/ui/button";
+import {
+  PROJECT_ASSIGNMENTS_STORAGE_KEY,
+  PROJECT_TEAM_DRAFT_STORAGE_KEY,
+  makeAssignmentFromMember,
+  readLocalTeamRoster,
+  readProjectAssignments,
+  writeProjectAssignments,
+} from "@/components/team/local-team-store";
 import { generateSlug } from "@/lib/utils/generate-slug";
+import { saveProject, type ProjectActionState } from "@/modules/projects/actions";
 import { projectSchema, type ProjectFormValues } from "@/modules/projects/schemas";
 import { projectStatuses, type Project } from "@/modules/projects/types";
 
@@ -65,99 +76,191 @@ function getProjectValues(project?: Project): ProjectFormValues {
   };
 }
 
+function applyLocalTeamDraft(projectId: string) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  try {
+    const saved = window.localStorage.getItem(PROJECT_TEAM_DRAFT_STORAGE_KEY);
+    const selectedIds = saved ? (JSON.parse(saved) as string[]) : [];
+
+    if (!Array.isArray(selectedIds) || selectedIds.length === 0) {
+      return;
+    }
+
+    const roster = readLocalTeamRoster();
+    const selectedMembers = roster.filter((member) => selectedIds.includes(member.id));
+
+    if (selectedMembers.length === 0) {
+      return;
+    }
+
+    const assignments = readProjectAssignments();
+    const currentAssignments = assignments[projectId] ?? [];
+    const currentMemberIds = new Set(currentAssignments.map((assignment) => assignment.memberId));
+    const newAssignments = selectedMembers
+      .filter((member) => !currentMemberIds.has(member.id))
+      .map(makeAssignmentFromMember);
+
+    assignments[projectId] = [...currentAssignments, ...newAssignments];
+    writeProjectAssignments(assignments);
+    window.localStorage.setItem(PROJECT_TEAM_DRAFT_STORAGE_KEY, "[]");
+    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new CustomEvent(PROJECT_ASSIGNMENTS_STORAGE_KEY));
+  } catch {
+    // Se o navegador bloquear o localStorage, o projeto continua sendo salvo no Supabase.
+  }
+}
+
 export function ProjectForm({ project }: { project?: Project }) {
+  const router = useRouter();
+  const [state, setState] = useState<ProjectActionState | undefined>();
+  const [pending, startPending] = useTransition();
   const {
     register,
-    handleSubmit,
     setValue,
-    formState: { errors, isSubmitSuccessful },
+    getValues,
+    formState: { errors },
   } = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
     defaultValues: getProjectValues(project),
   });
+
+  useEffect(() => {
+    const name = getValues("name");
+
+    if (!project && name) {
+      setValue("slug", generateSlug(name), { shouldValidate: true });
+    }
+  }, [getValues, project, setValue]);
+
+  function handleAction(formData: FormData) {
+    const currentValues = getValues();
+
+    if (!project) {
+      formData.set("slug", generateSlug(currentValues.name));
+    }
+
+    startPending(async () => {
+      const result = await saveProject(state, formData);
+      setState(result);
+
+      if (result.ok && result.projectId) {
+        applyLocalTeamDraft(result.projectId);
+        startTransition(() => router.refresh());
+      }
+    });
+  }
 
   return (
     <SectionCard
       title={project ? "Editar projeto" : "Cadastro de projeto"}
       description="Campos principais do edital e execução."
     >
-      {isSubmitSuccessful ? (
-        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
-          Projeto validado localmente. A próxima etapa é persistir no Supabase.
+      {state?.message ? (
+        <div
+          className={
+            state.ok
+              ? "mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
+              : "mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          }
+        >
+          {state.message}
         </div>
       ) : null}
-      <form
-        className="grid gap-4 lg:grid-cols-2"
-        onSubmit={handleSubmit((values) => {
-          setValue("slug", generateSlug(values.name));
-        })}
-      >
-        <Field label="Nome do projeto" error={errors.name?.message}>
+
+      <form id="project-form" className="grid gap-4 lg:grid-cols-2" action={handleAction}>
+        {project ? <input type="hidden" name="projectId" value={project.id} /> : null}
+
+        <Field label="Nome do projeto" error={errors.name?.message ?? state?.errors?.name?.[0]}>
           <input {...register("name")} className="form-input" />
         </Field>
-        <Field label="Slug" error={errors.slug?.message}>
+
+        <Field label="Slug" error={errors.slug?.message ?? state?.errors?.slug?.[0]}>
           <input {...register("slug")} className="form-input" />
         </Field>
-        <Field label="Título completo" error={errors.fullTitle?.message} wide>
+
+        <Field label="Título completo" error={errors.fullTitle?.message ?? state?.errors?.fullTitle?.[0]} wide>
           <input {...register("fullTitle")} className="form-input" />
         </Field>
-        <Field label="Edital" error={errors.edital?.message}>
+
+        <Field label="Edital" error={errors.edital?.message ?? state?.errors?.edital?.[0]}>
           <input {...register("edital")} className="form-input" />
         </Field>
-        <Field label="Inscrição" error={errors.registrationNumber?.message}>
+
+        <Field label="Inscrição" error={errors.registrationNumber?.message ?? state?.errors?.registrationNumber?.[0]}>
           <input {...register("registrationNumber")} className="form-input" />
         </Field>
-        <Field label="Valor aprovado" error={errors.approvedAmount?.message}>
+
+        <Field label="Valor aprovado" error={errors.approvedAmount?.message ?? state?.errors?.approvedAmount?.[0]}>
           <input {...register("approvedAmount", { valueAsNumber: true })} className="form-input" type="number" />
         </Field>
-        <Field label="Valor executado" error={errors.executedAmount?.message}>
+
+        <Field label="Valor executado" error={errors.executedAmount?.message ?? state?.errors?.executedAmount?.[0]}>
           <input {...register("executedAmount", { valueAsNumber: true })} className="form-input" type="number" />
         </Field>
-        <Field label="Status" error={errors.status?.message}>
+
+        <Field label="Status" error={errors.status?.message ?? state?.errors?.status?.[0]}>
           <select {...register("status")} className="form-input">
             {projectStatuses.map((status) => (
               <option key={status}>{status}</option>
             ))}
           </select>
         </Field>
-        <Field label="Etapa atual" error={errors.currentStage?.message}>
+
+        <Field label="Etapa atual" error={errors.currentStage?.message ?? state?.errors?.currentStage?.[0]}>
           <input {...register("currentStage")} className="form-input" />
         </Field>
-        <Field label="Modalidade" error={errors.modality?.message}>
+
+        <Field label="Modalidade" error={errors.modality?.message ?? state?.errors?.modality?.[0]}>
           <input {...register("modality")} className="form-input" />
         </Field>
-        <Field label="Classe" error={errors.className?.message}>
+
+        <Field label="Classe" error={errors.className?.message ?? state?.errors?.className?.[0]}>
           <input {...register("className")} className="form-input" />
         </Field>
-        <Field label="Proponente" error={errors.proponent?.message}>
+
+        <Field label="Proponente" error={errors.proponent?.message ?? state?.errors?.proponent?.[0]}>
           <input {...register("proponent")} className="form-input" />
         </Field>
-        <Field label="CPF/CNPJ do proponente" error={errors.proponentDocument?.message}>
+
+        <Field label="CPF/CNPJ do proponente" error={errors.proponentDocument?.message ?? state?.errors?.proponentDocument?.[0]}>
           <input {...register("proponentDocument")} className="form-input" />
         </Field>
-        <Field label="Cidade" error={errors.city?.message}>
+
+        <Field label="Cidade" error={errors.city?.message ?? state?.errors?.city?.[0]}>
           <input {...register("city")} className="form-input" />
         </Field>
-        <Field label="Estado" error={errors.state?.message}>
+
+        <Field label="Estado" error={errors.state?.message ?? state?.errors?.state?.[0]}>
           <input {...register("state")} className="form-input" maxLength={2} />
         </Field>
-        <Field label="Data inicial" error={errors.startDate?.message}>
+
+        <Field label="Data inicial" error={errors.startDate?.message ?? state?.errors?.startDate?.[0]}>
           <input {...register("startDate")} className="form-input" type="date" />
         </Field>
-        <Field label="Data final" error={errors.endDate?.message}>
+
+        <Field label="Data final" error={errors.endDate?.message ?? state?.errors?.endDate?.[0]}>
           <input {...register("endDate")} className="form-input" type="date" />
         </Field>
-        <Field label="Resumo" error={errors.summary?.message} wide>
+
+        <Field label="Resumo" error={errors.summary?.message ?? state?.errors?.summary?.[0]} wide>
           <textarea {...register("summary")} className="form-input min-h-28" />
         </Field>
-        <Field label="Descrição curta" error={errors.shortDescription?.message} wide>
+
+        <Field label="Descrição curta" error={errors.shortDescription?.message ?? state?.errors?.shortDescription?.[0]} wide>
           <textarea {...register("shortDescription")} className="form-input min-h-20" />
         </Field>
-        <Field label="Observações" error={errors.notes?.message} wide>
+
+        <Field label="Observações" error={errors.notes?.message ?? state?.errors?.notes?.[0]} wide>
           <textarea {...register("notes")} className="form-input min-h-24" />
         </Field>
+
         <div className="lg:col-span-2">
-          <Button type="submit">Salvar projeto</Button>
+          <Button type="submit" disabled={pending}>
+            {pending ? "Salvando..." : "Salvar projeto"}
+          </Button>
         </div>
       </form>
     </SectionCard>

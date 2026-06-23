@@ -1,11 +1,20 @@
-import { Upload } from "lucide-react";
+import { ProjectMediaUpload } from "./project-media-upload";
 
-export function ProjectCoverUpload() {
+export function ProjectCoverUpload({
+  initialUrl,
+  formId,
+}: {
+  initialUrl?: string | null;
+  formId?: string;
+}) {
   return (
-    <div className="rounded-lg border border-dashed border-border bg-white p-4 text-sm">
-      <Upload className="mb-2 size-5 text-primary" />
-      <p className="font-medium">Foto/capa do projeto</p>
-      <p className="mt-1 text-muted-foreground">Bucket project-covers.</p>
-    </div>
+    <ProjectMediaUpload
+      title="Foto/capa do projeto"
+      description="Imagem principal usada no card e no cabeçalho do projeto. Bucket project-covers."
+      bucket="project-covers"
+      fieldName="coverUrl"
+      initialUrl={initialUrl}
+      formId={formId}
+    />
   );
 }
