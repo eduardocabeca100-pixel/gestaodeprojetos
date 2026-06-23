@@ -1,3 +1,459 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "=================================================="
+echo " Corrigindo Configurações > Usuários e Logins"
+echo "=================================================="
+
+if [ ! -f package.json ]; then
+  echo "ERRO: rode este script na raiz do projeto, onde está o package.json."
+  exit 1
+fi
+
+TS="$(date +%Y%m%d-%H%M%S)"
+BACKUP_DIR=".backup-usuarios-login-$TS"
+mkdir -p "$BACKUP_DIR"
+
+echo "Criando backup..."
+[ -f src/modules/users/queries.ts ] && cp src/modules/users/queries.ts "$BACKUP_DIR/queries.ts"
+[ -f src/modules/users/actions.ts ] && cp src/modules/users/actions.ts "$BACKUP_DIR/actions.ts"
+[ -f src/modules/users/types.ts ] && cp src/modules/users/types.ts "$BACKUP_DIR/types.ts"
+[ -f src/components/settings/user-management-workspace.tsx ] && cp src/components/settings/user-management-workspace.tsx "$BACKUP_DIR/user-management-workspace.tsx"
+
+echo "Atualizando tipos..."
+
+python3 - <<'PY'
+from pathlib import Path
+
+path = Path("src/modules/users/types.ts")
+text = path.read_text()
+
+text = text.replace(
+    '"id" | "name" | "email" | "role" | "is_active"',
+    '"id" | "name" | "email" | "role" | "is_active" | "must_change_password"'
+)
+
+path.write_text(text)
+PY
+
+echo "Atualizando consulta de usuários..."
+
+cat > src/modules/users/queries.ts <<'TSEOF'
+import "server-only";
+
+import { createAdminClient } from "@/lib/supabase/admin";
+import { hasSupabaseServerEnv } from "@/lib/supabase/server";
+import { roles, type Role } from "@/lib/auth/permissions";
+import { ensureSeedProjects } from "@/modules/projects/queries";
+
+import type { Profile, UserProjectAccess } from "./types";
+
+export async function listUsers(): Promise<Profile[]> {
+  return [];
+}
+
+const demoUsers: UserProjectAccess[] = [
+  {
+    id: "demo-admin",
+    name: "Administrador Geral",
+    email: "admin@ciaviva.com",
+    role: "admin",
+    is_active: true,
+    must_change_password: false,
+    projectIds: [],
+  },
+  {
+    id: "demo-executive-director",
+    name: "Diretor executivo do projeto",
+    email: "direcao@ciaviva.com",
+    role: "diretor_executivo",
+    is_active: true,
+    must_change_password: false,
+    projectIds: ["formacao-artistas-rua-espetaculo-refens"],
+  },
+];
+
+function normalizeRole(role: unknown): Role {
+  return roles.includes(role as Role) ? (role as Role) : "visualizador";
+}
+
+function metadataProjectSlugs(metadata: unknown): string[] {
+  if (!metadata || typeof metadata !== "object") {
+    return [];
+  }
+
+  const projectSlugs = (metadata as { projectSlugs?: unknown }).projectSlugs;
+
+  return Array.isArray(projectSlugs)
+    ? projectSlugs.filter((slug): slug is string => typeof slug === "string")
+    : [];
+}
+
+export async function listUsersWithProjectAccess(): Promise<UserProjectAccess[]> {
+  if (!hasSupabaseServerEnv()) {
+    return demoUsers;
+  }
+
+  const admin = createAdminClient();
+
+  if (!admin) {
+    return demoUsers;
+  }
+
+  await ensureSeedProjects();
+
+  const [profilesResult, membershipsResult, projectsResult, authUsersResult] =
+    await Promise.all([
+      admin
+        .from("profiles")
+        .select("id, name, email, role, is_active, must_change_password")
+        .order("name"),
+      admin.from("project_memberships").select("profile_id, project_id"),
+      admin.from("projects").select("id, slug"),
+      admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
+    ]);
+
+  const profiles = profilesResult.error ? [] : profilesResult.data ?? [];
+  const projects = projectsResult.error ? [] : projectsResult.data ?? [];
+  const memberships = membershipsResult.error ? [] : membershipsResult.data ?? [];
+  const authUsers = authUsersResult.error
+    ? []
+    : ((authUsersResult.data?.users ?? []) as Array<{
+        id: string;
+        email?: string | null;
+        user_metadata?: Record<string, unknown> | null;
+      }>);
+
+  const projectSlugs = new Map(projects.map((project) => [project.id, project.slug]));
+  const profileById = new Map(profiles.map((profile) => [profile.id, profile]));
+  const usedIds = new Set<string>();
+
+  const getProjectIds = (profileId: string, metadata: unknown) => {
+    const fromMemberships = memberships
+      .filter((membership) => membership.profile_id === profileId)
+      .map((membership) => projectSlugs.get(membership.project_id))
+      .filter((slug): slug is string => Boolean(slug));
+
+    return fromMemberships.length > 0 ? fromMemberships : metadataProjectSlugs(metadata);
+  };
+
+  const usersFromAuth = authUsers.map((authUser) => {
+    usedIds.add(authUser.id);
+
+    const profile = profileById.get(authUser.id);
+    const metadata = authUser.user_metadata ?? {};
+    const email = profile?.email ?? authUser.email ?? "";
+
+    return {
+      id: authUser.id,
+      name:
+        profile?.name ??
+        (typeof metadata.name === "string" ? metadata.name : null) ??
+        email.split("@")[0] ??
+        "Usuário sem nome",
+      email,
+      role: normalizeRole(profile?.role ?? metadata.role),
+      is_active: profile?.is_active ?? true,
+      must_change_password: profile?.must_change_password ?? false,
+      projectIds: getProjectIds(authUser.id, metadata),
+    } satisfies UserProjectAccess;
+  });
+
+  const orphanProfiles = profiles
+    .filter((profile) => !usedIds.has(profile.id))
+    .map((profile) => ({
+      id: profile.id,
+      name: profile.name,
+      email: profile.email,
+      role: normalizeRole(profile.role),
+      is_active: profile.is_active,
+      must_change_password: profile.must_change_password ?? false,
+      projectIds: getProjectIds(profile.id, {}),
+    } satisfies UserProjectAccess));
+
+  return [...usersFromAuth, ...orphanProfiles].sort((a, b) => {
+    const order: Record<Role, number> = {
+      super_admin: 0,
+      admin: 1,
+      diretor_executivo: 2,
+      financeiro: 3,
+      editor_projeto: 4,
+      equipe_tecnica: 5,
+      visualizador: 6,
+    };
+
+    return order[a.role] - order[b.role] || a.name.localeCompare(b.name);
+  });
+}
+TSEOF
+
+echo "Adicionando ações de editar, alterar senha e excluir usuário..."
+
+python3 - <<'PY'
+from pathlib import Path
+
+path = Path("src/modules/users/actions.ts")
+text = path.read_text()
+
+if 'from "@/lib/auth/permissions"' not in text:
+    text = text.replace(
+        'import { getCurrentProfile } from "@/lib/auth/require-role";\n',
+        'import { getCurrentProfile } from "@/lib/auth/require-role";\nimport { projectManagerRoles, roles, type Role } from "@/lib/auth/permissions";\n'
+    )
+
+if "export type UserManagementActionState" not in text:
+    text = text.replace(
+        "export type ProjectAccessActionState = {\n  ok: boolean;\n  message: string;\n};\n",
+        "export type ProjectAccessActionState = {\n  ok: boolean;\n  message: string;\n};\n\nexport type UserManagementActionState = {\n  ok: boolean;\n  message: string;\n};\n"
+    )
+
+insert = r'''
+
+function normalizeManagedRole(role: FormDataEntryValue | null): Role {
+  const rawRole = String(role ?? "diretor_executivo");
+
+  if (["super_admin", "admin", "diretor_executivo"].includes(rawRole) && roles.includes(rawRole as Role)) {
+    return rawRole as Role;
+  }
+
+  return "diretor_executivo";
+}
+
+function roleHasProjectScope(role: Role) {
+  return !projectManagerRoles.includes(role);
+}
+
+async function requireUserManagementAccess() {
+  const currentProfile = await getCurrentProfile();
+
+  if (!currentProfile || !userManagerRoles.includes(currentProfile.role)) {
+    throw new Error("Você não tem permissão para gerenciar usuários.");
+  }
+
+  return currentProfile;
+}
+
+function getBooleanFromForm(formData: FormData, key: string) {
+  return formData.get(key) === "true";
+}
+
+function getProfileIdFromForm(formData: FormData) {
+  const profileId = String(formData.get("profileId") ?? "").trim();
+
+  if (!profileId) {
+    throw new Error("Usuário inválido.");
+  }
+
+  return profileId;
+}
+
+export async function updateUserDetails(
+  formData: FormData,
+): Promise<UserManagementActionState> {
+  try {
+    await requireUserManagementAccess();
+
+    const admin = createAdminClient();
+
+    if (!admin) {
+      return {
+        ok: false,
+        message: "Configure SUPABASE_SERVICE_ROLE_KEY nas variáveis do servidor para editar usuários.",
+      };
+    }
+
+    const profileId = getProfileIdFromForm(formData);
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim().toLowerCase();
+    const role = normalizeManagedRole(formData.get("role"));
+    const isActive = getBooleanFromForm(formData, "isActive");
+    const mustChangePassword = getBooleanFromForm(formData, "mustChangePassword");
+    const projectIds = roleHasProjectScope(role)
+      ? formData.getAll("projectIds").map(String)
+      : [];
+
+    if (name.length < 2) {
+      return { ok: false, message: "Informe o nome do usuário." };
+    }
+
+    if (!email.includes("@")) {
+      return { ok: false, message: "Informe um e-mail válido." };
+    }
+
+    if (roleHasProjectScope(role) && projectIds.length === 0) {
+      return { ok: false, message: "Selecione ao menos um projeto para este usuário." };
+    }
+
+    const authUserResult = await admin.auth.admin.getUserById(profileId);
+
+    if (authUserResult.error || !authUserResult.data.user) {
+      return {
+        ok: false,
+        message: authUserResult.error?.message ?? "Usuário não encontrado no Supabase Auth.",
+      };
+    }
+
+    const currentMetadata =
+      authUserResult.data.user.user_metadata &&
+      typeof authUserResult.data.user.user_metadata === "object"
+        ? authUserResult.data.user.user_metadata
+        : {};
+
+    const authUpdate = await admin.auth.admin.updateUserById(profileId, {
+      email,
+      email_confirm: true,
+      user_metadata: {
+        ...currentMetadata,
+        name,
+        role,
+        projectSlugs: projectIds,
+      },
+    });
+
+    if (authUpdate.error) {
+      return { ok: false, message: normalizeCreateUserError(authUpdate.error) };
+    }
+
+    const profileResult = await admin.from("profiles").upsert(
+      {
+        id: profileId,
+        name,
+        email,
+        role,
+        is_active: isActive,
+        must_change_password: mustChangePassword,
+      } as never,
+      { onConflict: "id" },
+    );
+
+    if (profileResult.error) {
+      return { ok: false, message: normalizeCreateUserError(profileResult.error) };
+    }
+
+    await persistProjectAccess(profileId, projectIds);
+
+    revalidatePath("/configuracoes/usuarios", "page");
+
+    return { ok: true, message: "Login atualizado com sucesso." };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Não foi possível editar o usuário.",
+    };
+  }
+}
+
+export async function resetUserPassword(
+  formData: FormData,
+): Promise<UserManagementActionState> {
+  try {
+    await requireUserManagementAccess();
+
+    const admin = createAdminClient();
+
+    if (!admin) {
+      return {
+        ok: false,
+        message: "Configure SUPABASE_SERVICE_ROLE_KEY nas variáveis do servidor para alterar senhas.",
+      };
+    }
+
+    const profileId = getProfileIdFromForm(formData);
+    const password = String(formData.get("password") ?? "");
+
+    if (password.length < 8) {
+      return { ok: false, message: "A nova senha precisa ter pelo menos 8 caracteres." };
+    }
+
+    const authUpdate = await admin.auth.admin.updateUserById(profileId, {
+      password,
+    });
+
+    if (authUpdate.error) {
+      return { ok: false, message: authUpdate.error.message };
+    }
+
+    const profileResult = await admin
+      .from("profiles")
+      .update({ must_change_password: true } as never)
+      .eq("id", profileId);
+
+    if (profileResult.error) {
+      return { ok: false, message: profileResult.error.message };
+    }
+
+    revalidatePath("/configuracoes/usuarios", "page");
+
+    return {
+      ok: true,
+      message: "Senha temporária alterada. O usuário será obrigado a redefinir no próximo login.",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Não foi possível alterar a senha.",
+    };
+  }
+}
+
+export async function deleteUser(
+  formData: FormData,
+): Promise<UserManagementActionState> {
+  try {
+    const currentProfile = await requireUserManagementAccess();
+    const profileId = getProfileIdFromForm(formData);
+
+    if (currentProfile.id === profileId) {
+      return { ok: false, message: "Você não pode excluir o próprio login enquanto está conectado." };
+    }
+
+    const admin = createAdminClient();
+
+    if (!admin) {
+      return {
+        ok: false,
+        message: "Configure SUPABASE_SERVICE_ROLE_KEY nas variáveis do servidor para excluir usuários.",
+      };
+    }
+
+    const membershipsResult = await admin
+      .from("project_memberships")
+      .delete()
+      .eq("profile_id", profileId);
+
+    if (membershipsResult.error && !isProjectMembershipsUnavailable(membershipsResult.error)) {
+      return { ok: false, message: membershipsResult.error.message };
+    }
+
+    await admin.from("profiles").delete().eq("id", profileId);
+
+    const deleteResult = await admin.auth.admin.deleteUser(profileId);
+
+    if (deleteResult.error && !/not found|does not exist/i.test(deleteResult.error.message)) {
+      return { ok: false, message: deleteResult.error.message };
+    }
+
+    revalidatePath("/configuracoes/usuarios", "page");
+
+    return { ok: true, message: "Login excluído do sistema." };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Não foi possível excluir o usuário.",
+    };
+  }
+}
+'''
+
+if "export async function updateUserDetails" not in text:
+    text = text.replace("\nexport async function logout() {", insert + "\n\nexport async function logout() {")
+
+path.write_text(text)
+PY
+
+echo "Atualizando tela Configurações > Usuários..."
+
+cat > src/components/settings/user-management-workspace.tsx <<'TSEOF'
 "use client";
 
 import { startTransition, useMemo, useState, useTransition } from "react";
@@ -533,3 +989,22 @@ function StatCard({ title, value }: { title: string; value: string }) {
     </div>
   );
 }
+TSEOF
+
+echo "Protegendo .env e .env.local..."
+
+touch .gitignore
+grep -qxF ".env" .gitignore || echo ".env" >> .gitignore
+grep -qxF ".env.local" .gitignore || echo ".env.local" >> .gitignore
+grep -qxF ".env.*.local" .gitignore || echo ".env.*.local" >> .gitignore
+grep -qxF "!.env.example" .gitignore || echo "!.env.example" >> .gitignore
+
+git rm --cached .env .env.local 2>/dev/null || true
+
+echo "Rodando build..."
+
+npm run build
+
+echo ""
+echo "Correção aplicada com sucesso."
+echo "Agora a tela deve listar todos os logins e permitir editar, excluir e alterar senha."

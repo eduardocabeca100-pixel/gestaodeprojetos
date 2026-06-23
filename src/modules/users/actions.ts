@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/auth/require-role";
+import { projectManagerRoles, roles, type Role } from "@/lib/auth/permissions";
 import { ensureSeedProjects } from "@/modules/projects/queries";
 
 import { createUserSchema, loginSchema, passwordResetSchema } from "./schemas";
@@ -46,6 +47,11 @@ export type CreateUserState = {
 };
 
 export type ProjectAccessActionState = {
+  ok: boolean;
+  message: string;
+};
+
+export type UserManagementActionState = {
   ok: boolean;
   message: string;
 };
@@ -538,6 +544,243 @@ export async function updateUserProjectAccess(
     };
   }
 }
+
+
+function normalizeManagedRole(role: FormDataEntryValue | null): Role {
+  const rawRole = String(role ?? "diretor_executivo");
+
+  if (["super_admin", "admin", "diretor_executivo"].includes(rawRole) && roles.includes(rawRole as Role)) {
+    return rawRole as Role;
+  }
+
+  return "diretor_executivo";
+}
+
+function roleHasProjectScope(role: Role) {
+  return !projectManagerRoles.includes(role);
+}
+
+async function requireUserManagementAccess() {
+  const currentProfile = await getCurrentProfile();
+
+  if (!currentProfile || !userManagerRoles.includes(currentProfile.role)) {
+    throw new Error("Você não tem permissão para gerenciar usuários.");
+  }
+
+  return currentProfile;
+}
+
+function getBooleanFromForm(formData: FormData, key: string) {
+  return formData.get(key) === "true";
+}
+
+function getProfileIdFromForm(formData: FormData) {
+  const profileId = String(formData.get("profileId") ?? "").trim();
+
+  if (!profileId) {
+    throw new Error("Usuário inválido.");
+  }
+
+  return profileId;
+}
+
+export async function updateUserDetails(
+  formData: FormData,
+): Promise<UserManagementActionState> {
+  try {
+    await requireUserManagementAccess();
+
+    const admin = createAdminClient();
+
+    if (!admin) {
+      return {
+        ok: false,
+        message: "Configure SUPABASE_SERVICE_ROLE_KEY nas variáveis do servidor para editar usuários.",
+      };
+    }
+
+    const profileId = getProfileIdFromForm(formData);
+    const name = String(formData.get("name") ?? "").trim();
+    const email = String(formData.get("email") ?? "").trim().toLowerCase();
+    const role = normalizeManagedRole(formData.get("role"));
+    const isActive = getBooleanFromForm(formData, "isActive");
+    const mustChangePassword = getBooleanFromForm(formData, "mustChangePassword");
+    const projectIds = roleHasProjectScope(role)
+      ? formData.getAll("projectIds").map(String)
+      : [];
+
+    if (name.length < 2) {
+      return { ok: false, message: "Informe o nome do usuário." };
+    }
+
+    if (!email.includes("@")) {
+      return { ok: false, message: "Informe um e-mail válido." };
+    }
+
+    if (roleHasProjectScope(role) && projectIds.length === 0) {
+      return { ok: false, message: "Selecione ao menos um projeto para este usuário." };
+    }
+
+    const authUserResult = await admin.auth.admin.getUserById(profileId);
+
+    if (authUserResult.error || !authUserResult.data.user) {
+      return {
+        ok: false,
+        message: authUserResult.error?.message ?? "Usuário não encontrado no Supabase Auth.",
+      };
+    }
+
+    const currentMetadata =
+      authUserResult.data.user.user_metadata &&
+      typeof authUserResult.data.user.user_metadata === "object"
+        ? authUserResult.data.user.user_metadata
+        : {};
+
+    const authUpdate = await admin.auth.admin.updateUserById(profileId, {
+      email,
+      email_confirm: true,
+      user_metadata: {
+        ...currentMetadata,
+        name,
+        role,
+        projectSlugs: projectIds,
+      },
+    });
+
+    if (authUpdate.error) {
+      return { ok: false, message: normalizeCreateUserError(authUpdate.error) };
+    }
+
+    const profileResult = await admin.from("profiles").upsert(
+      {
+        id: profileId,
+        name,
+        email,
+        role,
+        is_active: isActive,
+        must_change_password: mustChangePassword,
+      } as never,
+      { onConflict: "id" },
+    );
+
+    if (profileResult.error) {
+      return { ok: false, message: normalizeCreateUserError(profileResult.error) };
+    }
+
+    await persistProjectAccess(profileId, projectIds);
+
+    revalidatePath("/configuracoes/usuarios", "page");
+
+    return { ok: true, message: "Login atualizado com sucesso." };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Não foi possível editar o usuário.",
+    };
+  }
+}
+
+export async function resetUserPassword(
+  formData: FormData,
+): Promise<UserManagementActionState> {
+  try {
+    await requireUserManagementAccess();
+
+    const admin = createAdminClient();
+
+    if (!admin) {
+      return {
+        ok: false,
+        message: "Configure SUPABASE_SERVICE_ROLE_KEY nas variáveis do servidor para alterar senhas.",
+      };
+    }
+
+    const profileId = getProfileIdFromForm(formData);
+    const password = String(formData.get("password") ?? "");
+
+    if (password.length < 8) {
+      return { ok: false, message: "A nova senha precisa ter pelo menos 8 caracteres." };
+    }
+
+    const authUpdate = await admin.auth.admin.updateUserById(profileId, {
+      password,
+    });
+
+    if (authUpdate.error) {
+      return { ok: false, message: authUpdate.error.message };
+    }
+
+    const profileResult = await admin
+      .from("profiles")
+      .update({ must_change_password: true } as never)
+      .eq("id", profileId);
+
+    if (profileResult.error) {
+      return { ok: false, message: profileResult.error.message };
+    }
+
+    revalidatePath("/configuracoes/usuarios", "page");
+
+    return {
+      ok: true,
+      message: "Senha temporária alterada. O usuário será obrigado a redefinir no próximo login.",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Não foi possível alterar a senha.",
+    };
+  }
+}
+
+export async function deleteUser(
+  formData: FormData,
+): Promise<UserManagementActionState> {
+  try {
+    const currentProfile = await requireUserManagementAccess();
+    const profileId = getProfileIdFromForm(formData);
+
+    if (currentProfile.id === profileId) {
+      return { ok: false, message: "Você não pode excluir o próprio login enquanto está conectado." };
+    }
+
+    const admin = createAdminClient();
+
+    if (!admin) {
+      return {
+        ok: false,
+        message: "Configure SUPABASE_SERVICE_ROLE_KEY nas variáveis do servidor para excluir usuários.",
+      };
+    }
+
+    const membershipsResult = await admin
+      .from("project_memberships")
+      .delete()
+      .eq("profile_id", profileId);
+
+    if (membershipsResult.error && !isProjectMembershipsUnavailable(membershipsResult.error)) {
+      return { ok: false, message: membershipsResult.error.message };
+    }
+
+    await admin.from("profiles").delete().eq("id", profileId);
+
+    const deleteResult = await admin.auth.admin.deleteUser(profileId);
+
+    if (deleteResult.error && !/not found|does not exist/i.test(deleteResult.error.message)) {
+      return { ok: false, message: deleteResult.error.message };
+    }
+
+    revalidatePath("/configuracoes/usuarios", "page");
+
+    return { ok: true, message: "Login excluído do sistema." };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Não foi possível excluir o usuário.",
+    };
+  }
+}
+
 
 export async function logout() {
   const supabase = await createClient();

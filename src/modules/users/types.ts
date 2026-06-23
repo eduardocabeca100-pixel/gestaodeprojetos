@@ -14,7 +14,7 @@ export type Profile = {
 
 export type UserProjectAccess = Pick<
   Profile,
-  "id" | "name" | "email" | "role" | "is_active"
+  "id" | "name" | "email" | "role" | "is_active" | "must_change_password"
 > & {
   projectIds: string[];
 };
