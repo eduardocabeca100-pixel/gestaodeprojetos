@@ -1,10 +1,5 @@
 import Link from "next/link";
-import {
-  Check,
-  ChevronDown,
-  MousePointerClick,
-  PenLine,
-} from "lucide-react";
+import { Check, ChevronDown, MousePointerClick, PenLine } from "lucide-react";
 
 import { updateProjectStage } from "@/modules/projects/stage-actions";
 import type { ProjectStage } from "@/modules/projects/types";
@@ -32,10 +27,7 @@ function currentStageIndex(current: string) {
     const normalizedStage = normalize(stage);
     const firstWord = normalizedStage.split(" ")[0];
 
-    return (
-      normalizedCurrent.includes(normalizedStage) ||
-      normalizedCurrent.includes(firstWord)
-    );
+    return normalizedCurrent.includes(normalizedStage) || normalizedCurrent.includes(firstWord);
   });
 
   return index === -1 ? 0 : index;
@@ -82,18 +74,10 @@ export function ProjectStagesPanel({
         {stages.map(([stage, number, title], index) => {
           const done = index < currentIndex;
           const active = index === currentIndex;
-          const status = done
-            ? "Concluída"
-            : active
-              ? "Em andamento"
-              : "Pendente";
+          const status = done ? "Concluída" : active ? "Em andamento" : "Pendente";
 
           return (
-            <form
-              key={stage}
-              action={updateProjectStage}
-              className="relative text-center text-xs"
-            >
+            <form key={stage} action={updateProjectStage} className="relative text-center text-xs">
               <input type="hidden" name="projectId" value={projectId} />
               <input type="hidden" name="stage" value={stage} />
 
@@ -101,16 +85,13 @@ export function ProjectStagesPanel({
                 <div className="absolute left-1/2 top-4 hidden h-px w-full translate-x-1/2 bg-slate-200 md:block" />
               ) : null}
 
-              <button
-                type="submit"
-                className="group relative z-10 w-full rounded-2xl p-1 transition hover:-translate-y-0.5"
-              >
+              <button type="submit" className="group relative z-10 w-full rounded-2xl p-1 transition hover:-translate-y-0.5">
                 <div
                   className={
                     done
-                      ? "mx-auto mb-3 flex size-9 items-center justify-center rounded-full bg-emerald-500 text-white shadow-[0_14px_30px_-20px_rgba(16,185,129,0.9)]"
+                      ? "mx-auto mb-3 flex size-9 items-center justify-center rounded-full bg-emerald-500 text-white"
                       : active
-                        ? "mx-auto mb-3 flex size-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#4f46e5,#2563eb)] text-white shadow-[0_14px_30px_-20px_rgba(79,70,229,0.9)]"
+                        ? "mx-auto mb-3 flex size-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#4f46e5,#2563eb)] text-white"
                         : "mx-auto mb-3 flex size-9 items-center justify-center rounded-full bg-slate-100 text-slate-500 group-hover:bg-primary/10 group-hover:text-primary"
                   }
                 >
@@ -118,14 +99,7 @@ export function ProjectStagesPanel({
                 </div>
 
                 <p className="font-semibold text-slate-950">{title}</p>
-
-                <p
-                  className={
-                    active
-                      ? "mt-1 text-primary"
-                      : "mt-1 text-muted-foreground"
-                  }
-                >
+                <p className={active ? "mt-1 text-primary" : "mt-1 text-muted-foreground"}>
                   {status}
                 </p>
               </button>

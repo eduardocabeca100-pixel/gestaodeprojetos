@@ -25,39 +25,25 @@ const stageToStatus: Record<ProjectStage, ProjectStatus> = {
   "Prestação de contas": "Prestação de contas",
 };
 
-export type UpdateProjectStageState = {
-  ok: boolean;
-  message: string;
-};
-
-export async function updateProjectStage(
-  formData: FormData,
-): Promise<UpdateProjectStageState> {
+export async function updateProjectStage(formData: FormData) {
   const projectId = String(formData.get("projectId") ?? "").trim();
   const rawStage = String(formData.get("stage") ?? "").trim();
   const stage = allowedStages.find((item) => item === rawStage);
 
-  if (!projectId) {
-    return { ok: false, message: "Projeto inválido." };
-  }
-
-  if (!stage) {
-    return { ok: false, message: "Etapa inválida." };
+  if (!projectId || !stage) {
+    return;
   }
 
   const profile = await getCurrentProfile();
 
   if (!profile || !can(profile.role, "edit_project")) {
-    return {
-      ok: false,
-      message: "Você não tem permissão para alterar a etapa do projeto.",
-    };
+    return;
   }
 
   const supabase = await createClient();
 
   if (!supabase) {
-    return { ok: false, message: "Supabase não configurado." };
+    return;
   }
 
   const result = await supabase
@@ -70,8 +56,8 @@ export async function updateProjectStage(
     .select("id, slug")
     .single();
 
-  if (result.error) {
-    return { ok: false, message: result.error.message };
+  if (result.error || !result.data) {
+    return;
   }
 
   const savedProject = result.data as { id: string; slug?: string | null };
@@ -83,6 +69,4 @@ export async function updateProjectStage(
   if (savedProject.slug) {
     revalidatePath(`/projetos/${savedProject.slug}`, "page");
   }
-
-  return { ok: true, message: `Etapa atualizada para ${stage}.` };
 }

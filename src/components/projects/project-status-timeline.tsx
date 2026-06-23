@@ -13,12 +13,12 @@ const stages: ProjectStage[] = [
 ];
 
 const stageHints: Record<ProjectStage, string> = {
-  Avaliação: "Projeto em análise ou já avaliado.",
-  Habilitação: "Documentação, anexos e conferências.",
-  "Assinatura do termo": "Aguardando termo/contrato.",
-  Repasse: "Aguardando liberação financeira.",
-  Execução: "Projeto em execução.",
-  "Prestação de contas": "Fechamento e prestação final.",
+  Avaliação: "Análise inicial do projeto.",
+  Habilitação: "Documentação e anexos.",
+  "Assinatura do termo": "Termo/contrato.",
+  Repasse: "Liberação financeira.",
+  Execução: "Execução das ações.",
+  "Prestação de contas": "Fechamento final.",
 };
 
 function normalize(value: string) {
@@ -35,10 +35,7 @@ function currentStageIndex(current: string) {
     const normalizedStage = normalize(stage);
     const firstWord = normalizedStage.split(" ")[0];
 
-    return (
-      normalizedCurrent.includes(normalizedStage) ||
-      normalizedCurrent.includes(firstWord)
-    );
+    return normalizedCurrent.includes(normalizedStage) || normalizedCurrent.includes(firstWord);
   });
 
   return index === -1 ? 0 : index;
@@ -58,10 +55,7 @@ export function ProjectStatusTimeline({
       <div className="rounded-lg border border-primary/15 bg-primary/5 px-4 py-3 text-sm text-primary">
         <div className="flex items-start gap-2">
           <MousePointerClick className="mt-0.5 size-4 shrink-0" />
-          <p>
-            Clique em uma etapa abaixo para atualizar o andamento do projeto.
-            A alteração é salva no Supabase e reflete no dashboard.
-          </p>
+          <p>Clique em uma etapa para atualizar o andamento do projeto.</p>
         </div>
       </div>
 
@@ -80,9 +74,9 @@ export function ProjectStatusTimeline({
                 type="submit"
                 className={
                   active
-                    ? "h-full w-full rounded-lg border border-primary/40 bg-primary/10 p-3 text-left text-sm text-primary shadow-[0_20px_50px_-35px_rgba(37,99,235,0.8)] transition hover:-translate-y-0.5 hover:border-primary"
+                    ? "h-full w-full rounded-lg border border-primary/40 bg-primary/10 p-3 text-left text-sm text-primary transition hover:-translate-y-0.5"
                     : complete
-                      ? "h-full w-full rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-left text-sm text-emerald-800 transition hover:-translate-y-0.5 hover:border-emerald-400"
+                      ? "h-full w-full rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-left text-sm text-emerald-800 transition hover:-translate-y-0.5"
                       : "h-full w-full rounded-lg border border-border bg-white p-3 text-left text-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5"
                 }
               >
@@ -97,16 +91,9 @@ export function ProjectStatusTimeline({
                 />
 
                 <p className="font-semibold">{stage}</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">{stageHints[stage]}</p>
 
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">
-                  {stageHints[stage]}
-                </p>
-
-                {active ? (
-                  <p className="mt-2 text-xs font-semibold text-primary">
-                    Etapa atual
-                  </p>
-                ) : null}
+                {active ? <p className="mt-2 text-xs font-semibold text-primary">Etapa atual</p> : null}
               </button>
             </form>
           );
