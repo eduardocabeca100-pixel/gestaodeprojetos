@@ -55,8 +55,8 @@ export default async function ProjectDetailPage({
         <ProjectForm project={project} />
 
         <div className="space-y-6">
-          <ProjectCoverUpload formId="project-form" initialUrl={project.coverUrl} />
-          <ProjectBannerUpload formId="project-form" initialUrl={project.bannerUrl} />
+          <ProjectCoverUpload formId="project-form" projectId={project.id} initialUrl={project.coverUrl} />
+          <ProjectBannerUpload formId="project-form" projectId={project.id} initialUrl={project.bannerUrl} />
         </div>
       </div>
     </PageContainer>

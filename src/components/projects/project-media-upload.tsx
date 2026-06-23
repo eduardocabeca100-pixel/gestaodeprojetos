@@ -13,6 +13,7 @@ type ProjectMediaUploadProps = {
   fieldName: "coverUrl" | "bannerUrl";
   initialUrl?: string | null;
   formId?: string;
+  projectId?: string | null;
   accent?: "primary" | "cyan";
 };
 
@@ -37,6 +38,7 @@ export function ProjectMediaUpload({
   fieldName,
   initialUrl = null,
   formId = "project-form",
+  projectId = null,
   accent = "primary",
 }: ProjectMediaUploadProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -71,10 +73,12 @@ export function ProjectMediaUpload({
         return;
       }
 
-      const path = `uploads/${safeFileName(file.name)}`;
+      const folder = projectId ? projectId : "drafts";
+      const path = `${folder}/${safeFileName(file.name)}`;
+
       const result = await supabase.storage.from(bucket).upload(path, file, {
         cacheControl: "3600",
-        upsert: true,
+        upsert: false,
         contentType: file.type,
       });
 
@@ -87,7 +91,7 @@ export function ProjectMediaUpload({
 
       setUrl(publicUrl);
       setPreviewUrl(publicUrl);
-      setStatus("Imagem enviada. Clique em Salvar projeto para gravar no cadastro.");
+      setStatus("Imagem enviada. Agora clique em Salvar projeto para gravar.");
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Erro ao enviar imagem.");
     } finally {
@@ -103,6 +107,7 @@ export function ProjectMediaUpload({
         <div className={accent === "cyan" ? "text-cyan-600" : "text-primary"}>
           <Upload className="size-5" />
         </div>
+
         <div>
           <p className="font-medium">{title}</p>
           <p className="mt-1 text-muted-foreground">{description}</p>
@@ -130,7 +135,13 @@ export function ProjectMediaUpload({
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={uploading}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+        >
           {uploading ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
           {url ? "Trocar imagem" : "Selecionar imagem"}
         </Button>

@@ -94,7 +94,7 @@ export default async function DashboardPage({
     >
       <div className="grid gap-6 2xl:grid-cols-[1.35fr_1fr]">
         <ProjectDetailPanel project={featured} />
-        <ProjectStagesPanel />
+        <ProjectStagesPanel projectId={featured.id} />
       </div>
 
       <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.65fr)_360px]">

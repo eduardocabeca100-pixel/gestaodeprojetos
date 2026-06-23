@@ -7,14 +7,6 @@ import { useForm } from "react-hook-form";
 
 import { SectionCard } from "@/components/layout/section-card";
 import { Button } from "@/components/ui/button";
-import {
-  PROJECT_ASSIGNMENTS_STORAGE_KEY,
-  PROJECT_TEAM_DRAFT_STORAGE_KEY,
-  makeAssignmentFromMember,
-  readLocalTeamRoster,
-  readProjectAssignments,
-  writeProjectAssignments,
-} from "@/components/team/local-team-store";
 import { generateSlug } from "@/lib/utils/generate-slug";
 import { saveProject, type ProjectActionState } from "@/modules/projects/actions";
 import { projectSchema, type ProjectFormValues } from "@/modules/projects/schemas";
@@ -47,9 +39,7 @@ const defaultProjectValues: ProjectFormValues = {
 };
 
 function getProjectValues(project?: Project): ProjectFormValues {
-  if (!project) {
-    return defaultProjectValues;
-  }
+  if (!project) return defaultProjectValues;
 
   return {
     name: project.name,
@@ -76,47 +66,11 @@ function getProjectValues(project?: Project): ProjectFormValues {
   };
 }
 
-function applyLocalTeamDraft(projectId: string) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  try {
-    const saved = window.localStorage.getItem(PROJECT_TEAM_DRAFT_STORAGE_KEY);
-    const selectedIds = saved ? (JSON.parse(saved) as string[]) : [];
-
-    if (!Array.isArray(selectedIds) || selectedIds.length === 0) {
-      return;
-    }
-
-    const roster = readLocalTeamRoster();
-    const selectedMembers = roster.filter((member) => selectedIds.includes(member.id));
-
-    if (selectedMembers.length === 0) {
-      return;
-    }
-
-    const assignments = readProjectAssignments();
-    const currentAssignments = assignments[projectId] ?? [];
-    const currentMemberIds = new Set(currentAssignments.map((assignment) => assignment.memberId));
-    const newAssignments = selectedMembers
-      .filter((member) => !currentMemberIds.has(member.id))
-      .map(makeAssignmentFromMember);
-
-    assignments[projectId] = [...currentAssignments, ...newAssignments];
-    writeProjectAssignments(assignments);
-    window.localStorage.setItem(PROJECT_TEAM_DRAFT_STORAGE_KEY, "[]");
-    window.dispatchEvent(new Event("storage"));
-    window.dispatchEvent(new CustomEvent(PROJECT_ASSIGNMENTS_STORAGE_KEY));
-  } catch {
-    // Se o navegador bloquear o localStorage, o projeto continua sendo salvo no Supabase.
-  }
-}
-
 export function ProjectForm({ project }: { project?: Project }) {
   const router = useRouter();
   const [state, setState] = useState<ProjectActionState | undefined>();
   const [pending, startPending] = useTransition();
+
   const {
     register,
     setValue,
@@ -128,10 +82,11 @@ export function ProjectForm({ project }: { project?: Project }) {
   });
 
   useEffect(() => {
-    const name = getValues("name");
-
-    if (!project && name) {
-      setValue("slug", generateSlug(name), { shouldValidate: true });
+    if (!project) {
+      const name = getValues("name");
+      if (name) {
+        setValue("slug", generateSlug(name), { shouldValidate: true });
+      }
     }
   }, [getValues, project, setValue]);
 
@@ -146,8 +101,12 @@ export function ProjectForm({ project }: { project?: Project }) {
       const result = await saveProject(state, formData);
       setState(result);
 
-      if (result.ok && result.projectId) {
-        applyLocalTeamDraft(result.projectId);
+      if (result.ok) {
+        if (!project && result.projectId) {
+          router.push(`/projetos/${result.projectId}#editar-projeto`);
+          return;
+        }
+
         startTransition(() => router.refresh());
       }
     });
@@ -156,7 +115,11 @@ export function ProjectForm({ project }: { project?: Project }) {
   return (
     <SectionCard
       title={project ? "Editar projeto" : "Cadastro de projeto"}
-      description="Campos principais do edital e execução."
+      description={
+        project
+          ? "Altere dados, foto/capa e banner interno do projeto."
+          : "Campos principais do edital e execução."
+      }
     >
       {state?.message ? (
         <div
@@ -172,6 +135,7 @@ export function ProjectForm({ project }: { project?: Project }) {
 
       <form id="project-form" className="grid gap-4 lg:grid-cols-2" action={handleAction}>
         {project ? <input type="hidden" name="projectId" value={project.id} /> : null}
+        <input type="hidden" name="archived" value={project?.archived ? "true" : "false"} />
 
         <Field label="Nome do projeto" error={errors.name?.message ?? state?.errors?.name?.[0]}>
           <input {...register("name")} className="form-input" />

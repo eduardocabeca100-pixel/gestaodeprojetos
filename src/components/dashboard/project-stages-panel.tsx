@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Check, ChevronDown, PenLine } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ const stages = [
   ["6", "Prest. Contas", "Pendente"],
 ] as const;
 
-export function ProjectStagesPanel() {
+export function ProjectStagesPanel({ projectId }: { projectId: string }) {
   return (
     <section className="overflow-hidden rounded-[1.8rem] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.99),rgba(246,248,255,0.96))] p-5 soft-shadow">
       <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -23,10 +24,13 @@ export function ProjectStagesPanel() {
             Linha de acompanhamento
           </h3>
         </div>
-        <Button className="rounded-2xl border-white/80" variant="outline">
-          <PenLine className="size-4" />
-          Editar projeto
-          <ChevronDown className="size-4" />
+
+        <Button asChild className="rounded-2xl border-white/80" variant="outline">
+          <Link href={`/projetos/${projectId}#editar-projeto`}>
+            <PenLine className="size-4" />
+            Editar projeto
+            <ChevronDown className="size-4" />
+          </Link>
         </Button>
       </div>
 
@@ -40,6 +44,7 @@ export function ProjectStagesPanel() {
               {index < stages.length - 1 ? (
                 <div className="absolute left-1/2 top-4 hidden h-px w-full translate-x-1/2 bg-slate-200 md:block" />
               ) : null}
+
               <div
                 className={
                   done
@@ -51,6 +56,7 @@ export function ProjectStagesPanel() {
               >
                 {done ? <Check className="size-4" /> : number}
               </div>
+
               <p className="font-semibold text-slate-950">{title}</p>
               <p className={current ? "mt-1 text-primary" : "mt-1 text-muted-foreground"}>
                 {status}

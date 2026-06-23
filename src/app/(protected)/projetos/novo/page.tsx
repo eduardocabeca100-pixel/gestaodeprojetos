@@ -11,7 +11,7 @@ export default async function NewProjectPage() {
   return (
     <PageContainer
       title="Novo projeto"
-      description="Cadastre os dados principais do projeto e selecione a equipe permanente que fará parte da produção."
+      description="Cadastre os dados principais do projeto, foto/capa, banner e equipe."
     >
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
         <div className="space-y-6">

@@ -49,51 +49,12 @@ function projectPayload(values: ProjectFormValues, formData: FormData) {
   };
 }
 
-async function persistSelectedTeam(projectId: string, formData: FormData) {
-  const supabase = await createClient();
-
-  if (!supabase) {
-    return;
-  }
-
-  const selectedIds = formData
-    .getAll("selectedTeamRosterIds")
-    .map(String)
-    .filter(Boolean);
-
-  if (selectedIds.length === 0) {
-    return;
-  }
-
-  const rosterResult = await supabase
-    .from("team_roster")
-    .select("id")
-    .in("id", selectedIds);
-
-  if (rosterResult.error || !rosterResult.data?.length) {
-    return;
-  }
-
-  const rosterRows = (rosterResult.data ?? []) as Array<{ id: string }>;
-  const payload = rosterRows.map((member) => ({
-    team_roster_id: member.id,
-    project_id: projectId,
-    expected_amount: 0,
-    paid_amount: 0,
-    payment_status: "Previsto",
-    notes: "Selecionado no cadastro do projeto.",
-  }));
-
-  await supabase
-    .from("team_roster_assignments")
-    .upsert(payload as never, { onConflict: "team_roster_id,project_id" });
-}
-
 export async function saveProject(
   _state: ProjectActionState | undefined,
   formData: FormData,
 ): Promise<ProjectActionState> {
   const values = Object.fromEntries(formData);
+
   const parsed = projectSchema.safeParse({
     ...values,
     approvedAmount: Number(values.approvedAmount ?? 0),
@@ -112,7 +73,7 @@ export async function saveProject(
   if (!hasSupabaseServerEnv()) {
     return {
       ok: false,
-      message: "Supabase não configurado no servidor. Confira NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+      message: "Supabase não configurado no servidor.",
     };
   }
 
@@ -130,7 +91,7 @@ export async function saveProject(
   if (!supabase) {
     return {
       ok: false,
-      message: "Cliente Supabase não foi inicializado.",
+      message: "Cliente Supabase não inicializado.",
     };
   }
 
@@ -153,13 +114,11 @@ export async function saveProject(
   if (result.error || !result.data) {
     return {
       ok: false,
-      message: result.error?.message ?? "Não foi possível salvar o projeto no Supabase.",
+      message: result.error?.message ?? "Não foi possível salvar o projeto.",
     };
   }
 
   const savedProject = result.data as { id: string; slug: string };
-
-  await persistSelectedTeam(savedProject.id, formData);
 
   revalidatePath("/dashboard", "page");
   revalidatePath("/projetos", "page");
