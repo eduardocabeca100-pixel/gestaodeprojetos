@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   BarChart3,
   Bell,
@@ -23,7 +23,7 @@ import {
   Database,
   FileArchive,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -69,26 +69,20 @@ function getProjectIdFromPathname(pathname: string) {
 
 function SidebarContent({ profile }: { profile: CurrentProfile }) {
   const pathname = usePathname();
-  const [searchProjectId, setSearchProjectId] = useState<string | null>(null);
-  const activeProjectId = searchProjectId ?? getProjectIdFromPathname(pathname);
+  const searchParams = useSearchParams();
+  const activeProjectId =
+    searchParams.get("project") ?? getProjectIdFromPathname(pathname);
   const visibleNavigation = navigation.filter(
     (item) =>
       item.href !== "/configuracoes/geral" || can(profile.role, "change_settings"),
   );
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      setSearchProjectId(new URLSearchParams(window.location.search).get("project"));
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, [pathname]);
-
   return (
     <aside
-      className="flex h-[100dvh] w-[var(--viva-sidebar-width)] flex-col overflow-hidden bg-sidebar text-sidebar-foreground"
+      className="relative flex h-[100dvh] w-[var(--viva-sidebar-width)] flex-col overflow-hidden border-r border-white/8 bg-[linear-gradient(180deg,#06112f_0%,#0a1332_20%,#12103e_52%,#090d22_100%)] text-sidebar-foreground shadow-[18px_0_60px_-42px_rgba(15,23,42,0.9)]"
       style={{ fontFamily: "var(--font-viva-heading)" }}
     >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(96,165,250,0.24),transparent_28%),radial-gradient(circle_at_82%_22%,rgba(168,85,247,0.24),transparent_24%),radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.14),transparent_28%)]" />
       <div className="flex shrink-0 items-center border-b border-sidebar-border px-4 py-3">
         <div className="min-w-0">
           <p className="truncate text-[1.9rem] font-black leading-none tracking-normal">
@@ -100,22 +94,22 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
         </div>
       </div>
 
-      <div className="shrink-0 px-3 py-2.5">
+      <div className="relative shrink-0 px-3 py-3">
         {can(profile.role, "create_project") ? (
-          <Button asChild className="h-[var(--viva-button-height)] w-full justify-start bg-sidebar-primary px-3.5 text-[0.88rem] font-semibold">
+          <Button asChild className="h-12 w-full justify-start rounded-2xl bg-[linear-gradient(135deg,#2563eb_0%,#6d28d9_100%)] px-4 text-[0.9rem] font-semibold text-white shadow-[0_18px_40px_-18px_rgba(99,102,241,0.88)] hover:opacity-95">
             <Link href="/projetos/novo">
               <Plus className="size-4" />
               Novo Projeto
             </Link>
           </Button>
         ) : (
-          <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-sidebar-foreground/70">
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-sidebar-foreground/70 backdrop-blur">
             Acesso somente aos projetos liberados
           </div>
         )}
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-2.5 pb-3 [scrollbar-width:thin]">
+      <div className="relative flex-1 min-h-0 overflow-y-auto px-2.5 pb-3 [scrollbar-width:thin]">
         <nav className="space-y-1">
           {visibleNavigation.map((item) => {
             const Icon = item.icon;
@@ -135,14 +129,14 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
                 key={item.href}
                 href={href}
                 className={cn(
-                  "flex h-[var(--viva-sidebar-item-height)] items-center gap-2 rounded-lg px-3 text-[0.86rem] font-semibold text-sidebar-foreground/78 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  active && "bg-sidebar-accent text-sidebar-accent-foreground",
+                  "flex h-10 items-center gap-2.5 rounded-2xl px-3 text-[0.86rem] font-semibold text-sidebar-foreground/80 transition hover:bg-white/8 hover:text-sidebar-accent-foreground",
+                  active && "bg-[linear-gradient(90deg,rgba(99,102,241,0.45),rgba(37,99,235,0.18))] text-sidebar-accent-foreground shadow-[0_16px_28px_-24px_rgba(96,165,250,0.85)] ring-1 ring-white/10",
                 )}
               >
               <Icon className="viva-sidebar-icon size-[15px] shrink-0" />
               <span className="viva-sidebar-label">{item.label}</span>
                 {"badge" in item ? (
-                  <span className="ml-auto rounded-full bg-sidebar-primary px-2 py-0.5 text-[10px] text-sidebar-primary-foreground">
+                  <span className="ml-auto rounded-full bg-[linear-gradient(135deg,#22c55e,#06b6d4)] px-2 py-0.5 text-[10px] text-white shadow-sm">
                     {item.badge}
                   </span>
                 ) : null}
@@ -150,9 +144,9 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
             );
           })}
 
-          <div className="mt-2 border-t border-sidebar-border pt-2.5">
-            <div className="mb-2 flex items-center gap-2">
-              <div className="flex size-7 items-center justify-center rounded-lg bg-white/10 text-[0.78rem] font-semibold">
+          <div className="mt-3 rounded-[1.35rem] border border-white/10 bg-white/5 p-3 backdrop-blur">
+            <div className="mb-3 flex items-center gap-2.5">
+              <div className="flex size-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#2563eb,#7c3aed)] text-[0.88rem] font-semibold text-white shadow-[0_12px_28px_-18px_rgba(99,102,241,0.95)]">
                 {profile.name.slice(0, 1)}
               </div>
               <div className="min-w-0">
@@ -172,7 +166,7 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
             </div>
             <form action={logout}>
               <Button
-                className="h-[var(--viva-button-height)] w-full justify-start border-sidebar-border bg-transparent text-[0.86rem] text-sidebar-foreground hover:bg-sidebar-accent"
+                className="h-11 w-full justify-start rounded-2xl border-white/10 bg-transparent text-[0.86rem] text-sidebar-foreground hover:bg-white/8"
                 variant="outline"
                 type="submit"
               >

@@ -5,6 +5,7 @@ import { CheckCircle2, Database, FileText, RefreshCcw, Trash2 } from "lucide-rea
 import { refensKnownTeam, refensProjectAssignments, seedRefensTeamForProject } from "@/components/refens/refens-official-data";
 import { applyRefensOfficialCostBreakdowns } from "@/components/refens/refens-cost-breakdown";
 import { Button } from "@/components/ui/button";
+import { notifyLocalFinancialDataChanged } from "@/lib/local-financial-sync";
 
 type SeedResult = {
   team: number;
@@ -588,6 +589,8 @@ function importRefensData(): SeedResult {
     });
   });
 
+  notifyLocalFinancialDataChanged();
+
   return {
     team: refensTeam.length,
     assignments: refensAssignments.length,
@@ -606,6 +609,8 @@ function clearRefensData() {
   REFENS_PROJECT_IDS.forEach((projectId) => {
     window.localStorage.removeItem(buildAdvancedKey(projectId));
   });
+
+  notifyLocalFinancialDataChanged();
 }
 
 export function RefensDataSeeder() {

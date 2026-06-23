@@ -1,0 +1,4 @@
+project_id = "viva-gestao-cultural"
+
+[functions.create-admin-user]
+verify_jwt = true

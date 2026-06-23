@@ -15,7 +15,7 @@ export function RecentActivities({ activities }: { activities: Activity[] }) {
         {activities.map((activity) => (
           <div
             key={activity.id}
-            className="flex items-start gap-3 rounded-lg border border-border bg-white p-3"
+            className="flex items-start gap-3 rounded-[1.1rem] border border-white/80 bg-white/86 p-3 shadow-[0_18px_36px_-32px_rgba(14,165,233,0.32)]"
           >
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-700">
               <CalendarClock className="size-4" />

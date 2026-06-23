@@ -1,13 +1,15 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import { canAccessEveryProject } from "@/lib/auth/permissions";
 import { getCurrentProfile } from "@/lib/auth/require-role";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/utils/format-currency";
 
-import type { Project, ProjectKpi } from "./types";
+import type { Project, ProjectKpi, ProjectStatus } from "./types";
 
 export const projects: Project[] = [
   {
@@ -41,7 +43,174 @@ export const projects: Project[] = [
   },
 ];
 
-export async function listProjects() {
+type ProjectRow = {
+  id: string;
+  name: string;
+  full_title: string;
+  slug: string;
+  short_description: string | null;
+  summary: string | null;
+  edital: string | null;
+  registration_number: string | null;
+  approved_amount: number | string | null;
+  executed_amount: number | string | null;
+  status: string | null;
+  current_stage: string | null;
+  modality: string | null;
+  class_name: string | null;
+  proponent: string | null;
+  proponent_document: string | null;
+  city: string | null;
+  state: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  cover_url: string | null;
+  banner_url: string | null;
+  notes: string | null;
+  archived: boolean | null;
+};
+
+const projectSelect =
+  "id, name, full_title, slug, short_description, summary, edital, registration_number, approved_amount, executed_amount, status, current_stage, modality, class_name, proponent, proponent_document, city, state, start_date, end_date, cover_url, banner_url, notes, archived";
+
+function mapProjectRowToProject(project: ProjectRow): Project {
+  return {
+    id: project.id,
+    name: project.name,
+    fullTitle: project.full_title,
+    slug: project.slug,
+    shortDescription: project.short_description ?? "",
+    summary: project.summary ?? "",
+    edital: project.edital ?? "",
+    registrationNumber: project.registration_number ?? "",
+    approvedAmount: Number(project.approved_amount ?? 0),
+    executedAmount: Number(project.executed_amount ?? 0),
+    status: (project.status ?? "Planejamento") as ProjectStatus,
+    currentStage: project.current_stage ?? "",
+    modality: project.modality ?? "",
+    className: project.class_name ?? "",
+    proponent: project.proponent ?? "",
+    proponentDocument: project.proponent_document ?? "",
+    city: project.city ?? "",
+    state: project.state ?? "",
+    startDate: project.start_date ?? "",
+    endDate: project.end_date ?? "",
+    coverUrl: project.cover_url,
+    bannerUrl: project.banner_url,
+    notes: project.notes ?? "",
+    archived: project.archived ?? false,
+  };
+}
+
+function mapSeedProjectToInsert(project: Project) {
+  return {
+    name: project.name,
+    full_title: project.fullTitle,
+    slug: project.slug,
+    short_description: project.shortDescription,
+    summary: project.summary,
+    edital: project.edital,
+    registration_number: project.registrationNumber,
+    approved_amount: project.approvedAmount,
+    executed_amount: project.executedAmount,
+    status: project.status,
+    current_stage: project.currentStage,
+    modality: project.modality,
+    class_name: project.className,
+    proponent: project.proponent,
+    proponent_document: project.proponentDocument,
+    city: project.city,
+    state: project.state,
+    start_date: project.startDate,
+    end_date: project.endDate,
+    cover_url: project.coverUrl,
+    banner_url: project.bannerUrl,
+    notes: project.notes,
+    archived: project.archived,
+  };
+}
+
+function normalizeProjectSlugs(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is string => typeof item === "string");
+}
+
+function isProjectMembershipsUnavailable(error: { code?: string; message?: string } | null) {
+  if (!error) {
+    return false;
+  }
+
+  return (
+    error.code === "PGRST205" ||
+    error.message?.includes("project_memberships") === true
+  );
+}
+
+async function listProjectsBySlugs(
+  supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>,
+  projectSlugs: string[],
+) {
+  if (projectSlugs.length === 0) {
+    return [];
+  }
+
+  const projectResult = await supabase
+    .from("projects")
+    .select(projectSelect)
+    .in("slug", projectSlugs);
+
+  if (projectResult.error) {
+    return projects.filter((project) => projectSlugs.includes(project.slug));
+  }
+
+  if (!projectResult.data.length) {
+    return projects.filter((project) => projectSlugs.includes(project.slug));
+  }
+
+  return projectResult.data.map((project) =>
+    mapProjectRowToProject(project as ProjectRow),
+  );
+}
+
+export const ensureSeedProjects = cache(async () => {
+  if (!hasSupabaseServerEnv()) {
+    return;
+  }
+
+  const admin = createAdminClient();
+
+  if (!admin) {
+    return;
+  }
+
+  const existingResult = await admin.from("projects").select("slug");
+
+  if (existingResult.error) {
+    throw new Error(existingResult.error.message);
+  }
+
+  const existingSlugs = new Set(
+    existingResult.data.map((project) => project.slug),
+  );
+  const missingProjects = projects
+    .filter((project) => !existingSlugs.has(project.slug))
+    .map(mapSeedProjectToInsert);
+
+  if (missingProjects.length === 0) {
+    return;
+  }
+
+  const insertResult = await admin.from("projects").insert(missingProjects as never);
+
+  if (insertResult.error) {
+    throw new Error(insertResult.error.message);
+  }
+});
+
+export const listProjects = cache(async () => {
   const profile = await getCurrentProfile();
 
   if (!profile) {
@@ -49,44 +218,84 @@ export async function listProjects() {
   }
 
   if (!hasSupabaseServerEnv() || canAccessEveryProject(profile.role)) {
-    return projects;
+    if (!hasSupabaseServerEnv()) {
+      return projects;
+    }
   }
+
+  await ensureSeedProjects();
 
   const supabase = await createClient();
 
   if (!supabase) {
-    return [];
+    return projects;
   }
+
+  if (canAccessEveryProject(profile.role)) {
+    const projectResult = await supabase
+      .from("projects")
+      .select(projectSelect)
+      .order("name");
+
+    if (projectResult.error) {
+      return projects;
+    }
+
+    if (!projectResult.data.length) {
+      return projects;
+    }
+
+    return projectResult.data.map((project) =>
+      mapProjectRowToProject(project as ProjectRow),
+    );
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const metadataProjectSlugs = normalizeProjectSlugs(
+    user?.user_metadata?.projectSlugs ?? user?.user_metadata?.project_slugs,
+  );
 
   const membershipResult = await supabase
     .from("project_memberships")
     .select("project_id")
     .eq("profile_id", profile.id);
 
-  if (membershipResult.error || !membershipResult.data?.length) {
+  if (membershipResult.error) {
+    if (isProjectMembershipsUnavailable(membershipResult.error)) {
+      return listProjectsBySlugs(supabase, metadataProjectSlugs);
+    }
+
     return [];
+  }
+
+  if (!membershipResult.data?.length) {
+    return listProjectsBySlugs(supabase, metadataProjectSlugs);
   }
 
   const projectIds = membershipResult.data.map((membership) => membership.project_id);
   const projectResult = await supabase
     .from("projects")
-    .select("id, slug")
+    .select(projectSelect)
     .in("id", projectIds);
 
   if (projectResult.error) {
-    return [];
+    return listProjectsBySlugs(supabase, metadataProjectSlugs);
   }
 
-  const allowedKeys = new Set(
-    projectResult.data.flatMap((project) => [project.id, project.slug]),
+  const scopedProjects = projectResult.data.map((project) =>
+    mapProjectRowToProject(project as ProjectRow),
   );
 
-  return projects.filter(
-    (project) => allowedKeys.has(project.id) || allowedKeys.has(project.slug),
-  );
-}
+  if (scopedProjects.length === 0) {
+    return listProjectsBySlugs(supabase, metadataProjectSlugs);
+  }
 
-export async function getFeaturedProject() {
+  return scopedProjects;
+});
+
+export const getFeaturedProject = cache(async () => {
   const [project] = await listProjects();
 
   if (!project) {
@@ -94,15 +303,15 @@ export async function getFeaturedProject() {
   }
 
   return project;
-}
+});
 
-export async function getProjectById(id: string) {
+export const getProjectById = cache(async (id: string) => {
   const accessibleProjects = await listProjects();
 
   return accessibleProjects.find(
     (project) => project.id === id || project.slug === id,
   );
-}
+});
 
 export async function getProjectKpis(): Promise<ProjectKpi[]> {
   const accessibleProjects = await listProjects();

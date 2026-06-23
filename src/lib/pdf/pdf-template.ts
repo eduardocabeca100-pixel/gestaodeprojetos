@@ -68,7 +68,7 @@ export function resetPdfSettings() {
   window.localStorage.removeItem(PDF_SETTINGS_STORAGE_KEY);
 }
 
-function escapeHtml(value: string) {
+export function escapePdfHtml(value: string) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
@@ -106,23 +106,24 @@ export function buildSystemPdfHtml(
   const primarySoft = softenHex(primary, 0.18);
   const primaryMid = softenHex(primary, 0.55);
   const primaryStrong = softenHex(primary, 0.88);
+  const issuedAt = getTodayBr();
 
-  const title = escapeHtml(options.title);
-  const subtitle = escapeHtml(options.subtitle ?? "");
-  const documentLabel = escapeHtml(options.documentLabel ?? "Documento gerado pelo sistema");
-  const preparedBy = escapeHtml(options.preparedBy ?? "Sistema");
-  const fileName = escapeHtml(options.fileName ?? "documento-cia-viva.pdf");
+  const title = escapePdfHtml(options.title);
+  const subtitle = escapePdfHtml(options.subtitle ?? "");
+  const documentLabel = escapePdfHtml(options.documentLabel ?? "Documento gerado pelo sistema");
+  const preparedBy = escapePdfHtml(options.preparedBy ?? "Sistema");
+  const fileName = escapePdfHtml(options.fileName ?? "documento-cia-viva.pdf");
 
-  const systemTitle = escapeHtml(settings.systemTitle);
-  const companyName = escapeHtml(settings.companyName);
-  const systemSubtitle = escapeHtml(settings.subtitle);
-  const cnpj = escapeHtml(settings.cnpj || "____________________");
-  const cityUf = escapeHtml(settings.cityUf);
-  const email = escapeHtml(settings.email);
-  const phone = escapeHtml(settings.phone);
-  const site = escapeHtml(settings.site);
-  const footerText = escapeHtml(settings.footerText);
-  const footerSite = escapeHtml(settings.footerSite);
+  const systemTitle = escapePdfHtml(settings.systemTitle);
+  const companyName = escapePdfHtml(settings.companyName);
+  const systemSubtitle = escapePdfHtml(settings.subtitle);
+  const cnpj = escapePdfHtml(settings.cnpj || "____________________");
+  const cityUf = escapePdfHtml(settings.cityUf);
+  const email = escapePdfHtml(settings.email);
+  const phone = escapePdfHtml(settings.phone);
+  const site = escapePdfHtml(settings.site);
+  const footerText = escapePdfHtml(settings.footerText);
+  const footerSite = escapePdfHtml(settings.footerSite);
 
   return `<!doctype html>
 <html lang="pt-BR">
@@ -378,6 +379,104 @@ export function buildSystemPdfHtml(
       color: #657064;
     }
 
+    .document-content .eyebrow {
+      margin: 0 0 3mm;
+      color: ${primary};
+      font-size: 7.6pt;
+      font-weight: 950;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    .document-content .document-section {
+      margin-top: 8mm;
+    }
+
+    .document-content .pre-line {
+      white-space: pre-line;
+    }
+
+    .document-content .info-grid {
+      display: grid;
+      gap: 4mm;
+      margin: 5mm 0 8mm;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .document-content .info-card {
+      border: 1px solid #d7ddd5;
+      border-radius: 4mm;
+      padding: 4mm;
+      background: linear-gradient(180deg, ${primarySoft} 0%, rgba(255,255,255,0.98) 100%);
+    }
+
+    .document-content .info-card strong,
+    .document-content .detail-list strong {
+      display: block;
+      margin-bottom: 1.5mm;
+      color: ${primary};
+      font-size: 7.4pt;
+      font-weight: 950;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .document-content .detail-list {
+      display: grid;
+      gap: 4mm;
+      margin: 6mm 0;
+    }
+
+    .document-content .inline-note {
+      margin: 6mm 0;
+      border-left: 3px solid ${primary};
+      padding: 3mm 0 3mm 4mm;
+      color: #4d5b52;
+      background: linear-gradient(90deg, ${primarySoft} 0%, rgba(255,255,255,0) 100%);
+    }
+
+    .document-content .signature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10mm;
+      margin-top: 10mm;
+    }
+
+    .document-content .signature-card {
+      padding-top: 10mm;
+      text-align: center;
+    }
+
+    .document-content .signature-line {
+      margin-bottom: 2mm;
+      border-top: 1px solid #718172;
+      height: 1px;
+    }
+
+    .document-content .signature-name {
+      font-weight: 700;
+    }
+
+    .document-content .signature-role {
+      color: #5d685f;
+      font-size: 8.2pt;
+    }
+
+    .document-content .supporting-image {
+      margin: 6mm 0 0;
+      text-align: center;
+    }
+
+    .document-content .supporting-image img {
+      max-width: 100%;
+      max-height: 34mm;
+      object-fit: contain;
+      border: 1px solid #d7ddd5;
+      border-radius: 4mm;
+      padding: 3mm;
+      background: white;
+    }
+
     .pdf-footer {
       position: absolute;
       left: 18mm;
@@ -418,6 +517,15 @@ export function buildSystemPdfHtml(
       font-size: 8pt;
     }
 
+    @media (max-width: 980px) {
+      .pdf-header,
+      .document-meta,
+      .document-content .info-grid,
+      .document-content .signature-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @media print {
       body {
         background: white;
@@ -430,9 +538,48 @@ export function buildSystemPdfHtml(
       .sheet {
         margin: 0;
         width: 210mm;
-        min-height: 297mm;
+        min-height: auto;
         box-shadow: none;
-        page-break-after: always;
+        overflow: visible;
+      }
+
+      .sheet::before,
+      .sheet::after {
+        display: none;
+      }
+
+      .pdf-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 5;
+        padding: 12mm 18mm 6mm;
+        background: white;
+      }
+
+      .header-line {
+        position: fixed;
+        top: 42mm;
+        left: 18mm;
+        right: 18mm;
+        z-index: 5;
+        margin: 0;
+      }
+
+      .content-frame {
+        margin: 49mm 18mm 28mm;
+        min-height: auto;
+        padding-bottom: 0;
+      }
+
+      .pdf-footer {
+        position: fixed;
+        left: 18mm;
+        right: 18mm;
+        bottom: 8mm;
+        z-index: 5;
+        background: white;
       }
     }
   </style>
@@ -477,7 +624,7 @@ export function buildSystemPdfHtml(
         </div>
         <div>
           <span>Emissão / elaborado por</span>
-          ${getTodayBr()} • ${preparedBy}
+          ${issuedAt} • ${preparedBy}
         </div>
       </div>
 
@@ -492,7 +639,7 @@ export function buildSystemPdfHtml(
       <div class="footer-line"></div>
       <div class="footer-system">${footerText}</div>
       <div class="footer-site">${footerSite}</div>
-      <div class="footer-page">Página 1</div>
+      <div class="footer-page">Emitido em ${issuedAt}</div>
     </footer>
   </section>
 </body>

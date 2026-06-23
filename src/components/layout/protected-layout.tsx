@@ -1,5 +1,3 @@
-import { UniversalPdfTemplateInterceptor } from "@/components/pdf/universal-pdf-template-interceptor";
-import { FinancialLocalStorageSynchronizer } from "@/components/sync/financial-local-storage-synchronizer";
 import type { ReactNode } from "react";
 
 import { requireAuthorizedProfile } from "@/lib/auth/require-role";
@@ -8,6 +6,7 @@ import { AppSidebar } from "./app-sidebar";
 import { AppearanceSync } from "./appearance-sync";
 import { Topbar } from "./topbar";
 import { PasswordResetGate } from "./password-reset-gate";
+import { ProtectedEnhancers } from "./protected-enhancers";
 
 export async function ProtectedLayout({ children }: { children: ReactNode }) {
   const profile = await requireAuthorizedProfile();
@@ -17,11 +16,11 @@ export async function ProtectedLayout({ children }: { children: ReactNode }) {
       <div className="min-h-screen bg-background">
         <AppearanceSync />
         <AppSidebar profile={profile} />
-        <div className="flex min-h-screen min-w-0 flex-col overflow-x-hidden lg:pl-[var(--viva-sidebar-width)]">
+        <div className="relative flex min-h-screen min-w-0 flex-col overflow-x-hidden lg:pl-[var(--viva-sidebar-width)]">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(99,102,241,0.12),transparent_24%),radial-gradient(circle_at_100%_8%,rgba(45,212,191,0.12),transparent_18%)]" />
           <Topbar profile={profile} />
-          <FinancialLocalStorageSynchronizer />
-      <UniversalPdfTemplateInterceptor />
-      {children}
+          <ProtectedEnhancers />
+          <div className="relative">{children}</div>
         </div>
       </div>
     </PasswordResetGate>

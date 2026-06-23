@@ -1,3 +1,5 @@
+import { notifyLocalFinancialDataChanged } from "@/lib/local-financial-sync";
+
 export type RefensTeamMember = {
   id: string;
   name: string;
@@ -297,5 +299,5 @@ export function seedRefensTeamForProject(projectId: string) {
   writeJson(TEAM_ROSTER_STORAGE_KEY, nextTeam);
   writeJson(PROJECT_ASSIGNMENTS_STORAGE_KEY, nextAssignments);
   writeJson(PROJECT_TEAM_DRAFT_STORAGE_KEY, nextTeam.map((member) => member.id));
+  notifyLocalFinancialDataChanged();
 }
-

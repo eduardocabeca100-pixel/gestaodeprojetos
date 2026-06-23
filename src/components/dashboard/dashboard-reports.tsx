@@ -18,7 +18,7 @@ export function DashboardReports({
       title="Relatórios"
       description="Dossiês e relatórios prontos para geração."
       actions={
-        <Button asChild>
+        <Button asChild className="rounded-2xl bg-[linear-gradient(135deg,#2563eb,#7c3aed)] text-white shadow-[0_18px_36px_-26px_rgba(79,70,229,0.65)]">
           <Link href={`/relatorios?project=${projectId}`}>
             <FileDown className="size-4" />
             Gerar PDF
@@ -30,7 +30,7 @@ export function DashboardReports({
         {reports.map((report) => (
           <div
             key={report.id}
-            className="flex items-center gap-3 rounded-lg border border-border bg-white p-3"
+            className="flex items-center gap-3 rounded-[1.1rem] border border-white/80 bg-white/86 p-3 shadow-[0_18px_36px_-32px_rgba(245,158,11,0.34)]"
           >
             <div className="flex size-9 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
               <FileArchive className="size-4" />

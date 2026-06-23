@@ -12,8 +12,8 @@ export function DashboardMedia({ mediaItems }: { mediaItems: MediaItem[] }) {
     >
       <div className="grid gap-3 sm:grid-cols-3">
         {mediaItems.map((item) => (
-          <div key={item.id} className="rounded-lg border border-border bg-white p-3">
-            <div className="mb-3 flex h-20 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+          <div key={item.id} className="rounded-[1.2rem] border border-white/80 bg-white/86 p-3 shadow-[0_18px_36px_-32px_rgba(56,189,248,0.34)]">
+            <div className="mb-3 flex h-20 items-center justify-center rounded-[1rem] bg-[linear-gradient(135deg,rgba(239,246,255,0.95),rgba(238,242,255,0.92))] text-muted-foreground">
               {item.type.includes("Link") ? (
                 <LinkIcon className="size-6 text-cyan-600" />
               ) : (

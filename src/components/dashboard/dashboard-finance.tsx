@@ -37,9 +37,9 @@ export function DashboardFinance({
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between rounded-lg bg-muted/70 px-3 py-2 text-sm">
+    <div className="flex items-center justify-between rounded-[1rem] border border-white/70 bg-white/80 px-3 py-2 text-sm shadow-[0_18px_36px_-30px_rgba(16,185,129,0.35)]">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-semibold">{value}</span>
+      <span className="font-semibold text-slate-950">{value}</span>
     </div>
   );
 }

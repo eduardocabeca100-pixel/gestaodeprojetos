@@ -51,38 +51,38 @@
 :root {
   --font-viva-sans: Arial, "Helvetica Neue", Helvetica, sans-serif;
   --font-viva-heading: "Arial Black", Arial, Helvetica, sans-serif;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.19 0.018 270);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.19 0.018 270);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.19 0.018 270);
-  --primary: oklch(0.57 0.19 255);
+  --background: oklch(0.985 0.01 258);
+  --foreground: oklch(0.24 0.03 270);
+  --card: oklch(0.995 0.008 258);
+  --card-foreground: oklch(0.24 0.03 270);
+  --popover: oklch(0.995 0.008 258);
+  --popover-foreground: oklch(0.24 0.03 270);
+  --primary: oklch(0.59 0.22 262);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.96 0.02 275);
-  --secondary-foreground: oklch(0.27 0.04 285);
-  --muted: oklch(0.955 0.011 260);
-  --muted-foreground: oklch(0.48 0.025 270);
-  --accent: oklch(0.93 0.035 180);
-  --accent-foreground: oklch(0.28 0.06 205);
+  --secondary: oklch(0.96 0.025 270);
+  --secondary-foreground: oklch(0.29 0.05 285);
+  --muted: oklch(0.96 0.014 258);
+  --muted-foreground: oklch(0.5 0.03 270);
+  --accent: oklch(0.94 0.04 198);
+  --accent-foreground: oklch(0.34 0.07 220);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.9 0.012 260);
-  --input: oklch(0.9 0.012 260);
-  --ring: oklch(0.57 0.19 255);
-  --chart-1: oklch(0.6 0.19 255);
-  --chart-2: oklch(0.63 0.14 172);
-  --chart-3: oklch(0.74 0.15 85);
-  --chart-4: oklch(0.62 0.16 245);
-  --chart-5: oklch(0.68 0.2 30);
+  --border: oklch(0.9 0.018 258);
+  --input: oklch(0.9 0.018 258);
+  --ring: oklch(0.59 0.22 262);
+  --chart-1: oklch(0.61 0.22 262);
+  --chart-2: oklch(0.71 0.16 165);
+  --chart-3: oklch(0.75 0.17 85);
+  --chart-4: oklch(0.64 0.18 245);
+  --chart-5: oklch(0.7 0.2 28);
   --radius: 0.5rem;
-  --sidebar: oklch(0.18 0.035 270);
-  --sidebar-foreground: oklch(0.94 0.01 270);
-  --sidebar-primary: oklch(0.58 0.2 255);
+  --sidebar: oklch(0.2 0.055 276);
+  --sidebar-foreground: oklch(0.96 0.01 270);
+  --sidebar-primary: oklch(0.62 0.24 263);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.26 0.045 272);
+  --sidebar-accent: oklch(0.29 0.075 274);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.57 0.19 255);
+  --sidebar-ring: oklch(0.59 0.22 262);
 }
 
 .dark {
@@ -125,6 +125,11 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(circle at 6% 8%, rgba(99, 102, 241, 0.18), transparent 22%),
+      radial-gradient(circle at 92% 6%, rgba(45, 212, 191, 0.14), transparent 18%),
+      radial-gradient(circle at 82% 24%, rgba(168, 85, 247, 0.12), transparent 22%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(244, 247, 255, 0.96));
     overflow-x: hidden;
     font-family: var(--font-viva-sans);
     font-size: 14px;
@@ -170,11 +175,13 @@
 
 @layer utilities {
   .soft-shadow {
-    box-shadow: 0 16px 38px -28px rgb(20 21 38 / 0.5);
+    box-shadow:
+      0 24px 60px -34px rgba(30, 41, 59, 0.28),
+      0 10px 24px -18px rgba(79, 70, 229, 0.18);
   }
 
   .form-input {
-    @apply w-full min-h-[var(--viva-input-height)] rounded-lg border border-input bg-white px-3 py-1.5 text-[0.95rem] shadow-sm transition focus:border-primary focus:ring-3 focus:ring-primary/15;
+    @apply w-full min-h-[var(--viva-input-height)] rounded-xl border border-input bg-white/90 px-3 py-1.5 text-[0.95rem] shadow-sm transition focus:border-primary focus:ring-3 focus:ring-primary/15;
   }
 
   .content-safe {
@@ -322,18 +329,20 @@ kbd {
 .vault-input {
   width: 100%;
   border-radius: 1rem;
-  border: 1px solid rgb(226 232 240);
-  background: white;
+  border: 1px solid rgb(217 226 255);
+  background: rgba(255, 255, 255, 0.96);
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 12px 28px -24px rgba(37, 99, 235, 0.34);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .viva-input:focus,
 .vault-input:focus {
-  border-color: rgb(124 58 237);
-  box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.08);
+  border-color: rgb(99 102 241);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  transform: translateY(-1px);
 }
 
 .viva-button,

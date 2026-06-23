@@ -1,3 +1,5 @@
+import { notifyLocalFinancialDataChanged } from "@/lib/local-financial-sync";
+
 export type LocalPaymentStatus = "Previsto" | "Pendente" | "Parcial" | "Pago";
 
 export type LocalPersonType =
@@ -30,6 +32,7 @@ export type LocalTeamMember = {
   id: string;
   name: string;
   fullName: string;
+  avatarUrl: string | null;
   profileType: LocalPersonType;
   role: string;
   email: string;
@@ -55,6 +58,7 @@ export type LocalProjectAssignment = {
   memberId: string;
   name: string;
   fullName: string;
+  avatarUrl: string | null;
   profileType: LocalPersonType;
   role: string;
   email: string;
@@ -97,6 +101,7 @@ export const defaultLocalTeamMembers: LocalTeamMember[] = [
     id: "eduardo-cabeca",
     name: "Eduardo Cabeça",
     fullName: "Eduardo Cabeça",
+    avatarUrl: null,
     profileType: "Produção",
     role: "Direção geral e produção executiva",
     email: "eduardocabeca100@gmail.com",
@@ -172,6 +177,7 @@ export function normalizeTeamMember(member: Partial<LocalTeamMember>): LocalTeam
     id: member.id || createLocalId("member"),
     name,
     fullName: member.fullName || name,
+    avatarUrl: member.avatarUrl || null,
     profileType: normalizePersonType(member.profileType),
     role: member.role || "",
     email: member.email || "",
@@ -221,6 +227,7 @@ export function normalizeAssignment(assignment: Partial<LocalProjectAssignment>)
     memberId: assignment.memberId || createLocalId("project-person"),
     name,
     fullName: assignment.fullName || name,
+    avatarUrl: assignment.avatarUrl || null,
     profileType: normalizePersonType(assignment.profileType),
     role: assignment.role || "",
     email: assignment.email || "",
@@ -273,6 +280,7 @@ export function writeProjectAssignments(assignments: Record<string, LocalProject
   }
 
   writeJson(PROJECT_ASSIGNMENTS_STORAGE_KEY, normalized);
+  notifyLocalFinancialDataChanged();
 }
 
 export function makeAssignmentFromMember(member: LocalTeamMember): LocalProjectAssignment {
@@ -281,6 +289,7 @@ export function makeAssignmentFromMember(member: LocalTeamMember): LocalProjectA
     memberId: member.id,
     name: member.name,
     fullName: member.fullName,
+    avatarUrl: member.avatarUrl,
     profileType: member.profileType,
     role: member.role,
     email: member.email,
@@ -309,6 +318,7 @@ export function makeMemberFromAssignment(assignment: LocalProjectAssignment): Lo
     id: assignment.memberId || createLocalId("member"),
     name: assignment.name,
     fullName: assignment.fullName,
+    avatarUrl: assignment.avatarUrl,
     profileType: assignment.profileType,
     role: assignment.role,
     email: assignment.email,

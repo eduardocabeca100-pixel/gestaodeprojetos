@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useRef, useState, type ReactNode } from "react";
-import jsPDF from "jspdf";
 import {
   Copy,
   Download,
@@ -16,6 +15,12 @@ import {
 import { SectionCard } from "@/components/layout/section-card";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/status-badge";
+import {
+  buildSystemPdfHtml,
+  escapePdfHtml,
+  getPdfSettings,
+  openSystemPdf,
+} from "@/lib/pdf/pdf-template";
 import { formatDate } from "@/lib/utils/format-date";
 import type { Project } from "@/modules/projects/types";
 import type { OfficialDocument } from "@/modules/official-documents/types";
@@ -258,6 +263,172 @@ function makeExportText(documentState: DocumentState) {
     .join("\n\n");
 }
 
+function formatTextBlocksAsHtml(value: string) {
+  const blocks = value
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  if (blocks.length === 0) {
+    return "<p>Conteúdo não informado.</p>";
+  }
+
+  return blocks
+    .map((block) => `<p class="pre-line">${escapePdfHtml(block)}</p>`)
+    .join("");
+}
+
+function buildOfficialDocumentBodyHtml(documentState: DocumentState) {
+  const recipientLines = [
+    documentState.recipient,
+    documentState.recipientRole,
+    documentState.institution,
+    documentState.address,
+  ].filter(Boolean);
+  const signatures = [
+    { name: documentState.signerOne, role: documentState.signerOneRole },
+    { name: documentState.signerTwo, role: documentState.signerTwoRole },
+  ].filter((signature) => signature.name || signature.role);
+  const complementaryLines = [
+    documentState.footerText,
+    documentState.footerDocument,
+  ].filter(Boolean);
+
+  return `
+    <p class="eyebrow">${escapePdfHtml(documentState.template)}</p>
+
+    <div class="info-grid">
+      <div class="info-card">
+        <strong>Número / código</strong>
+        <div>${escapePdfHtml(documentState.code)}</div>
+      </div>
+      <div class="info-card">
+        <strong>Status do arquivo</strong>
+        <div>${escapePdfHtml(documentState.status)}</div>
+      </div>
+      <div class="info-card">
+        <strong>Cidade e data</strong>
+        <div>${escapePdfHtml(
+          [documentState.city, formatLongDate(documentState.date)]
+            .filter(Boolean)
+            .join(", "),
+        )}</div>
+      </div>
+      <div class="info-card">
+        <strong>Responsável</strong>
+        <div>${escapePdfHtml(documentState.approver || "Sistema")}</div>
+      </div>
+    </div>
+
+    ${
+      recipientLines.length > 0
+        ? `
+          <section class="document-section">
+            <h2>Destinatário</h2>
+            <div class="info-card">
+              <div class="pre-line">${escapePdfHtml(
+                ["Ao Senhor(a)", ...recipientLines].join("\n"),
+              )}</div>
+            </div>
+          </section>
+        `
+        : ""
+    }
+
+    ${
+      documentState.subject
+        ? `
+          <section class="document-section">
+            <h2>Assunto</h2>
+            <p>${escapePdfHtml(documentState.subject)}</p>
+          </section>
+        `
+        : ""
+    }
+
+    <section class="document-section">
+      <h2>Corpo do documento</h2>
+      ${formatTextBlocksAsHtml(documentState.content)}
+    </section>
+
+    <section class="document-section">
+      <p>Atenciosamente,</p>
+    </section>
+
+    ${
+      signatures.length > 0
+        ? `
+          <section class="document-section">
+            <h2>Assinaturas</h2>
+            <div class="signature-grid">
+              ${signatures
+                .map(
+                  (signature) => `
+                    <div class="signature-card">
+                      <div class="signature-line"></div>
+                      <div class="signature-name">${escapePdfHtml(signature.name)}</div>
+                      <div class="signature-role">${escapePdfHtml(signature.role)}</div>
+                    </div>
+                  `,
+                )
+                .join("")}
+            </div>
+          </section>
+        `
+        : ""
+    }
+
+    ${
+      complementaryLines.length > 0 || documentState.headerLogo || documentState.footerImage
+        ? `
+          <section class="document-section">
+            <h2>Informações complementares do arquivo</h2>
+            ${
+              complementaryLines.length > 0
+                ? `<div class="inline-note pre-line">${escapePdfHtml(complementaryLines.join("\n"))}</div>`
+                : ""
+            }
+            ${
+              documentState.headerLogo
+                ? `
+                  <div class="supporting-image">
+                    <img src="${documentState.headerLogo}" alt="Marca complementar do documento" />
+                  </div>
+                `
+                : ""
+            }
+            ${
+              documentState.footerImage
+                ? `
+                  <div class="supporting-image">
+                    <img src="${documentState.footerImage}" alt="Imagem complementar do documento" />
+                  </div>
+                `
+                : ""
+            }
+          </section>
+        `
+        : ""
+    }
+  `;
+}
+
+function buildOfficialDocumentPreviewHtml(documentState: DocumentState) {
+  return buildSystemPdfHtml(
+    {
+      title: documentState.title,
+      subtitle:
+        "Documento oficial padronizado conforme o modelo institucional de PDF.",
+      documentLabel: `${documentState.template} • ${documentState.code}`,
+      preparedBy: documentState.approver || "Sistema",
+      fileName: `${documentState.fileName || documentState.code}.pdf`,
+      bodyHtml: buildOfficialDocumentBodyHtml(documentState),
+    },
+    getPdfSettings(),
+    false,
+  );
+}
+
 export function OfficialDocumentsWorkspace({
   project,
   savedDocuments,
@@ -275,6 +446,10 @@ export function OfficialDocumentsWorkspace({
 
   const selectedDescription = templateDetails[documentState.template].description;
   const exportText = useMemo(() => makeExportText(documentState), [documentState]);
+  const previewHtml = useMemo(
+    () => buildOfficialDocumentPreviewHtml(documentState),
+    [documentState],
+  );
 
   function updateField<K extends keyof DocumentState>(key: K, value: DocumentState[K]) {
     setDocumentState((current) => ({ ...current, [key]: value }));
@@ -374,128 +549,27 @@ export function OfficialDocumentsWorkspace({
   }
 
   function downloadPdf() {
-    const pdf = new jsPDF({ unit: "pt", format: "a4" });
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const margin = 46;
-    let y = 62;
-    const recipientLines = [
-      documentState.recipient,
-      documentState.recipientRole,
-      documentState.institution,
-      documentState.address,
-    ].filter(Boolean);
-
-    pdf.setFont("helvetica", "bold");
-    if (documentState.headerLogo) {
-      try {
-        pdf.addImage(documentState.headerLogo, "PNG", margin, y - 12, 120, 54);
-      } catch {
-        pdf.rect(margin, y - 12, 120, 54);
-      }
-    } else {
-      pdf.rect(margin, y - 12, 120, 54);
-      pdf.text("VIVA", margin + 36, y + 20);
-    }
-
-    pdf.setFontSize(17);
-    pdf.text("COMPANHIA DE ARTES VIVA", margin + 160, y + 8);
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(10);
-    pdf.text("Instituição Cultural", margin + 160, y + 26);
-    pdf.text("Documentos Oficiais e Administrativos", margin + 160, y + 42);
-
-    y += 100;
-    pdf.setFont("helvetica", "bold");
-    pdf.text(`${documentState.template.toUpperCase()} ${documentState.code}`, margin, y);
-    pdf.setFont("helvetica", "normal");
-    if (documentState.city || documentState.date) {
-      pdf.text(
-        `${[documentState.city, formatLongDate(documentState.date)].filter(Boolean).join(", ")}.`,
-        pageWidth - margin - 145,
-        y,
-      );
-    }
-
-    if (recipientLines.length > 0) {
-      y += 42;
-      pdf.text("Ao Senhor(a)", margin, y);
-      y += 16;
-      recipientLines.forEach((line) => {
-        pdf.text(line, margin, y);
-        y += 16;
-      });
-    }
-
-    if (documentState.subject) {
-      y += 22;
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Assunto:", margin, y);
-      pdf.setFont("helvetica", "normal");
-      pdf.text(documentState.subject, margin + 46, y);
-    }
-
-    y += 34;
-    if (documentState.content) {
-      const lines = pdf.splitTextToSize(documentState.content, pageWidth - margin * 2);
-      pdf.text(lines, margin, y);
-      y += lines.length * 14 + 44;
-    }
-
-    pdf.text("Atenciosamente,", margin, y);
-    y += 58;
-    if (documentState.signerOne || documentState.signerOneRole) {
-      pdf.line(margin, y, margin + 210, y);
-      if (documentState.signerOne) {
-        pdf.text(documentState.signerOne, margin + 72, y + 18);
-      }
-      if (documentState.signerOneRole) {
-        pdf.text(documentState.signerOneRole, margin + 54, y + 34);
-      }
-    }
-    if (documentState.signerTwo || documentState.signerTwoRole) {
-      pdf.line(pageWidth - margin - 210, y, pageWidth - margin, y);
-      if (documentState.signerTwo) {
-        pdf.text(documentState.signerTwo, pageWidth - margin - 138, y + 18);
-      }
-      if (documentState.signerTwoRole) {
-        pdf.text(documentState.signerTwoRole, pageWidth - margin - 150, y + 34);
-      }
-    }
-
-    const footerY = 742;
-    pdf.line(margin, footerY, pageWidth - margin, footerY);
-    if (documentState.footerImage) {
-      try {
-        pdf.addImage(documentState.footerImage, "PNG", margin, footerY + 10, 34, 24);
-      } catch {
-        pdf.rect(margin, footerY + 10, 34, 24);
-      }
-    }
-    pdf.setFontSize(8);
-    if (documentState.footerText) {
-      pdf.text(documentState.footerText, pageWidth / 2, footerY + 18, {
-        align: "center",
-      });
-    }
-    if (documentState.footerDocument) {
-      pdf.text(documentState.footerDocument, pageWidth / 2, footerY + 34, {
-        align: "center",
-      });
-    }
-
-    pdf.save(`${documentState.fileName || documentState.code}.pdf`);
-    setFeedback("PDF gerado.");
+    openSystemPdf({
+      title: documentState.title,
+      subtitle:
+        "Documento oficial gerado com o cabeçalho, rodapé e cores definidos em Modelo de PDF.",
+      documentLabel: `${documentState.template} • ${documentState.code}`,
+      preparedBy: documentState.approver || "Sistema",
+      fileName: `${documentState.fileName || documentState.code}.pdf`,
+      bodyHtml: buildOfficialDocumentBodyHtml(documentState),
+    });
+    setFeedback("PDF institucional aberto para salvar ou imprimir.");
   }
 
   return (
     <div className="space-y-6">
       <SectionCard
-        title="Logo especial dos documentos oficiais"
-        description="Use uma logo própria para papel timbrado, ofícios e PDFs."
+        title="Complemento visual do documento"
+        description="O PDF final usa o cabeçalho do Modelo de PDF. Esta imagem pode entrar apenas como complemento do conteúdo."
         actions={
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium">
             <ImagePlus className="size-4 text-primary" />
-            Alterar logo
+            Inserir imagem
             <input
               className="hidden"
               type="file"
@@ -512,7 +586,7 @@ export function OfficialDocumentsWorkspace({
             {documentState.headerLogo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
-                alt="Logo dos documentos oficiais"
+                alt="Imagem complementar dos documentos oficiais"
                 className="h-full w-full rounded-lg object-contain"
                 src={documentState.headerLogo}
               />
@@ -521,9 +595,9 @@ export function OfficialDocumentsWorkspace({
             )}
           </div>
           <div>
-            <p className="font-semibold">Cabeçalho dos documentos oficiais</p>
+            <p className="font-semibold">Imagem complementar do documento</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              PNG/JPG/WebP. Para PDF, prefira PNG transparente.
+              PNG/JPG/WebP. O cabeçalho oficial do PDF segue a configuração global.
             </p>
           </div>
         </div>
@@ -702,8 +776,8 @@ export function OfficialDocumentsWorkspace({
           </SectionCard>
 
           <SectionCard
-            title="Rodapé do documento"
-            description="Texto, CNPJ e imagem opcional do rodapé."
+            title="Informações complementares"
+            description="Esses dados entram como complemento do conteúdo. O rodapé final do PDF vem do Modelo de PDF."
           >
             <div className="grid gap-3">
               <textarea
@@ -837,7 +911,14 @@ export function OfficialDocumentsWorkspace({
           </div>
 
           {previewMode ? (
-            <DocumentPreview documentState={documentState} />
+            <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-slate-100">
+              <iframe
+                suppressHydrationWarning
+                title="Pré-visualização do documento oficial"
+                srcDoc={previewHtml}
+                className="h-[860px] w-full border-0 bg-slate-100"
+              />
+            </div>
           ) : (
             <>
               <div className="mb-3 flex flex-wrap gap-2">
@@ -893,117 +974,5 @@ function Field({
       <span className="text-sm font-medium">{label}</span>
       {children}
     </label>
-  );
-}
-
-function DocumentPreview({ documentState }: { documentState: DocumentState }) {
-  const recipientLines = [
-    documentState.recipient,
-    documentState.recipientRole,
-    documentState.institution,
-    documentState.address,
-  ].filter(Boolean);
-  const signatures = [
-    { name: documentState.signerOne, role: documentState.signerOneRole },
-    { name: documentState.signerTwo, role: documentState.signerTwoRole },
-  ].filter((signature) => signature.name || signature.role);
-  const showFooter =
-    documentState.footerText || documentState.footerDocument || documentState.footerImage;
-
-  return (
-    <div className="overflow-auto rounded-lg bg-slate-900/85 p-4">
-      <article className="mx-auto min-h-[760px] w-full max-w-[760px] bg-white p-10 text-[13px] leading-6 text-black shadow-xl sm:p-14">
-        <header className="grid items-center gap-8 sm:grid-cols-[220px_1fr]">
-          <div className="flex h-20 items-center justify-center bg-zinc-900 text-white">
-            {documentState.headerLogo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                alt="Logo do documento"
-                className="h-full w-full object-contain"
-                src={documentState.headerLogo}
-              />
-            ) : (
-              <span className="text-4xl font-black">VIVA</span>
-            )}
-          </div>
-          <div>
-            <h2 className="text-2xl font-black">COMPANHIA DE ARTES VIVA</h2>
-            <p>Instituição Cultural</p>
-            <p>Documentos Oficiais e Administrativos</p>
-          </div>
-        </header>
-
-        <div className="mt-12 flex flex-wrap items-center justify-between gap-3">
-          <p className="font-bold">
-            {documentState.template.toUpperCase()} {documentState.code}
-          </p>
-          {documentState.city || documentState.date ? (
-            <p>
-              {[documentState.city, formatLongDate(documentState.date)]
-                .filter(Boolean)
-                .join(", ")}
-              .
-            </p>
-          ) : null}
-        </div>
-
-        {recipientLines.length > 0 ? (
-          <div className="mt-10 whitespace-pre-line">
-            {["Ao Senhor(a)", ...recipientLines].join("\n")}
-          </div>
-        ) : null}
-
-        {documentState.subject ? (
-          <p className="mt-10">
-            <strong>Assunto:</strong> {documentState.subject}
-          </p>
-        ) : null}
-
-        {documentState.content ? (
-          <div className="mt-10 whitespace-pre-line text-justify">
-            {documentState.content}
-          </div>
-        ) : null}
-
-        <p className="mt-12">Atenciosamente,</p>
-
-        {signatures.length > 0 ? (
-          <div className="mt-16 grid gap-8 sm:grid-cols-2">
-            {signatures.map((signature) => (
-              <Signature
-                key={`${signature.name}-${signature.role}`}
-                name={signature.name}
-                role={signature.role}
-              />
-            ))}
-          </div>
-        ) : null}
-
-        {showFooter ? (
-          <footer className="mt-16 border-t border-black/60 pt-3 text-center text-[11px] leading-5">
-            {documentState.footerImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                alt="Imagem do rodapé"
-                className="mx-auto mb-2 h-10 max-w-full object-contain"
-                src={documentState.footerImage}
-              />
-            ) : null}
-            {documentState.footerText ? <p>{documentState.footerText}</p> : null}
-            {documentState.footerDocument ? <p>{documentState.footerDocument}</p> : null}
-          </footer>
-        ) : null}
-      </article>
-    </div>
-  );
-}
-
-function Signature({ name, role }: { name: string; role: string }) {
-  return (
-    <div className="text-center">
-      <div className="mb-2 border-t border-black" />
-      <p>{name}</p>
-      <p>{role}</p>
-    </div>
   );
 }

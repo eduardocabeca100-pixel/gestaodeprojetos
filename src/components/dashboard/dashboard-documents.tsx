@@ -19,7 +19,7 @@ export function DashboardDocuments({
         {documents.map((document) => (
           <div
             key={document.id}
-            className="flex items-center gap-3 rounded-lg border border-border bg-white p-3"
+            className="flex items-center gap-3 rounded-[1.1rem] border border-white/80 bg-white/86 p-3 shadow-[0_18px_36px_-32px_rgba(99,102,241,0.34)]"
           >
             <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
               {document.expiresAt ? (

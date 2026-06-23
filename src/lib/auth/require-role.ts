@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 import { canAccessRole, dashboardRoles, type Role } from "@/lib/auth/permissions";
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
@@ -23,7 +24,7 @@ export const demoProfile: CurrentProfile = {
   must_change_password: false,
 };
 
-export async function getCurrentProfile(): Promise<CurrentProfile | null> {
+export const getCurrentProfile = cache(async (): Promise<CurrentProfile | null> => {
   if (!hasSupabaseServerEnv()) {
     return demoProfile;
   }
@@ -71,7 +72,7 @@ export async function getCurrentProfile(): Promise<CurrentProfile | null> {
     is_active: profile.is_active,
     must_change_password: profile.must_change_password ?? false,
   };
-}
+});
 
 export async function requireAuthorizedProfile(
   roles: Role[] = [...dashboardRoles],

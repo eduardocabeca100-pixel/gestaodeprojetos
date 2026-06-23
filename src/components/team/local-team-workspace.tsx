@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import Image from "next/image";
+import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import {
+  Camera,
   CheckCircle2,
   DollarSign,
   History,
+  ImagePlus,
   Pencil,
   Plus,
   Save,
@@ -13,10 +16,10 @@ import {
   UsersRound,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { syncProjectFinancialDraft } from "@/lib/local-financial-sync";
 import {
   calculateAgeFromBirthDate,
   createLocalId,
-  defaultLocalTeamMembers,
   makeAssignmentFromMember,
   makeMemberFromAssignment,
   normalizeAssignment,
@@ -123,6 +126,7 @@ const brlFormatter = new Intl.NumberFormat("pt-BR", {
 const emptyMemberDraft: Omit<LocalTeamMember, "id"> = {
   name: "",
   fullName: "",
+  avatarUrl: null,
   profileType: "Artista",
   role: "",
   email: "",
@@ -158,6 +162,7 @@ const emptyAssignmentDraft: AssignmentDraft = {
   memberId: "",
   name: "",
   fullName: "",
+  avatarUrl: null,
   profileType: "Artista",
   role: "",
   email: "",
@@ -195,16 +200,6 @@ function formatCurrencyInput(value: string) {
   return brlFormatter.format(Number(digits) / 100);
 }
 
-
-function normalizeFinancialKey(value: string) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ");
-}
-
 function inferPaymentStatus(
   expectedAmount: string,
   paidAmount: string,
@@ -222,138 +217,6 @@ function inferPaymentStatus(
   }
 
   return "Parcial";
-}
-
-function syncProjectFinancialsWithTeam(
-  currentProjectId: string,
-  assignments: LocalProjectAssignment[],
-) {
-  if (typeof window === "undefined") return;
-
-  const key = `viva:gestao-avancada:${currentProjectId}`;
-  const saved = window.localStorage.getItem(key);
-
-  if (!saved) return;
-
-  try {
-    const data = JSON.parse(saved) as {
-      pending?: unknown[];
-      tasks?: unknown[];
-      rubrics?: Array<Record<string, string>>;
-    };
-
-    const currentRubrics = Array.isArray(data.rubrics) ? data.rubrics : [];
-    const byRubric = new Map<
-      string,
-      {
-        name: string;
-        expected: number;
-        paid: number;
-        count: number;
-      }
-    >();
-
-    let totalExpected = 0;
-    let totalPaid = 0;
-
-    assignments.forEach((assignment) => {
-      const expected = parseCurrency(assignment.expectedAmount);
-      const paid = parseCurrency(assignment.paidAmount);
-
-      totalExpected += expected;
-      totalPaid += paid;
-
-      const rubricName = assignment.rubric?.trim() || "Equipe sem rubrica";
-      const rubricKey = normalizeFinancialKey(rubricName);
-
-      const current = byRubric.get(rubricKey) ?? {
-        name: rubricName,
-        expected: 0,
-        paid: 0,
-        count: 0,
-      };
-
-      current.expected += expected;
-      current.paid += paid;
-      current.count += 1;
-
-      byRubric.set(rubricKey, current);
-    });
-
-    const matchedKeys = new Set<string>();
-
-    const updatedRubrics = currentRubrics.map((rubric) => {
-      const name = rubric.name || "";
-      const rubricKey = normalizeFinancialKey(name);
-      const match = byRubric.get(rubricKey);
-
-      if (!match) return rubric;
-
-      matchedKeys.add(rubricKey);
-
-      const currentApproved = rubric.approved || rubric.planned || "";
-      const approved =
-        parseCurrency(currentApproved) > 0
-          ? currentApproved
-          : formatBRLFromNumber(match.expected);
-
-      const executed = formatBRLFromNumber(match.paid);
-
-      return {
-        ...rubric,
-        approved,
-        planned: approved,
-        executed,
-        paid: executed,
-        quantity: rubric.quantity || `${match.count} pessoa(s)`,
-        unit: rubric.unit || "Equipe",
-        paymentBasis: rubric.paymentBasis || "Conforme pagamentos lançados na equipe",
-      };
-    });
-
-    const missingRubrics = Array.from(byRubric.entries())
-      .filter(([rubricKey]) => !matchedKeys.has(rubricKey))
-      .map(([rubricKey, item]) => ({
-        id: `rub-auto-${rubricKey.replace(/[^a-z0-9]+/g, "-")}`,
-        category: "Equipe do projeto",
-        name: item.name,
-        unit: "Equipe",
-        quantity: `${item.count} pessoa(s)`,
-        paymentBasis: "Conforme pagamentos lançados na equipe",
-        approved: formatBRLFromNumber(item.expected),
-        planned: formatBRLFromNumber(item.expected),
-        executed: formatBRLFromNumber(item.paid),
-        paid: formatBRLFromNumber(item.paid),
-        notes: "Rubrica criada automaticamente a partir dos pagamentos da equipe.",
-      }));
-
-    const summaryId = "rub-auto-pagamentos-equipe";
-    const summaryRubric = {
-      id: summaryId,
-      category: "Resumo automático",
-      name: "Pagamentos da equipe",
-      unit: "Equipe",
-      quantity: `${assignments.length} pessoa(s)`,
-      paymentBasis: "Somatório dos valores previstos e pagos na equipe do projeto",
-      approved: formatBRLFromNumber(totalExpected),
-      planned: formatBRLFromNumber(totalExpected),
-      executed: formatBRLFromNumber(totalPaid),
-      paid: formatBRLFromNumber(totalPaid),
-      notes: "Resumo automático. Atualiza sempre que pagamentos da equipe são alterados.",
-    };
-
-    const withoutOldSummary = updatedRubrics.filter((rubric) => rubric.id !== summaryId);
-
-    window.localStorage.setItem(
-      key,
-      JSON.stringify({
-        ...data,
-        rubrics: [summaryRubric, ...withoutOldSummary, ...missingRubrics],
-      }),
-    );
-  } catch (error) {
-    console.warn("Não foi possível sincronizar equipe com financeiro.", error);
-  }
 }
 
 
@@ -404,13 +267,44 @@ function tagClass(profileType: LocalPersonType) {
   return "bg-slate-200 text-slate-600";
 }
 
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "VC";
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Formato de imagem inválido."));
+    };
+
+    reader.onerror = () => reject(new Error("Não foi possível carregar a foto."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function LocalTeamWorkspace({
   initialTab = "project",
   activeProject = fallbackProject,
 }: LocalTeamWorkspaceProps) {
   const [tab, setTab] = useState<Tab>(initialTab);
-  const [members, setMembers] = useState<LocalTeamMember[]>(defaultLocalTeamMembers);
-  const [assignmentsByProject, setAssignmentsByProject] = useState<Record<string, LocalProjectAssignment[]>>({});
+  const [members, setMembers] = useState<LocalTeamMember[]>(() =>
+    readLocalTeamRoster(),
+  );
+  const [assignmentsByProject, setAssignmentsByProject] = useState<
+    Record<string, LocalProjectAssignment[]>
+  >(() => readProjectAssignments());
   const [memberDraft, setMemberDraft] = useState(emptyMemberDraft);
   const [projectDraft, setProjectDraft] = useState<AssignmentDraft>(emptyAssignmentDraft);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
@@ -445,11 +339,6 @@ export function LocalTeamWorkspace({
   const projectArtistCount = projectAssignments.filter((item) => item.profileType === "Artista").length;
   const projectTechnicalCount = projectAssignments.filter((item) => item.profileType === "Equipe técnica").length;
 
-  useEffect(() => {
-    setMembers(readLocalTeamRoster());
-    setAssignmentsByProject(readProjectAssignments());
-  }, []);
-
   function persistMembers(nextMembers: LocalTeamMember[]) {
     const normalized = nextMembers.map(normalizeTeamMember);
     setMembers(normalized);
@@ -480,7 +369,7 @@ export function LocalTeamWorkspace({
 
     setAssignmentsByProject(normalized);
     writeProjectAssignments(normalized);
-    syncProjectFinancialsWithTeam(projectId, normalized[projectId] ?? []);
+    syncProjectFinancialDraft(projectId, normalized[projectId] ?? []);
   }
 
   function resetMemberForm() {
@@ -509,6 +398,30 @@ export function LocalTeamWorkspace({
       birthDate: value,
       age: calculateAgeFromBirthDate(value),
     });
+  }
+
+  async function handleMemberAvatarChange(file: File | null) {
+    if (!file) return;
+
+    try {
+      const avatarUrl = await readFileAsDataUrl(file);
+      setMemberDraft((current) => ({ ...current, avatarUrl }));
+      setMessage("Foto adicionada ao cadastro permanente.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível carregar a foto.");
+    }
+  }
+
+  async function handleProjectAvatarChange(file: File | null) {
+    if (!file) return;
+
+    try {
+      const avatarUrl = await readFileAsDataUrl(file);
+      setProjectDraft((current) => ({ ...current, avatarUrl }));
+      setMessage("Foto adicionada à pessoa deste projeto.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível carregar a foto.");
+    }
   }
 
   function saveMember(event: FormEvent<HTMLFormElement>) {
@@ -541,6 +454,7 @@ export function LocalTeamWorkspace({
                 ...assignment,
                 name: normalizedDraft.name,
                 fullName: normalizedDraft.fullName,
+                avatarUrl: normalizedDraft.avatarUrl,
                 profileType: normalizedDraft.profileType,
                 role: normalizedDraft.role,
                 email: normalizedDraft.email,
@@ -581,6 +495,7 @@ export function LocalTeamWorkspace({
     setMemberDraft({
       name: member.name,
       fullName: member.fullName,
+      avatarUrl: member.avatarUrl,
       profileType: member.profileType,
       role: member.role,
       email: member.email,
@@ -715,6 +630,7 @@ export function LocalTeamWorkspace({
       memberId: assignment.memberId,
       name: assignment.name,
       fullName: assignment.fullName,
+      avatarUrl: assignment.avatarUrl,
       profileType: assignment.profileType,
       role: assignment.role,
       email: assignment.email,
@@ -736,39 +652,6 @@ export function LocalTeamWorkspace({
       notes: assignment.notes,
     });
     setMessage("Editando pessoa da equipe do projeto.");
-  }
-
-  function updateAssignment(assignmentId: string, field: EditableAssignmentField, value: string) {
-    const normalizedValue =
-      field === "expectedAmount" || field === "paidAmount"
-        ? formatCurrencyInput(value)
-        : value;
-
-    persistAssignments({
-      ...assignmentsByProject,
-      [projectId]: projectAssignments.map((assignment) => {
-        if (assignment.id !== assignmentId) return assignment;
-
-        const updatedAssignment = {
-          ...assignment,
-          [field]: field === "paymentStatus"
-            ? (normalizedValue as LocalPaymentStatus)
-            : field === "profileType"
-              ? (normalizedValue as LocalPersonType)
-              : normalizedValue,
-        };
-
-        if (field === "expectedAmount" || field === "paidAmount") {
-          updatedAssignment.paymentStatus = inferPaymentStatus(
-            updatedAssignment.expectedAmount,
-            updatedAssignment.paidAmount,
-            updatedAssignment.paymentStatus,
-          );
-        }
-
-        return updatedAssignment;
-      }),
-    });
   }
 
   function toggleHistory(assignmentId: string) {
@@ -1086,6 +969,8 @@ export function LocalTeamWorkspace({
                   }}
                   amountLabel="Valor previsto"
                   amountField="expectedAmount"
+                  onAvatarChange={handleProjectAvatarChange}
+                  onClearAvatar={() => setProjectDraft((current) => ({ ...current, avatarUrl: null }))}
                 />
 
                 {!editingAssignmentId ? (
@@ -1127,27 +1012,37 @@ export function LocalTeamWorkspace({
                   <article key={assignment.id} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                       <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h4 className="text-lg font-black text-slate-950">{assignment.fullName || assignment.name}</h4>
-                          <span className={`rounded-full px-3 py-1 text-xs font-black uppercase ${tagClass(assignment.profileType)}`}>
-                            {assignment.profileType}
-                          </span>
-                        </div>
+                        <div className="flex items-start gap-4">
+                          <MemberAvatar
+                            name={assignment.fullName || assignment.name}
+                            avatarUrl={assignment.avatarUrl}
+                            size="lg"
+                          />
 
-                        <p className="mt-1 text-sm font-semibold text-slate-600">{assignment.role || "Função não informada"}</p>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h4 className="text-lg font-black text-slate-950">{assignment.fullName || assignment.name}</h4>
+                              <span className={`rounded-full px-3 py-1 text-xs font-black uppercase ${tagClass(assignment.profileType)}`}>
+                                {assignment.profileType}
+                              </span>
+                            </div>
 
-                        <div className="mt-3 grid gap-2 text-sm text-slate-500 md:grid-cols-2 xl:grid-cols-3">
-                          <p><strong>CPF:</strong> {assignment.cpf || "Não informado"}</p>
-                          <p><strong>RG:</strong> {assignment.rg || "Não informado"}</p>
-                          <p><strong>Nascimento:</strong> {assignment.birthDate || "Não informado"} {assignment.age ? `• ${assignment.age} anos` : ""}</p>
-                          <p><strong>Telefone:</strong> {assignment.phone || "Não informado"}</p>
-                          <p><strong>E-mail:</strong> {assignment.email || "Não informado"}</p>
-                          <p><strong>Cidade:</strong> {assignment.cityUf || "Não informado"}</p>
-                          <p className="md:col-span-2 xl:col-span-3"><strong>Endereço:</strong> {assignment.address || "Não informado"}</p>
-                          <p><strong>Rubrica:</strong> {assignment.rubric || "Sem rubrica"}</p>
-                          <p><strong>Previsto:</strong> {assignment.expectedAmount || "R$ 0,00"}</p>
-                          <p><strong>Pago:</strong> {assignment.paidAmount || "R$ 0,00"} • <strong>Aberto:</strong> {formatBRLFromNumber(open)}</p>
-                          <p><strong>Status:</strong> {assignment.paymentStatus}</p>
+                            <p className="mt-1 text-sm font-semibold text-slate-600">{assignment.role || "Função não informada"}</p>
+
+                            <div className="mt-3 grid gap-2 text-sm text-slate-500 md:grid-cols-2 xl:grid-cols-3">
+                              <p><strong>CPF:</strong> {assignment.cpf || "Não informado"}</p>
+                              <p><strong>RG:</strong> {assignment.rg || "Não informado"}</p>
+                              <p><strong>Nascimento:</strong> {assignment.birthDate || "Não informado"} {assignment.age ? `• ${assignment.age} anos` : ""}</p>
+                              <p><strong>Telefone:</strong> {assignment.phone || "Não informado"}</p>
+                              <p><strong>E-mail:</strong> {assignment.email || "Não informado"}</p>
+                              <p><strong>Cidade:</strong> {assignment.cityUf || "Não informado"}</p>
+                              <p className="md:col-span-2 xl:col-span-3"><strong>Endereço:</strong> {assignment.address || "Não informado"}</p>
+                              <p><strong>Rubrica:</strong> {assignment.rubric || "Sem rubrica"}</p>
+                              <p><strong>Previsto:</strong> {assignment.expectedAmount || "R$ 0,00"}</p>
+                              <p><strong>Pago:</strong> {assignment.paidAmount || "R$ 0,00"} • <strong>Aberto:</strong> {formatBRLFromNumber(open)}</p>
+                              <p><strong>Status:</strong> {assignment.paymentStatus}</p>
+                            </div>
+                          </div>
                         </div>
                         <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
                           <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
@@ -1356,6 +1251,7 @@ export function LocalTeamWorkspace({
                 memberId: "",
                 name: memberDraft.name,
                 fullName: memberDraft.fullName,
+                avatarUrl: memberDraft.avatarUrl,
                 profileType: memberDraft.profileType,
                 role: memberDraft.role,
                 email: memberDraft.email,
@@ -1408,6 +1304,8 @@ export function LocalTeamWorkspace({
               amountLabel="Valor padrão"
               amountField="expectedAmount"
               hidePaid
+              onAvatarChange={handleMemberAvatarChange}
+              onClearAvatar={() => setMemberDraft((current) => ({ ...current, avatarUrl: null }))}
             />
 
             <label className="mt-4 flex items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700">
@@ -1429,27 +1327,35 @@ export function LocalTeamWorkspace({
             {members.map((member) => (
               <article key={member.id} className="rounded-[1.5rem] border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="text-lg font-black text-slate-950">{member.fullName || member.name}</h4>
-                      <span className={`rounded-full px-3 py-1 text-xs font-black uppercase ${tagClass(member.profileType)}`}>
-                        {member.profileType}
-                      </span>
-                      <span className={`rounded-full px-3 py-1 text-xs font-black uppercase ${member.active ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-500"}`}>
-                        {member.active ? "Ativo" : "Inativo"}
-                      </span>
-                    </div>
+                  <div className="flex items-start gap-4">
+                    <MemberAvatar
+                      name={member.fullName || member.name}
+                      avatarUrl={member.avatarUrl}
+                      size="lg"
+                    />
 
-                    <p className="mt-1 text-sm font-semibold text-slate-600">{member.role}</p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="text-lg font-black text-slate-950">{member.fullName || member.name}</h4>
+                        <span className={`rounded-full px-3 py-1 text-xs font-black uppercase ${tagClass(member.profileType)}`}>
+                          {member.profileType}
+                        </span>
+                        <span className={`rounded-full px-3 py-1 text-xs font-black uppercase ${member.active ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-500"}`}>
+                          {member.active ? "Ativo" : "Inativo"}
+                        </span>
+                      </div>
 
-                    <div className="mt-3 grid gap-2 text-sm text-slate-500 md:grid-cols-2">
-                      <p><strong>CPF:</strong> {member.cpf || "Não informado"}</p>
-                      <p><strong>Nascimento:</strong> {member.birthDate || "Não informado"} {member.age ? `• ${member.age} anos` : ""}</p>
-                      <p><strong>Telefone:</strong> {member.phone || "Não informado"}</p>
-                      <p><strong>E-mail:</strong> {member.email || "Não informado"}</p>
-                      <p className="md:col-span-2"><strong>Endereço:</strong> {member.address || "Não informado"}</p>
-                      <p><strong>Rubrica padrão:</strong> {member.rubric || "Sem rubrica"}</p>
-                      <p><strong>Valor padrão:</strong> {member.defaultAmount || "R$ 0,00"}</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-600">{member.role}</p>
+
+                      <div className="mt-3 grid gap-2 text-sm text-slate-500 md:grid-cols-2">
+                        <p><strong>CPF:</strong> {member.cpf || "Não informado"}</p>
+                        <p><strong>Nascimento:</strong> {member.birthDate || "Não informado"} {member.age ? `• ${member.age} anos` : ""}</p>
+                        <p><strong>Telefone:</strong> {member.phone || "Não informado"}</p>
+                        <p><strong>E-mail:</strong> {member.email || "Não informado"}</p>
+                        <p className="md:col-span-2"><strong>Endereço:</strong> {member.address || "Não informado"}</p>
+                        <p><strong>Rubrica padrão:</strong> {member.rubric || "Sem rubrica"}</p>
+                        <p><strong>Valor padrão:</strong> {member.defaultAmount || "R$ 0,00"}</p>
+                      </div>
                     </div>
                   </div>
 
@@ -1483,15 +1389,26 @@ function PersonFormFields({
   amountLabel,
   amountField,
   hidePaid = false,
+  onAvatarChange,
+  onClearAvatar,
 }: {
   draft: AssignmentDraft;
   onChange: (field: EditableAssignmentField, value: string) => void;
   amountLabel: string;
   amountField: "expectedAmount";
   hidePaid?: boolean;
+  onAvatarChange: (file: File | null) => void | Promise<void>;
+  onClearAvatar: () => void;
 }) {
   return (
     <div className="space-y-4">
+      <AvatarField
+        name={draft.fullName || draft.name}
+        avatarUrl={draft.avatarUrl}
+        onAvatarChange={onAvatarChange}
+        onClearAvatar={onClearAvatar}
+      />
+
       <InputLine label="Nome completo">
         <input
           value={draft.fullName}
@@ -1702,6 +1619,106 @@ function PersonFormFields({
           placeholder="Observações, disponibilidade, detalhes artísticos/técnicos..."
         />
       </InputLine>
+    </div>
+  );
+}
+
+function AvatarField({
+  name,
+  avatarUrl,
+  onAvatarChange,
+  onClearAvatar,
+}: {
+  name: string;
+  avatarUrl: string | null;
+  onAvatarChange: (file: File | null) => void | Promise<void>;
+  onClearAvatar: () => void;
+}) {
+  return (
+    <div className="rounded-[1.5rem] border border-slate-200 bg-slate-50/90 p-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <MemberAvatar name={name} avatarUrl={avatarUrl} size="xl" />
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-700">
+              <Camera className="size-4" />
+            </div>
+            <div>
+              <p className="text-sm font-black text-slate-950">Foto da pessoa</p>
+              <p className="text-xs text-slate-500">
+                Adicione uma foto para deixar a equipe mais visual e organizada.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800">
+              <ImagePlus className="size-4" />
+              Escolher foto
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(event) => {
+                  void onAvatarChange(event.target.files?.[0] ?? null);
+                  event.currentTarget.value = "";
+                }}
+              />
+            </label>
+
+            {avatarUrl ? (
+              <button
+                type="button"
+                onClick={onClearAvatar}
+                className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 transition hover:border-red-200 hover:text-red-600"
+              >
+                Remover foto
+              </button>
+            ) : (
+              <span className="text-xs text-slate-500">
+                JPG, PNG ou WebP. A foto fica salva junto com este cadastro.
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MemberAvatar({
+  name,
+  avatarUrl,
+  size = "md",
+}: {
+  name: string;
+  avatarUrl: string | null;
+  size?: "md" | "lg" | "xl";
+}) {
+  const sizeClass =
+    size === "xl" ? "size-24" : size === "lg" ? "size-16" : "size-12";
+  const label = name || "Pessoa da equipe";
+
+  return (
+    <div
+      className={`relative ${sizeClass} shrink-0 overflow-hidden rounded-[1.4rem] border border-white/70 bg-gradient-to-br from-violet-500 via-blue-500 to-cyan-400 shadow-[0_18px_45px_rgba(79,70,229,0.28)]`}
+    >
+      {avatarUrl ? (
+        <Image
+          alt={label}
+          className="h-full w-full object-cover"
+          height={160}
+          src={avatarUrl}
+          unoptimized
+          width={160}
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center text-sm font-black text-white">
+          {getInitials(label)}
+        </div>
+      )}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.18),transparent_40%,rgba(15,23,42,0.1))]" />
     </div>
   );
 }
