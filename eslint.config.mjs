@@ -12,8 +12,6 @@ const eslintConfig = defineConfig([
     "coverage/**",
     "node_modules/**",
     "next-env.d.ts",
-
-    // Backups e arquivos temporários gerados durante correções
     ".backup-*/**",
     ".tmp-*/**",
     "artifacts/**",
