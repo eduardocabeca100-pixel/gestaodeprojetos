@@ -79,7 +79,7 @@ export function ScheduleWorkspace({
     if (!isClient) return;
 
     const handle = window.setTimeout(() => {
-      const storedActivities = readStoredScheduleActivities(project.id, activities);
+      const storedActivities = readStoredScheduleActivities(project, activities);
 
       setItems(storedActivities);
       setSelectedId((current) =>
@@ -99,7 +99,7 @@ export function ScheduleWorkspace({
 
   function commitItems(nextItems: Activity[], message: string, nextSelectedId?: string) {
     setItems(nextItems);
-    writeStoredScheduleActivities(project.id, nextItems);
+    writeStoredScheduleActivities(project, nextItems);
 
     if (nextSelectedId !== undefined) {
       setSelectedId(nextSelectedId);
@@ -160,7 +160,7 @@ export function ScheduleWorkspace({
   }
 
   function restoreInitialSchedule() {
-    resetStoredScheduleActivities(project.id);
+    resetStoredScheduleActivities(project);
     setItems(activities);
     setSelectedId(activities[0]?.id ?? "");
     setFeedback("Cronograma inicial restaurado.");

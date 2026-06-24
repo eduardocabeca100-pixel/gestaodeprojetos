@@ -73,7 +73,7 @@ export function DiaryWorkspace({
 
   useEffect(() => {
     function refreshDiaryActivities() {
-      const nextActivities = readStoredScheduleActivities(project.id, initialActivities);
+      const nextActivities = readStoredScheduleActivities(project, initialActivities);
 
       setActivities(nextActivities);
       setSelectedActivityId((current) =>

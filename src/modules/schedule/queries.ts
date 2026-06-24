@@ -42,8 +42,12 @@ async function getScopedProject(projectId?: string) {
 }
 
 function buildActivities(project: Project): Activity[] {
-  const titles = projectLessons[project.id] ?? projectLessons.refens;
-  const dates = projectStartDates[project.id] ?? projectStartDates.refens;
+  const titles = projectLessons[project.id] ?? projectLessons[project.slug] ?? [];
+  const dates = projectStartDates[project.id] ?? projectStartDates[project.slug] ?? [];
+
+  if (titles.length === 0) {
+    return [];
+  }
 
   return titles.map((title, index) => ({
     id: `${project.id}-atividade-${index + 1}`,
