@@ -25,25 +25,30 @@ const stageToStatus: Record<ProjectStage, ProjectStatus> = {
   "Prestação de contas": "Prestação de contas",
 };
 
-export async function updateProjectStage(formData: FormData) {
+export type ProjectStageActionState = {
+  ok: boolean;
+  message: string;
+};
+
+async function persistProjectStage(formData: FormData): Promise<ProjectStageActionState> {
   const projectId = String(formData.get("projectId") ?? "").trim();
   const rawStage = String(formData.get("stage") ?? "").trim();
   const stage = allowedStages.find((item) => item === rawStage);
 
   if (!projectId || !stage) {
-    return;
+    return { ok: false, message: "Projeto ou etapa inválida." };
   }
 
   const profile = await getCurrentProfile();
 
   if (!profile || !can(profile.role, "edit_project")) {
-    return;
+    return { ok: false, message: "Você não tem permissão para atualizar etapas." };
   }
 
   const supabase = await createClient();
 
   if (!supabase) {
-    return;
+    return { ok: false, message: "Supabase não configurado." };
   }
 
   const result = await supabase
@@ -57,7 +62,10 @@ export async function updateProjectStage(formData: FormData) {
     .single();
 
   if (result.error || !result.data) {
-    return;
+    return {
+      ok: false,
+      message: result.error?.message ?? "Não foi possível atualizar a etapa.",
+    };
   }
 
   const savedProject = result.data as { id: string; slug?: string | null };
@@ -69,4 +77,17 @@ export async function updateProjectStage(formData: FormData) {
   if (savedProject.slug) {
     revalidatePath(`/projetos/${savedProject.slug}`, "page");
   }
+
+  return { ok: true, message: `Etapa atualizada para ${stage}.` };
+}
+
+export async function updateProjectStage(formData: FormData) {
+  await persistProjectStage(formData);
+}
+
+export async function updateProjectStageWithState(
+  _state: ProjectStageActionState | undefined,
+  formData: FormData,
+): Promise<ProjectStageActionState> {
+  return persistProjectStage(formData);
 }

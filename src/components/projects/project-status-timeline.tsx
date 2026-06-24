@@ -1,6 +1,9 @@
-import { CheckCircle2, Circle, MousePointerClick } from "lucide-react";
+"use client";
 
-import { updateProjectStage } from "@/modules/projects/stage-actions";
+import { useActionState } from "react";
+import { CheckCircle2, Circle, Loader2, MousePointerClick } from "lucide-react";
+
+import { updateProjectStageWithState } from "@/modules/projects/stage-actions";
 import type { ProjectStage } from "@/modules/projects/types";
 
 const stages: ProjectStage[] = [
@@ -49,6 +52,7 @@ export function ProjectStatusTimeline({
   current: string;
 }) {
   const currentIndex = currentStageIndex(current);
+  const [state, formAction, pending] = useActionState(updateProjectStageWithState, undefined);
 
   return (
     <div className="space-y-4">
@@ -59,6 +63,18 @@ export function ProjectStatusTimeline({
         </div>
       </div>
 
+      {state?.message ? (
+        <div
+          className={
+            state.ok
+              ? "rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+              : "rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          }
+        >
+          {state.message}
+        </div>
+      ) : null}
+
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         {stages.map((stage, index) => {
           const complete = index < currentIndex;
@@ -66,29 +82,34 @@ export function ProjectStatusTimeline({
           const Icon = complete || active ? CheckCircle2 : Circle;
 
           return (
-            <form key={stage} action={updateProjectStage}>
+            <form key={stage} action={formAction}>
               <input type="hidden" name="projectId" value={projectId} />
               <input type="hidden" name="stage" value={stage} />
 
               <button
                 type="submit"
+                disabled={pending}
                 className={
                   active
-                    ? "h-full w-full rounded-lg border border-primary/40 bg-primary/10 p-3 text-left text-sm text-primary transition hover:-translate-y-0.5"
+                    ? "h-full w-full rounded-lg border border-primary/40 bg-primary/10 p-3 text-left text-sm text-primary transition hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
                     : complete
-                      ? "h-full w-full rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-left text-sm text-emerald-800 transition hover:-translate-y-0.5"
-                      : "h-full w-full rounded-lg border border-border bg-white p-3 text-left text-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5"
+                      ? "h-full w-full rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-left text-sm text-emerald-800 transition hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-70"
+                      : "h-full w-full rounded-lg border border-border bg-white p-3 text-left text-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 disabled:cursor-wait disabled:opacity-70"
                 }
               >
-                <Icon
-                  className={
-                    active
-                      ? "mb-2 size-4 text-primary"
-                      : complete
-                        ? "mb-2 size-4 text-emerald-600"
-                        : "mb-2 size-4 text-muted-foreground"
-                  }
-                />
+                {pending ? (
+                  <Loader2 className="mb-2 size-4 animate-spin text-muted-foreground" />
+                ) : (
+                  <Icon
+                    className={
+                      active
+                        ? "mb-2 size-4 text-primary"
+                        : complete
+                          ? "mb-2 size-4 text-emerald-600"
+                          : "mb-2 size-4 text-muted-foreground"
+                    }
+                  />
+                )}
 
                 <p className="font-semibold">{stage}</p>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">{stageHints[stage]}</p>

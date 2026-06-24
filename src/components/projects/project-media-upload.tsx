@@ -78,7 +78,7 @@ export function ProjectMediaUpload({
 
       const result = await supabase.storage.from(bucket).upload(path, file, {
         cacheControl: "3600",
-        upsert: false,
+        upsert: true,
         contentType: file.type,
       });
 

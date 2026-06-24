@@ -11,6 +11,13 @@ import { generateSlug } from "@/lib/utils/generate-slug";
 import { saveProject, type ProjectActionState } from "@/modules/projects/actions";
 import { projectSchema, type ProjectFormValues } from "@/modules/projects/schemas";
 import { projectStatuses, type Project } from "@/modules/projects/types";
+import {
+  PROJECT_TEAM_DRAFT_STORAGE_KEY,
+  makeAssignmentFromMember,
+  readLocalTeamRoster,
+  readProjectAssignments,
+  writeProjectAssignments,
+} from "@/components/team/local-team-store";
 
 const defaultProjectValues: ProjectFormValues = {
   name: "Reféns",
@@ -66,6 +73,42 @@ function getProjectValues(project?: Project): ProjectFormValues {
   };
 }
 
+function persistDraftTeamSelection(projectId: string) {
+  if (typeof window === "undefined") return;
+
+  try {
+    const saved = window.localStorage.getItem(PROJECT_TEAM_DRAFT_STORAGE_KEY);
+    const selectedIds = saved ? (JSON.parse(saved) as string[]) : [];
+
+    if (!selectedIds.length) return;
+
+    const roster = readLocalTeamRoster();
+    const assignmentsByProject = readProjectAssignments();
+    const currentAssignments = assignmentsByProject[projectId] ?? [];
+    const currentMemberIds = new Set(currentAssignments.map((assignment) => assignment.memberId));
+    const nextAssignments = [...currentAssignments];
+
+    for (const memberId of selectedIds) {
+      if (currentMemberIds.has(memberId)) continue;
+
+      const member = roster.find((item) => item.id === memberId);
+      if (!member) continue;
+
+      nextAssignments.push(makeAssignmentFromMember(member));
+      currentMemberIds.add(memberId);
+    }
+
+    writeProjectAssignments({
+      ...assignmentsByProject,
+      [projectId]: nextAssignments,
+    });
+
+    window.localStorage.removeItem(PROJECT_TEAM_DRAFT_STORAGE_KEY);
+  } catch (error) {
+    console.warn("Não foi possível vincular a equipe selecionada ao projeto.", error);
+  }
+}
+
 export function ProjectForm({ project }: { project?: Project }) {
   const router = useRouter();
   const [state, setState] = useState<ProjectActionState | undefined>();
@@ -102,6 +145,10 @@ export function ProjectForm({ project }: { project?: Project }) {
       setState(result);
 
       if (result.ok) {
+        if (result.projectId) {
+          persistDraftTeamSelection(result.projectId);
+        }
+
         if (!project && result.projectId) {
           router.push(`/projetos/${result.projectId}#editar-projeto`);
           return;
