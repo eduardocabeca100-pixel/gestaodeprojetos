@@ -143,10 +143,6 @@ function ProjectTeamPickerContent() {
                   <p className="mt-1 text-xs font-semibold text-slate-600">
                     {member.role || "Função não informada"}
                   </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {member.rubric || "Sem rubrica"}
-                    {member.defaultAmount ? ` • ${member.defaultAmount}` : ""}
-                  </p>
                 </div>
               ))}
             </div>
@@ -219,11 +215,6 @@ function ProjectTeamPickerContent() {
 
                         <span className="mt-1 block text-sm text-slate-600">
                           {member.role || "Função não informada"}
-                        </span>
-
-                        <span className="mt-1 block text-xs text-slate-400">
-                          {member.rubric || "Sem rubrica"}
-                          {member.defaultAmount ? ` • ${member.defaultAmount}` : ""}
                         </span>
                       </span>
                     </label>
