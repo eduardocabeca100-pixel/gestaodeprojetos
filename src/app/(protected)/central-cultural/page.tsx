@@ -5,7 +5,7 @@ export default function CentralCulturalPage() {
   return (
     <PageContainer
       title="Central Cultural"
-      description="Alertas, documentos, relatório de execução, rubricas, contratos, prestação de contas e dashboard geral da companhia."
+      description="Gestão de execução, prazos, documentos, relatórios, prestação de contas e demonstrativos administrativos."
     >
       <CulturalManagementSuite />
     </PageContainer>
