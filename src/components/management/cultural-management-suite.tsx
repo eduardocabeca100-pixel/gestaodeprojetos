@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { ProjectDocumentsVault } from "@/components/management/project-documents-vault";
 import { formatCurrency } from "@/lib/utils/format-currency";
 
 type IconComponent = ComponentType<{ className?: string }>;
@@ -906,131 +907,7 @@ Saldo estimado: ${formatCurrency(totals.remaining)}
         </div>
       ) : null}
 
-      {activeTab === "documents" ? (
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-black text-slate-950">Documentos do projeto</h3>
-              <p className="text-sm text-slate-500">
-                Base visual pronta. O próximo módulo adiciona upload, visualizar, baixar e apagar arquivo.
-              </p>
-            </div>
-            <Button
-              type="button"
-              onClick={() =>
-                commit(
-                  {
-                    ...state,
-                    documents: [
-                      {
-                        id: makeId("doc"),
-                        name: "Novo documento",
-                        category: "Geral",
-                        status: "Pendente",
-                        validUntil: "",
-                      },
-                      ...state.documents,
-                    ],
-                  },
-                  "Documento criado.",
-                )
-              }
-            >
-              <Plus className="size-4" />
-              Novo documento
-            </Button>
-          </div>
-
-          <div className="mt-5 grid gap-3">
-            {state.documents.map((item) => (
-              <div
-                key={item.id}
-                className="grid gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 xl:grid-cols-[1fr_180px_170px_170px_130px_44px]"
-              >
-                <TextInput
-                  value={item.name}
-                  onChange={(event) =>
-                    commit(
-                      {
-                        ...state,
-                        documents: state.documents.map((doc) =>
-                          doc.id === item.id ? { ...doc, name: event.target.value } : doc,
-                        ),
-                      },
-                      "Documento atualizado.",
-                    )
-                  }
-                />
-                <TextInput
-                  value={item.category}
-                  onChange={(event) =>
-                    commit(
-                      {
-                        ...state,
-                        documents: state.documents.map((doc) =>
-                          doc.id === item.id ? { ...doc, category: event.target.value } : doc,
-                        ),
-                      },
-                      "Categoria atualizada.",
-                    )
-                  }
-                />
-                <SelectInput
-                  value={item.status}
-                  onChange={(event) =>
-                    commit(
-                      {
-                        ...state,
-                        documents: state.documents.map((doc) =>
-                          doc.id === item.id
-                            ? { ...doc, status: event.target.value as ProjectDocument["status"] }
-                            : doc,
-                        ),
-                      },
-                      "Status atualizado.",
-                    )
-                  }
-                >
-                  <option>Pendente</option>
-                  <option>Enviado</option>
-                  <option>Aprovado</option>
-                  <option>Precisa corrigir</option>
-                </SelectInput>
-                <TextInput
-                  type="date"
-                  value={item.validUntil ?? ""}
-                  onChange={(event) =>
-                    commit(
-                      {
-                        ...state,
-                        documents: state.documents.map((doc) =>
-                          doc.id === item.id ? { ...doc, validUntil: event.target.value } : doc,
-                        ),
-                      },
-                      "Validade atualizada.",
-                    )
-                  }
-                />
-                <div className={`rounded-2xl border px-3 py-2 text-xs font-black ${statusTone(item.status)}`}>
-                  {item.status}
-                </div>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() =>
-                    commit(
-                      { ...state, documents: state.documents.filter((doc) => doc.id !== item.id) },
-                      "Documento removido.",
-                    )
-                  }
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
+      {activeTab === "documents" ? <ProjectDocumentsVault /> : null}
 
       {activeTab === "reports" ? (
         <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
