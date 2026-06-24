@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import jsPDF from "jspdf";
 import {
   CalendarDays,
@@ -17,6 +17,7 @@ import type { Project } from "@/modules/projects/types";
 import type { Activity } from "@/modules/schedule/types";
 import type { Participant } from "@/modules/participants/types";
 import type { TeamMember } from "@/modules/team/types";
+import { readStoredScheduleActivities, SCHEDULE_STORAGE_EVENT } from "@/components/schedule/local-schedule-store";
 
 type LessonDraft = NonNullable<Activity["lesson"]>;
 
@@ -39,7 +40,7 @@ function formatPercent(value: number) {
 
 export function DiaryWorkspace({
   project,
-  activities,
+  activities: initialActivities,
   participants,
   teamMembers,
 }: {
@@ -48,8 +49,9 @@ export function DiaryWorkspace({
   participants: Participant[];
   teamMembers: TeamMember[];
 }) {
+  const [activities, setActivities] = useState<Activity[]>(initialActivities);
   const [selectedActivityId, setSelectedActivityId] = useState(
-    activities[0]?.id ?? "",
+    initialActivities[0]?.id ?? "",
   );
   const [selectedParticipantId, setSelectedParticipantId] = useState(
     participants[0]?.id ?? "",
@@ -68,6 +70,48 @@ export function DiaryWorkspace({
       "Documento gerado a partir do diário de classe da Companhia de Artes Viva.",
   }));
   const [feedback, setFeedback] = useState("Chamada pronta para edição.");
+
+  useEffect(() => {
+    function refreshDiaryActivities() {
+      const nextActivities = readStoredScheduleActivities(project.id, initialActivities);
+
+      setActivities(nextActivities);
+      setSelectedActivityId((current) =>
+        nextActivities.some((activity) => activity.id === current)
+          ? current
+          : nextActivities[0]?.id ?? "",
+      );
+      setAttendance((current) => {
+        const validIds = new Set(nextActivities.map((activity) => activity.id));
+
+        return Object.fromEntries(
+          Object.entries(current).filter(([activityId]) => validIds.has(activityId)),
+        );
+      });
+      setLessonDrafts((current) => {
+        const validIds = new Set(nextActivities.map((activity) => activity.id));
+        const cleaned = Object.fromEntries(
+          Object.entries(current).filter(([activityId]) => validIds.has(activityId)),
+        );
+
+        for (const activity of nextActivities) {
+          cleaned[activity.id] = cleaned[activity.id] ?? getLessonContent(activity);
+        }
+
+        return cleaned;
+      });
+    }
+
+    const handle = window.setTimeout(refreshDiaryActivities, 0);
+    window.addEventListener(SCHEDULE_STORAGE_EVENT, refreshDiaryActivities);
+    window.addEventListener("storage", refreshDiaryActivities);
+
+    return () => {
+      window.clearTimeout(handle);
+      window.removeEventListener(SCHEDULE_STORAGE_EVENT, refreshDiaryActivities);
+      window.removeEventListener("storage", refreshDiaryActivities);
+    };
+  }, [initialActivities, project.id]);
   const selectedActivity = useMemo(
     () =>
       activities.find((activity) => activity.id === selectedActivityId) ??

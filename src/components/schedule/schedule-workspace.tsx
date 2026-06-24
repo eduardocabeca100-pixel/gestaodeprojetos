@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   CalendarDays,
   CheckCircle2,
@@ -9,11 +9,13 @@ import {
   PencilLine,
   Trash2,
   Save,
+  RotateCcw,
 } from "lucide-react";
 
 import { SectionCard } from "@/components/layout/section-card";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
+import { useClientReady } from "@/lib/use-client-ready";
 import { formatDate } from "@/lib/utils/format-date";
 import type { Project } from "@/modules/projects/types";
 import {
@@ -21,6 +23,11 @@ import {
   activityTypes,
   type Activity,
 } from "@/modules/schedule/types";
+import {
+  readStoredScheduleActivities,
+  resetStoredScheduleActivities,
+  writeStoredScheduleActivities,
+} from "@/components/schedule/local-schedule-store";
 
 function emptyLesson(number: number): NonNullable<Activity["lesson"]> {
   return {
@@ -63,18 +70,49 @@ export function ScheduleWorkspace({
   activities: Activity[];
   project: Project;
 }) {
-  const [items, setItems] = useState(activities);
+  const isClient = useClientReady();
+  const [items, setItems] = useState<Activity[]>(activities);
   const [selectedId, setSelectedId] = useState(activities[0]?.id ?? "");
   const [feedback, setFeedback] = useState("Cronograma pronto para edição.");
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    const handle = window.setTimeout(() => {
+      const storedActivities = readStoredScheduleActivities(project.id, activities);
+
+      setItems(storedActivities);
+      setSelectedId((current) =>
+        storedActivities.some((activity) => activity.id === current)
+          ? current
+          : storedActivities[0]?.id ?? "",
+      );
+    }, 0);
+
+    return () => window.clearTimeout(handle);
+  }, [activities, isClient, project.id]);
+
   const selected = useMemo(
     () => items.find((activity) => activity.id === selectedId) ?? items[0],
     [items, selectedId],
   );
 
+  function commitItems(nextItems: Activity[], message: string, nextSelectedId?: string) {
+    setItems(nextItems);
+    writeStoredScheduleActivities(project.id, nextItems);
+
+    if (nextSelectedId !== undefined) {
+      setSelectedId(nextSelectedId);
+    } else if (selectedId && !nextItems.some((activity) => activity.id === selectedId)) {
+      setSelectedId(nextItems[0]?.id ?? "");
+    }
+
+    setFeedback(message);
+  }
+
   function updateActivity(next: Activity) {
-    setItems((current) =>
-      current.map((activity) => (activity.id === next.id ? next : activity)),
-    );
+    const nextItems = items.map((activity) => (activity.id === next.id ? next : activity));
+    commitItems(nextItems, "Alteração salva no cronograma.");
   }
 
   function updateField<K extends keyof Activity>(key: K, value: Activity[K]) {
@@ -94,10 +132,7 @@ export function ScheduleWorkspace({
 
   function addActivity() {
     const next = createBlankActivity(project, items.length + 1);
-
-    setItems((current) => [...current, next]);
-    setSelectedId(next.id);
-    setFeedback("Nova atividade criada.");
+    commitItems([...items, next], "Nova atividade criada e salva no cronograma.", next.id);
   }
 
   function editActivity(activityId: string) {
@@ -106,16 +141,29 @@ export function ScheduleWorkspace({
   }
 
   function deleteActivity(activityId: string) {
-    setItems((current) => {
-      const next = current.filter((activity) => activity.id !== activityId);
+    const next = items.filter((activity) => activity.id !== activityId);
+    const nextSelectedId = selectedId === activityId ? next[0]?.id ?? "" : selectedId;
 
-      if (selectedId === activityId) {
-        setSelectedId(next[0]?.id ?? "");
-      }
+    commitItems(next, "Atividade removida. Ela também sairá do diário de classe.", nextSelectedId);
+  }
 
-      return next;
-    });
-    setFeedback("Atividade removida.");
+  function clearSchedule() {
+    if (
+      !window.confirm(
+        "Apagar todo o cronograma deste projeto? As aulas também desaparecerão do diário de classe.",
+      )
+    ) {
+      return;
+    }
+
+    commitItems([], "Cronograma apagado. O diário de classe deste projeto ficou sem aulas.", "");
+  }
+
+  function restoreInitialSchedule() {
+    resetStoredScheduleActivities(project.id);
+    setItems(activities);
+    setSelectedId(activities[0]?.id ?? "");
+    setFeedback("Cronograma inicial restaurado.");
   }
 
   function markDone() {
@@ -127,18 +175,41 @@ export function ScheduleWorkspace({
 
   if (!selected) {
     return (
-      <SectionCard title="Cronograma editável">
-        <Button type="button" onClick={addActivity}>
-          <Plus className="size-4" />
-          Criar primeira atividade
-        </Button>
+      <SectionCard
+        title="Cronograma editável"
+        description={feedback}
+        actions={
+          <Button type="button" variant="outline" onClick={restoreInitialSchedule}>
+            <RotateCcw className="size-4" />
+            Restaurar modelo inicial
+          </Button>
+        }
+      >
+        <div className="space-y-4">
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            Nenhuma aula/atividade cadastrada neste cronograma. O diário de classe também ficará vazio até você criar uma nova aula.
+          </div>
+
+          <Button type="button" onClick={addActivity}>
+            <Plus className="size-4" />
+            Criar primeira atividade
+          </Button>
+        </div>
       </SectionCard>
     );
   }
 
   return (
     <div className="space-y-6">
-      <SectionCard title="Calendário do projeto">
+      <SectionCard
+        title="Calendário do projeto"
+        actions={
+          <Button type="button" variant="destructive" onClick={clearSchedule}>
+            <Trash2 className="size-4" />
+            Apagar cronograma inteiro
+          </Button>
+        }
+      >
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           {items.slice(0, 8).map((activity) => (
             <button
@@ -168,7 +239,7 @@ export function ScheduleWorkspace({
       <div className="grid min-w-0 gap-6 2xl:grid-cols-[minmax(0,0.92fr)_minmax(340px,1.08fr)]">
         <SectionCard
           title={`Atividades de ${project.name}`}
-          description={`${items.length} registros no cronograma`}
+          description={`${items.length} registros no cronograma. ${feedback}`}
           actions={
             <Button type="button" onClick={addActivity}>
               <Plus className="size-4" />
@@ -227,7 +298,10 @@ export function ScheduleWorkspace({
                     type="button"
                     size="sm"
                     variant="outline"
-                    onClick={() => editActivity(activity.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      editActivity(activity.id);
+                    }}
                   >
                     <PencilLine className="size-3.5" />
                     Editar
@@ -236,7 +310,10 @@ export function ScheduleWorkspace({
                     type="button"
                     size="sm"
                     variant="destructive"
-                    onClick={() => deleteActivity(activity.id)}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      deleteActivity(activity.id);
+                    }}
                   >
                     <Trash2 className="size-3.5" />
                     Apagar
@@ -258,7 +335,7 @@ export function ScheduleWorkspace({
               </Button>
               <Button
                 type="button"
-                onClick={() => setFeedback("Alterações salvas no cronograma.")}
+                onClick={() => setFeedback("Cronograma salvo. O diário de classe foi sincronizado.")}
               >
                 <Save className="size-4" />
                 Salvar
@@ -327,9 +404,7 @@ export function ScheduleWorkspace({
                 <input
                   className="form-input mt-1"
                   value={selected.responsible}
-                  onChange={(event) =>
-                    updateField("responsible", event.target.value)
-                  }
+                  onChange={(event) => updateField("responsible", event.target.value)}
                 />
               </Field>
             </div>
@@ -369,9 +444,7 @@ export function ScheduleWorkspace({
                   className="form-input mt-1"
                   type="number"
                   value={selected.photoCount}
-                  onChange={(event) =>
-                    updateField("photoCount", Number(event.target.value))
-                  }
+                  onChange={(event) => updateField("photoCount", Number(event.target.value))}
                 />
               </Field>
               <Field label="Documentos">

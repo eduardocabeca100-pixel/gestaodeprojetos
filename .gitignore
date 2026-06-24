@@ -46,3 +46,13 @@ node_modules
 dist
 .next
 .env.*.local
+
+# Segurança / arquivos que nunca devem ir para Git ou ZIP
+.env.*
+.backup-*
+*.backup
+*.tgz
+.tmp-*
+tsconfig.tsbuildinfo
+build
+coverage
