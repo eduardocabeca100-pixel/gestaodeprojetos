@@ -36,6 +36,7 @@ export default async function ProjectDetailPage({
       description={project.currentStage}
       actions={
         <ProjectActionsMenu
+          projectId={project.id}
           canDuplicate={can(profile.role, "create_project")}
           canArchive={can(profile.role, "archive_project")}
         />
