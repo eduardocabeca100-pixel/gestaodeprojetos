@@ -5,11 +5,9 @@ import type { Activity } from "@/modules/schedule/types";
 
 export const SCHEDULE_STORAGE_EVENT = "viva:schedule-updated";
 
-type ProjectScheduleKey =
-  | string
-  | Pick<Project, "id" | "slug" | "name">;
+type ProjectScheduleKey = Project | string;
 
-function normalizeKeyPart(value: string) {
+function normalize(value: string) {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -18,31 +16,33 @@ function normalizeKeyPart(value: string) {
     .replace(/(^-|-$)/g, "");
 }
 
-function unique(values: string[]) {
-  return Array.from(new Set(values.filter(Boolean)));
+function unique(values: Array<string | null | undefined>) {
+  return Array.from(new Set(values.filter(Boolean) as string[]));
 }
 
-function getProjectKeyParts(project: ProjectScheduleKey) {
+function projectKeys(project: ProjectScheduleKey) {
   if (typeof project === "string") {
-    return unique([project, normalizeKeyPart(project)]);
+    return unique([project, normalize(project)]);
   }
 
   return unique([
     project.id,
     project.slug,
-    normalizeKeyPart(project.name),
+    project.name,
+    normalize(project.name),
+    normalize(project.slug),
   ]);
 }
 
-function getScheduleStorageKeys(project: ProjectScheduleKey) {
-  return getProjectKeyParts(project).map((key) => `viva:schedule:activities:${key}`);
+function activityKeys(project: ProjectScheduleKey) {
+  return projectKeys(project).map((key) => `viva:schedule:activities:${key}`);
 }
 
-function getEmptyStorageKeys(project: ProjectScheduleKey) {
-  return getProjectKeyParts(project).map((key) => `viva:schedule:empty:${key}`);
+function emptyKeys(project: ProjectScheduleKey) {
+  return projectKeys(project).map((key) => `viva:schedule:empty:${key}`);
 }
 
-function notifyScheduleUpdate(project: ProjectScheduleKey) {
+function notify(project: ProjectScheduleKey) {
   if (typeof window === "undefined") return;
 
   window.dispatchEvent(
@@ -58,32 +58,31 @@ export function readStoredScheduleActivities(
 ): Activity[] {
   if (typeof window === "undefined") return fallback;
 
-  try {
-    const isMarkedEmpty = getEmptyStorageKeys(project).some(
-      (key) => window.localStorage.getItem(key) === "1",
-    );
+  const hasEmptyFlag = emptyKeys(project).some(
+    (key) => window.localStorage.getItem(key) === "1",
+  );
 
-    if (isMarkedEmpty) {
-      return [];
-    }
+  if (hasEmptyFlag) {
+    return [];
+  }
 
-    for (const key of getScheduleStorageKeys(project)) {
-      const saved = window.localStorage.getItem(key);
+  for (const key of activityKeys(project)) {
+    const saved = window.localStorage.getItem(key);
 
-      if (saved === null) continue;
+    if (!saved) continue;
 
+    try {
       const parsed = JSON.parse(saved);
 
       if (Array.isArray(parsed)) {
         return parsed as Activity[];
       }
+    } catch {
+      continue;
     }
-
-    return fallback;
-  } catch (error) {
-    console.warn("Não foi possível carregar o cronograma salvo.", error);
-    return fallback;
   }
+
+  return fallback;
 }
 
 export function writeStoredScheduleActivities(
@@ -94,11 +93,11 @@ export function writeStoredScheduleActivities(
 
   const payload = JSON.stringify(activities);
 
-  for (const key of getScheduleStorageKeys(project)) {
+  for (const key of activityKeys(project)) {
     window.localStorage.setItem(key, payload);
   }
 
-  for (const key of getEmptyStorageKeys(project)) {
+  for (const key of emptyKeys(project)) {
     if (activities.length === 0) {
       window.localStorage.setItem(key, "1");
     } else {
@@ -106,19 +105,33 @@ export function writeStoredScheduleActivities(
     }
   }
 
-  notifyScheduleUpdate(project);
+  notify(project);
+}
+
+export function forceEmptySchedule(project: ProjectScheduleKey) {
+  if (typeof window === "undefined") return;
+
+  for (const key of activityKeys(project)) {
+    window.localStorage.setItem(key, "[]");
+  }
+
+  for (const key of emptyKeys(project)) {
+    window.localStorage.setItem(key, "1");
+  }
+
+  notify(project);
 }
 
 export function resetStoredScheduleActivities(project: ProjectScheduleKey) {
   if (typeof window === "undefined") return;
 
-  for (const key of getScheduleStorageKeys(project)) {
+  for (const key of activityKeys(project)) {
     window.localStorage.removeItem(key);
   }
 
-  for (const key of getEmptyStorageKeys(project)) {
+  for (const key of emptyKeys(project)) {
     window.localStorage.removeItem(key);
   }
 
-  notifyScheduleUpdate(project);
+  notify(project);
 }

@@ -3,37 +3,33 @@ import type { Project } from "@/modules/projects/types";
 
 import type { Activity } from "./types";
 
-const projectLessons: Record<string, string[]> = {
-  refens: [
-    "Acolhimento e integração",
-    "História do teatro e linguagens cênicas",
-    "Leitura do roteiro Reféns",
-    "Corpo, expressão e presença",
-    "Voz, respiração e projeção",
-    "Improvisação e jogo teatral",
-    "Montagem das primeiras cenas",
-    "Cenas centrais e ritmo",
-    "Final, coro e cenas coletivas",
-    "Ensaio corrido e ajustes de direção",
-    "Ensaio geral pedagógico e fechamento",
-  ],
-};
+const refensLessons = [
+  "Acolhimento e integração",
+  "História do teatro e linguagens cênicas",
+  "Leitura do roteiro Reféns",
+  "Corpo, expressão e presença",
+  "Voz, respiração e projeção",
+  "Improvisação e jogo teatral",
+  "Montagem das primeiras cenas",
+  "Cenas centrais e ritmo",
+  "Final, coro e cenas coletivas",
+  "Ensaio corrido e ajustes de direção",
+  "Ensaio geral pedagógico e fechamento",
+];
 
-const projectStartDates: Record<string, string[]> = {
-  refens: [
-    "2026-08-05",
-    "2026-08-08",
-    "2026-08-11",
-    "2026-08-14",
-    "2026-08-17",
-    "2026-08-20",
-    "2026-08-23",
-    "2026-08-26",
-    "2026-08-29",
-    "2026-09-01",
-    "2026-09-04",
-  ],
-};
+const refensDates = [
+  "2026-08-05",
+  "2026-08-08",
+  "2026-08-11",
+  "2026-08-14",
+  "2026-08-17",
+  "2026-08-20",
+  "2026-08-23",
+  "2026-08-26",
+  "2026-08-29",
+  "2026-09-01",
+  "2026-09-04",
+];
 
 async function getScopedProject(projectId?: string) {
   return projectId
@@ -41,15 +37,19 @@ async function getScopedProject(projectId?: string) {
     : getFeaturedProject();
 }
 
-function buildActivities(project: Project): Activity[] {
-  const titles = projectLessons[project.id] ?? projectLessons[project.slug] ?? [];
-  const dates = projectStartDates[project.id] ?? projectStartDates[project.slug] ?? [];
+function isRefensProject(project: Project) {
+  const name = project.name.toLowerCase();
+  const slug = project.slug.toLowerCase();
 
-  if (titles.length === 0) {
+  return project.id === "refens" || slug.includes("refens") || name.includes("reféns") || name.includes("refens");
+}
+
+function buildActivities(project: Project): Activity[] {
+  if (!isRefensProject(project)) {
     return [];
   }
 
-  return titles.map((title, index) => ({
+  return refensLessons.map((title, index) => ({
     id: `${project.id}-atividade-${index + 1}`,
     projectId: project.id,
     title,
@@ -59,17 +59,17 @@ function buildActivities(project: Project): Activity[] {
           ? "Apresentação"
           : "Ensaio"
         : "Aula",
-    date: dates[index] ?? project.startDate,
+    date: refensDates[index] ?? project.startDate,
     startTime: "19:00",
     endTime: "22:00",
     location: "Cia de Artes Viva",
-    responsible: "Marcel Eduardo Cabeça Domingues",
+    responsible: project.proponent || "Responsável do projeto",
     description: `Atividade ${index + 1} vinculada ao projeto ${project.name}.`,
-    status: index < 2 && project.executedAmount > 0 ? "Realizada" : "Agendada",
-    attendanceCount: index < 2 && project.executedAmount > 0 ? 18 : 0,
-    photoCount: index < 2 && project.executedAmount > 0 ? 12 : 0,
-    documentCount: index < 2 && project.executedAmount > 0 ? 1 : 0,
-    notes: "Editar data, horário, local, conteúdo e presença quando a atividade for confirmada.",
+    status: "Agendada",
+    attendanceCount: 0,
+    photoCount: 0,
+    documentCount: 0,
+    notes: "",
     lesson: {
       number: index + 1,
       theme: title,
@@ -78,7 +78,7 @@ function buildActivities(project: Project): Activity[] {
       practice: "Prática artística, ensaio, mediação ou registro conforme a atividade.",
       expectedResult: "Registro completo para relatório e prestação de contas.",
       teacher: "Professor / formador",
-      pedagogicalNotes: "Campo livre para observações pedagógicas.",
+      pedagogicalNotes: "",
     },
   }));
 }

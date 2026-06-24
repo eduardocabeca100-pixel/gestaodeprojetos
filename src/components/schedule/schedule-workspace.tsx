@@ -7,15 +7,14 @@ import {
   ClipboardList,
   Plus,
   PencilLine,
-  Trash2,
-  Save,
   RotateCcw,
+  Save,
+  Trash2,
 } from "lucide-react";
 
 import { SectionCard } from "@/components/layout/section-card";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
-import { useClientReady } from "@/lib/use-client-ready";
 import { formatDate } from "@/lib/utils/format-date";
 import type { Project } from "@/modules/projects/types";
 import {
@@ -24,6 +23,7 @@ import {
   type Activity,
 } from "@/modules/schedule/types";
 import {
+  forceEmptySchedule,
   readStoredScheduleActivities,
   resetStoredScheduleActivities,
   writeStoredScheduleActivities,
@@ -70,27 +70,24 @@ export function ScheduleWorkspace({
   activities: Activity[];
   project: Project;
 }) {
-  const isClient = useClientReady();
   const [items, setItems] = useState<Activity[]>(activities);
   const [selectedId, setSelectedId] = useState(activities[0]?.id ?? "");
   const [feedback, setFeedback] = useState("Cronograma pronto para edição.");
 
   useEffect(() => {
-    if (!isClient) return;
-
     const handle = window.setTimeout(() => {
-      const storedActivities = readStoredScheduleActivities(project, activities);
+      const stored = readStoredScheduleActivities(project, activities);
 
-      setItems(storedActivities);
+      setItems(stored);
       setSelectedId((current) =>
-        storedActivities.some((activity) => activity.id === current)
+        stored.some((activity) => activity.id === current)
           ? current
-          : storedActivities[0]?.id ?? "",
+          : stored[0]?.id ?? "",
       );
     }, 0);
 
     return () => window.clearTimeout(handle);
-  }, [activities, isClient, project.id]);
+  }, [activities, project]);
 
   const selected = useMemo(
     () => items.find((activity) => activity.id === selectedId) ?? items[0],
@@ -100,19 +97,16 @@ export function ScheduleWorkspace({
   function commitItems(nextItems: Activity[], message: string, nextSelectedId?: string) {
     setItems(nextItems);
     writeStoredScheduleActivities(project, nextItems);
-
-    if (nextSelectedId !== undefined) {
-      setSelectedId(nextSelectedId);
-    } else if (selectedId && !nextItems.some((activity) => activity.id === selectedId)) {
-      setSelectedId(nextItems[0]?.id ?? "");
-    }
-
+    setSelectedId(nextSelectedId ?? nextItems[0]?.id ?? "");
     setFeedback(message);
   }
 
   function updateActivity(next: Activity) {
-    const nextItems = items.map((activity) => (activity.id === next.id ? next : activity));
-    commitItems(nextItems, "Alteração salva no cronograma.");
+    const nextItems = items.map((activity) =>
+      activity.id === next.id ? next : activity,
+    );
+
+    commitItems(nextItems, "Alteração salva no cronograma.", next.id);
   }
 
   function updateField<K extends keyof Activity>(key: K, value: Activity[K]) {
@@ -125,14 +119,14 @@ export function ScheduleWorkspace({
     value: NonNullable<Activity["lesson"]>[K],
   ) {
     if (!selected) return;
-    const lesson = selected.lesson ?? emptyLesson(items.indexOf(selected) + 1);
 
+    const lesson = selected.lesson ?? emptyLesson(items.indexOf(selected) + 1);
     updateActivity({ ...selected, lesson: { ...lesson, [key]: value } });
   }
 
   function addActivity() {
     const next = createBlankActivity(project, items.length + 1);
-    commitItems([...items, next], "Nova atividade criada e salva no cronograma.", next.id);
+    commitItems([...items, next], "Nova atividade criada e salva.", next.id);
   }
 
   function editActivity(activityId: string) {
@@ -144,26 +138,29 @@ export function ScheduleWorkspace({
     const next = items.filter((activity) => activity.id !== activityId);
     const nextSelectedId = selectedId === activityId ? next[0]?.id ?? "" : selectedId;
 
-    commitItems(next, "Atividade removida. Ela também sairá do diário de classe.", nextSelectedId);
+    commitItems(next, "Atividade removida e salva. Ela também sai do diário de classe.", nextSelectedId);
   }
 
-  function clearSchedule() {
+  function clearAndSaveEmpty() {
     if (
       !window.confirm(
-        "Apagar todo o cronograma deste projeto? As aulas também desaparecerão do diário de classe.",
+        "Apagar e salvar o cronograma vazio? O diário de classe deste projeto também ficará sem aulas.",
       )
     ) {
       return;
     }
 
-    commitItems([], "Cronograma apagado. O diário de classe deste projeto ficou sem aulas.", "");
+    forceEmptySchedule(project);
+    setItems([]);
+    setSelectedId("");
+    setFeedback("Cronograma vazio salvo. O diário de classe também ficará vazio.");
   }
 
-  function restoreInitialSchedule() {
+  function restoreInitialModel() {
     resetStoredScheduleActivities(project);
     setItems(activities);
     setSelectedId(activities[0]?.id ?? "");
-    setFeedback("Cronograma inicial restaurado.");
+    setFeedback("Modelo inicial restaurado.");
   }
 
   function markDone() {
@@ -177,23 +174,23 @@ export function ScheduleWorkspace({
     return (
       <SectionCard
         title="Cronograma editável"
-        description={feedback}
+        description="Este projeto está sem aulas/atividades cadastradas."
         actions={
-          <Button type="button" variant="outline" onClick={restoreInitialSchedule}>
-            <RotateCcw className="size-4" />
-            Restaurar modelo inicial
-          </Button>
+          <>
+            <Button type="button" onClick={addActivity}>
+              <Plus className="size-4" />
+              Criar primeira atividade
+            </Button>
+
+            <Button type="button" variant="outline" onClick={restoreInitialModel}>
+              <RotateCcw className="size-4" />
+              Restaurar modelo
+            </Button>
+          </>
         }
       >
-        <div className="space-y-4">
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            Nenhuma aula/atividade cadastrada neste cronograma. O diário de classe também ficará vazio até você criar uma nova aula.
-          </div>
-
-          <Button type="button" onClick={addActivity}>
-            <Plus className="size-4" />
-            Criar primeira atividade
-          </Button>
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          Cronograma vazio salvo. O Diário de Classe deste projeto também deve ficar vazio.
         </div>
       </SectionCard>
     );
@@ -204,10 +201,17 @@ export function ScheduleWorkspace({
       <SectionCard
         title="Calendário do projeto"
         actions={
-          <Button type="button" variant="destructive" onClick={clearSchedule}>
-            <Trash2 className="size-4" />
-            Apagar cronograma inteiro
-          </Button>
+          <>
+            <Button type="button" variant="destructive" onClick={clearAndSaveEmpty}>
+              <Trash2 className="size-4" />
+              Apagar e salvar vazio
+            </Button>
+
+            <Button type="button" variant="outline" onClick={restoreInitialModel}>
+              <RotateCcw className="size-4" />
+              Restaurar modelo
+            </Button>
+          </>
         }
       >
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
@@ -279,6 +283,7 @@ export function ScheduleWorkspace({
                   </div>
                   <StatusBadge value={activity.status} />
                 </div>
+
                 <div className="mt-4 grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
                   <span className="flex items-center gap-1">
                     <CalendarDays className="size-3.5 text-primary" />
@@ -293,6 +298,7 @@ export function ScheduleWorkspace({
                     {activity.documentCount} docs
                   </span>
                 </div>
+
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button
                     type="button"
@@ -306,6 +312,7 @@ export function ScheduleWorkspace({
                     <PencilLine className="size-3.5" />
                     Editar
                   </Button>
+
                   <Button
                     type="button"
                     size="sm"
@@ -333,9 +340,13 @@ export function ScheduleWorkspace({
                 <CheckCircle2 className="size-4" />
                 Aula realizada
               </Button>
+
               <Button
                 type="button"
-                onClick={() => setFeedback("Cronograma salvo. O diário de classe foi sincronizado.")}
+                onClick={() => {
+                  writeStoredScheduleActivities(project, items);
+                  setFeedback("Cronograma salvo. O diário de classe foi sincronizado.");
+                }}
               >
                 <Save className="size-4" />
                 Salvar
@@ -352,6 +363,7 @@ export function ScheduleWorkspace({
                   onChange={(event) => updateField("title", event.target.value)}
                 />
               </Field>
+
               <Field label="Tipo">
                 <select
                   className="form-input mt-1"
@@ -366,6 +378,7 @@ export function ScheduleWorkspace({
                 </select>
               </Field>
             </div>
+
             <div className="grid gap-3 sm:grid-cols-3">
               <Field label="Data">
                 <input
@@ -375,6 +388,7 @@ export function ScheduleWorkspace({
                   onChange={(event) => updateField("date", event.target.value)}
                 />
               </Field>
+
               <Field label="Início">
                 <input
                   className="form-input mt-1"
@@ -383,6 +397,7 @@ export function ScheduleWorkspace({
                   onChange={(event) => updateField("startTime", event.target.value)}
                 />
               </Field>
+
               <Field label="Fim">
                 <input
                   className="form-input mt-1"
@@ -392,6 +407,7 @@ export function ScheduleWorkspace({
                 />
               </Field>
             </div>
+
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Local">
                 <input
@@ -400,6 +416,7 @@ export function ScheduleWorkspace({
                   onChange={(event) => updateField("location", event.target.value)}
                 />
               </Field>
+
               <Field label="Responsável">
                 <input
                   className="form-input mt-1"
@@ -408,6 +425,7 @@ export function ScheduleWorkspace({
                 />
               </Field>
             </div>
+
             <Field label="Status">
               <select
                 className="form-input mt-1"
@@ -421,6 +439,7 @@ export function ScheduleWorkspace({
                 ))}
               </select>
             </Field>
+
             <Field label="Descrição">
               <textarea
                 className="form-input mt-1 min-h-24"
@@ -428,6 +447,7 @@ export function ScheduleWorkspace({
                 onChange={(event) => updateField("description", event.target.value)}
               />
             </Field>
+
             <div className="grid gap-3 sm:grid-cols-3">
               <Field label="Presenças">
                 <input
@@ -439,14 +459,18 @@ export function ScheduleWorkspace({
                   }
                 />
               </Field>
+
               <Field label="Fotos">
                 <input
                   className="form-input mt-1"
                   type="number"
                   value={selected.photoCount}
-                  onChange={(event) => updateField("photoCount", Number(event.target.value))}
+                  onChange={(event) =>
+                    updateField("photoCount", Number(event.target.value))
+                  }
                 />
               </Field>
+
               <Field label="Documentos">
                 <input
                   className="form-input mt-1"
@@ -458,6 +482,7 @@ export function ScheduleWorkspace({
                 />
               </Field>
             </div>
+
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Tema">
                 <input
@@ -466,6 +491,7 @@ export function ScheduleWorkspace({
                   onChange={(event) => updateLesson("theme", event.target.value)}
                 />
               </Field>
+
               <Field label="Professor / responsável">
                 <input
                   className="form-input mt-1"
@@ -474,6 +500,7 @@ export function ScheduleWorkspace({
                 />
               </Field>
             </div>
+
             <Field label="Objetivo">
               <textarea
                 className="form-input mt-1 min-h-20"
@@ -481,6 +508,7 @@ export function ScheduleWorkspace({
                 onChange={(event) => updateLesson("objective", event.target.value)}
               />
             </Field>
+
             <Field label="Conteúdo programático">
               <textarea
                 className="form-input mt-1 min-h-24"
@@ -488,6 +516,7 @@ export function ScheduleWorkspace({
                 onChange={(event) => updateLesson("content", event.target.value)}
               />
             </Field>
+
             <Field label="Prática / encaminhamento">
               <textarea
                 className="form-input mt-1 min-h-20"
@@ -495,6 +524,7 @@ export function ScheduleWorkspace({
                 onChange={(event) => updateLesson("practice", event.target.value)}
               />
             </Field>
+
             <Field label="Observações">
               <textarea
                 className="form-input mt-1 min-h-24"

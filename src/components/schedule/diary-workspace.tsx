@@ -72,6 +72,49 @@ export function DiaryWorkspace({
   const [feedback, setFeedback] = useState("Chamada pronta para edição.");
 
   useEffect(() => {
+    function refreshActivities() {
+      const nextActivities = readStoredScheduleActivities(project, initialActivities);
+
+      setActivities(nextActivities);
+      setSelectedActivityId((current) =>
+        nextActivities.some((activity) => activity.id === current)
+          ? current
+          : nextActivities[0]?.id ?? "",
+      );
+      setAttendance((current) => {
+        const validActivityIds = new Set(nextActivities.map((activity) => activity.id));
+
+        return Object.fromEntries(
+          Object.entries(current).filter(([activityId]) => validActivityIds.has(activityId)),
+        );
+      });
+      setLessonDrafts((current) => {
+        const validActivityIds = new Set(nextActivities.map((activity) => activity.id));
+        const cleaned = Object.fromEntries(
+          Object.entries(current).filter(([activityId]) => validActivityIds.has(activityId)),
+        );
+
+        for (const activity of nextActivities) {
+          cleaned[activity.id] = cleaned[activity.id] ?? getLessonContent(activity);
+        }
+
+        return cleaned;
+      });
+    }
+
+    const handle = window.setTimeout(refreshActivities, 0);
+
+    window.addEventListener(SCHEDULE_STORAGE_EVENT, refreshActivities);
+    window.addEventListener("storage", refreshActivities);
+
+    return () => {
+      window.clearTimeout(handle);
+      window.removeEventListener(SCHEDULE_STORAGE_EVENT, refreshActivities);
+      window.removeEventListener("storage", refreshActivities);
+    };
+  }, [initialActivities, project]);
+
+  useEffect(() => {
     function refreshDiaryActivities() {
       const nextActivities = readStoredScheduleActivities(project, initialActivities);
 
@@ -178,6 +221,20 @@ export function DiaryWorkspace({
     teamMembers.find((member) => member.role === "Diretor geral") ??
     teamMembers[0] ??
     null;
+
+
+  if (!selectedActivity || !lesson) {
+    return (
+      <SectionCard
+        title="Aulas do projeto"
+        description="Este projeto está sem aulas no cronograma. Crie uma aula no Cronograma para ela aparecer aqui."
+      >
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          Diário de classe vazio porque o cronograma deste projeto está vazio.
+        </div>
+      </SectionCard>
+    );
+  }
 
   function toggleParticipant(participantId: string) {
     if (!selectedActivity) return;
