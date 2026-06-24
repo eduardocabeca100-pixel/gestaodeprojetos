@@ -33,6 +33,7 @@ import { logout } from "@/modules/users/actions";
 
 const navigation = [
   { label: "Dashboard", href: "/dashboard", icon: Home, projectScoped: true },
+  { label: "Central Cultural", href: "/central-cultural", icon: ClipboardList },
   { label: "Projetos", href: "/projetos", icon: Folder },
   { label: "Documentos", href: "/documentos", icon: FileText, projectScoped: true }, { label: "Anexos", href: "/anexos", icon: FileArchive, projectScoped: true }, 
   {
