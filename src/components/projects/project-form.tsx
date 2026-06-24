@@ -6,9 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
 import { SectionCard } from "@/components/layout/section-card";
-import { LocalTeamWorkspace } from "@/components/team/local-team-workspace";
 import { Button } from "@/components/ui/button";
-import { useClientReady } from "@/lib/use-client-ready";
 import { generateSlug } from "@/lib/utils/generate-slug";
 import { saveProject, type ProjectActionState } from "@/modules/projects/actions";
 import { projectSchema, type ProjectFormValues } from "@/modules/projects/schemas";
@@ -277,32 +275,10 @@ export function ProjectForm({ project }: { project?: Project }) {
         </div>
       </form>
 
-      {project ? <ProjectTeamEditor project={project} /> : null}
     </SectionCard>
   );
 }
 
-
-function ProjectTeamEditor({ project }: { project: Project }) {
-  const isClient = useClientReady();
-
-  if (!isClient) {
-    return (
-      <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm font-semibold text-slate-500 lg:col-span-2">
-        Carregando equipe cadastrada...
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-8 lg:col-span-2">
-      <LocalTeamWorkspace
-        initialTab="project"
-        activeProject={{ id: project.id, name: project.name }}
-      />
-    </div>
-  );
-}
 
 function Field({
   label,

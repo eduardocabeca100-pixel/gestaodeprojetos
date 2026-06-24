@@ -1,23 +1,18 @@
-import { ProjectMediaUpload } from "./project-media-upload";
+import { ProjectImageUploadCard } from "@/components/projects/project-image-upload-card";
+import type { Project } from "@/modules/projects/types";
 
-export function ProjectCoverUpload({
-  initialUrl,
-  formId,
-  projectId,
-}: {
-  initialUrl?: string | null;
-  formId?: string;
-  projectId?: string | null;
-}) {
+export function ProjectCoverUpload({ project }: { project?: Project }) {
   return (
-    <ProjectMediaUpload
+    <ProjectImageUploadCard
+      project={project}
+      kind="cover"
       title="Foto/capa do projeto"
-      description="Imagem principal do card e do topo do projeto."
+      description="Imagem principal usada no card e no topo do projeto."
       bucket="project-covers"
-      fieldName="coverUrl"
-      initialUrl={initialUrl}
-      formId={formId}
-      projectId={projectId}
+      dbField="cover_url"
+      recommendedWidth={1200}
+      recommendedHeight={800}
+      initialUrl={project?.coverUrl}
     />
   );
 }

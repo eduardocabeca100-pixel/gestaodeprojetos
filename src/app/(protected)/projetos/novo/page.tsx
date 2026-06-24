@@ -20,8 +20,8 @@ export default async function NewProjectPage() {
         </div>
 
         <div className="space-y-6">
-          <ProjectCoverUpload formId="project-form" />
-          <ProjectBannerUpload formId="project-form" />
+          <ProjectCoverUpload />
+          <ProjectBannerUpload />
         </div>
       </div>
     </PageContainer>

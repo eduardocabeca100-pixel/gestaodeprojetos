@@ -1,24 +1,18 @@
-import { ProjectMediaUpload } from "./project-media-upload";
+import { ProjectImageUploadCard } from "@/components/projects/project-image-upload-card";
+import type { Project } from "@/modules/projects/types";
 
-export function ProjectBannerUpload({
-  initialUrl,
-  formId,
-  projectId,
-}: {
-  initialUrl?: string | null;
-  formId?: string;
-  projectId?: string | null;
-}) {
+export function ProjectBannerUpload({ project }: { project?: Project }) {
   return (
-    <ProjectMediaUpload
+    <ProjectImageUploadCard
+      project={project}
+      kind="banner"
       title="Banner interno"
-      description="Banner de destaque usado nas páginas internas."
+      description="Banner de destaque usado nas páginas internas do projeto."
       bucket="project-banners"
-      fieldName="bannerUrl"
-      initialUrl={initialUrl}
-      formId={formId}
-      projectId={projectId}
-      accent="cyan"
+      dbField="banner_url"
+      recommendedWidth={1920}
+      recommendedHeight={640}
+      initialUrl={project?.bannerUrl}
     />
   );
 }
