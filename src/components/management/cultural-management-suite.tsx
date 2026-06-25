@@ -33,7 +33,11 @@ import { CulturalReportWorkspace } from "@/components/management/cultural-report
 import { ProjectDataResetPanel } from "@/components/projects/project-data-reset-panel";
 import { AdministrativeDemonstratives } from "@/components/management/administrative-demonstratives";
 import { AccountabilityEditor } from "@/components/management/accountability-editor";
-import { ProjectDocumentsVault } from "@/components/management/project-documents-vault";
+import {
+  CENTRAL_DOCUMENTS_UPDATED_EVENT,
+  ProjectDocumentsVault,
+} from "@/components/management/project-documents-vault";
+import { getActiveProjectScope, projectScopedKey } from "@/lib/project-scope";
 import { formatCurrency } from "@/lib/utils/format-currency";
 
 type IconComponent = ComponentType<{ className?: string }>;
@@ -296,6 +300,31 @@ function readState(): SuiteState {
   }
 }
 
+function readProjectDocumentsCount() {
+  if (typeof window === "undefined") {
+    return defaultState.documents.length;
+  }
+
+  try {
+    const project = getActiveProjectScope();
+    const saved = window.localStorage.getItem(
+      projectScopedKey("viva:central-cultural:documents:v1", project.id),
+    );
+
+    if (!saved) {
+      return defaultState.documents.length;
+    }
+
+    const documents = JSON.parse(saved) as Array<{ status?: string }>;
+
+    return Array.isArray(documents)
+      ? documents.filter((item) => item.status !== "Aprovado").length
+      : defaultState.documents.length;
+  } catch {
+    return defaultState.documents.length;
+  }
+}
+
 function downloadText(filename: string, content: string) {
   const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -437,6 +466,7 @@ export function CulturalManagementSuite() {
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
   const [state, setState] = useState<SuiteState>(defaultState);
   const [clientReady, setClientReady] = useState(false);
+  const [documentsVersion, setDocumentsVersion] = useState(0);
   const [message, setMessage] = useState("Central pronta para gestão da execução cultural.");
 
   useEffect(() => {
@@ -447,6 +477,24 @@ export function CulturalManagementSuite() {
 
     return () => window.clearTimeout(handle);
   }, []);
+
+  useEffect(() => {
+    if (!clientReady) return;
+
+    const refreshDocuments = () => setDocumentsVersion((current) => current + 1);
+
+    window.addEventListener(
+      CENTRAL_DOCUMENTS_UPDATED_EVENT,
+      refreshDocuments as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        CENTRAL_DOCUMENTS_UPDATED_EVENT,
+        refreshDocuments as EventListener,
+      );
+    };
+  }, [clientReady]);
 
   function commit(next: SuiteState, nextMessage = "Alteração salva automaticamente.") {
     setState(next);
@@ -464,7 +512,7 @@ export function CulturalManagementSuite() {
       const days = daysUntil(item.dueDate);
       return !item.done && days !== null && days < 0;
     }).length;
-    const pendingDocuments = state.documents.filter((item) => item.status !== "Aprovado").length;
+    const pendingDocuments = readProjectDocumentsCount();
     const doneAccountability = state.accountability.filter((item) => item.done).length;
     const accountabilityPercent = state.accountability.length
       ? Math.round((doneAccountability / state.accountability.length) * 100)
@@ -481,7 +529,7 @@ export function CulturalManagementSuite() {
       demonstrativeTotal,
       remaining: state.financeSummary.approved - state.financeSummary.executed,
     };
-  }, [state]);
+  }, [documentsVersion, state]);
 
   const criticalAlerts = useMemo(
     () =>

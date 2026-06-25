@@ -5,9 +5,17 @@ import { AlertTriangle, Archive, FileCheck2 } from "lucide-react";
 
 import { DocumentCategoryCard } from "@/components/documents/document-category-card";
 import { DocumentList } from "@/components/documents/document-list";
+import {
+  readStoredProjectDocuments,
+  writeStoredProjectDocuments,
+} from "@/components/documents/local-document-store";
 import { DocumentPreview } from "@/components/documents/document-preview";
-import { DocumentUpload } from "@/components/documents/document-upload";
+import {
+  DocumentUpload,
+  type UploadedDocumentDraft,
+} from "@/components/documents/document-upload";
 import { SectionCard } from "@/components/layout/section-card";
+import { useClientReady } from "@/lib/use-client-ready";
 import type { Project } from "@/modules/projects/types";
 import type { ProjectDocument } from "@/modules/documents/types";
 
@@ -28,28 +36,65 @@ export function DocumentsWorkspace({
   project: Project;
   documents: ProjectDocument[];
 }) {
-  const [items, setItems] = useState(documents);
-  const [selectedId, setSelectedId] = useState(documents[0]?.id ?? "");
+  const isClient = useClientReady();
+
+  if (!isClient) {
+    return (
+      <div className="rounded-[2rem] border border-slate-200 bg-white p-6 text-sm font-semibold text-slate-500 shadow-sm">
+        Carregando documentos do projeto...
+      </div>
+    );
+  }
+
+  return <DocumentsWorkspaceContent key={project.id} project={project} documents={documents} />;
+}
+
+function DocumentsWorkspaceContent({
+  project,
+  documents,
+}: {
+  project: Project;
+  documents: ProjectDocument[];
+}) {
+  const initialItems = useMemo(
+    () => readStoredProjectDocuments(project.id, documents),
+    [documents, project.id],
+  );
+  const [items, setItems] = useState(initialItems);
+  const [selectedId, setSelectedId] = useState(initialItems[0]?.id ?? "");
   const selectedDocument = useMemo(
     () => items.find((document) => document.id === selectedId) ?? items[0] ?? null,
     [items, selectedId],
   );
   const counts = getStatusCounts(items);
 
+  function commit(next: ProjectDocument[]) {
+    setItems(next);
+    writeStoredProjectDocuments(project.id, next);
+  }
+
   function handleView(document: ProjectDocument) {
     setSelectedId(document.id);
   }
 
   function handleDelete(documentId: string) {
-    setItems((current) => {
-      const next = current.filter((document) => document.id !== documentId);
+    const next = items.filter((document) => document.id !== documentId);
+    commit(next);
 
-      if (selectedId === documentId) {
-        setSelectedId(next[0]?.id ?? "");
-      }
+    if (selectedId === documentId) {
+      setSelectedId(next[0]?.id ?? "");
+    }
+  }
 
-      return next;
-    });
+  function handleUpload(newDocuments: UploadedDocumentDraft[]) {
+    const uploadedDocuments: ProjectDocument[] = newDocuments.map((document, index) => ({
+      ...document,
+      id: `${project.id}-local-doc-${Date.now()}-${index}`,
+    }));
+    const next = [...uploadedDocuments, ...items];
+
+    commit(next);
+    setSelectedId(uploadedDocuments[0]?.id ?? selectedId);
   }
 
   return (
@@ -83,7 +128,7 @@ export function DocumentsWorkspace({
           <DocumentList documents={items} onView={handleView} onDelete={handleDelete} />
         </SectionCard>
         <SectionCard title="Upload">
-          <DocumentUpload project={project} />
+          <DocumentUpload project={project} onUpload={handleUpload} />
         </SectionCard>
       </div>
 

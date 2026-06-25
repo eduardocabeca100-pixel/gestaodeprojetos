@@ -220,8 +220,8 @@ values (
   'Cia de Artes Viva',
   'Gestão de Projetos Culturais, Artísticos e Administrativos',
   'Jaraguá do Sul | SC',
-  'eduardo@ciaviva.com',
-  '(47) 992747545',
+  'contato@ciaviva.local',
+  '(00) 00000-0000',
   'www.ciaviva.com',
   'SISTEMA DE GESTÃO DE PROJETOS • CIA DE ARTES VIVA • V2026',
   'WWW.CIAVIVA.COM',
@@ -250,18 +250,18 @@ with project_refens as (
 members as (
   insert into public.viva_team_members (external_key, full_name, display_name, profile_type, role, cpf, cnpj, city_uf, email, phone, notes)
   values
-    ('refens-marcel-eduardo', 'Marcel Eduardo Cabeça Domingues', 'Marcel Eduardo', 'Artista', 'Formador, diretor, ator e produtor', '112.656.749-30', '59.053.899/0001-53', 'Jaraguá do Sul | SC', 'eduardo@ciaviva.com', '(47) 992747545', 'Proponente, diretor geral, formador, produtor e ator do projeto Reféns.'),
-    ('refens-kaique-varela', 'Kaique Varela Zaluski', 'Kaique Varela', 'Produção', 'Direção executiva / Produção executiva', null, '55.069.179/0001-25', 'Jaraguá do Sul | SC', null, null, 'Produção executiva do projeto.'),
-    ('refens-jones-andre', 'Jones Alves Pereira', 'Jones André', 'Equipe técnica', 'Técnico de som', '041.409.299-60', null, 'Jaraguá do Sul | SC', null, null, 'Técnico de som.'),
-    ('refens-cassius-venera', 'Cassius András Goetzke Venera', 'Cassius Venera', 'Equipe técnica', 'Técnico de iluminação', '072.327.099-60', null, 'Jaraguá do Sul | SC', null, null, 'Técnico de luz.'),
-    ('refens-andre-brito', 'André Felipe de Mila Brito', 'André Brito', 'Equipe técnica', 'Registro audiovisual / fotográfico', '094.289.049', null, 'Jaraguá do Sul | SC', null, null, 'Fotógrafo / registro audiovisual.'),
+    ('refens-marcel-eduardo', 'Marcel Eduardo Cabeça Domingues', 'Marcel Eduardo', 'Artista', 'Formador, diretor, ator e produtor', '000.000.001-00', '00.000.001/0001-00', 'Jaraguá do Sul | SC', 'contato@ciaviva.local', '(00) 00000-0000', 'Proponente, diretor geral, formador, produtor e ator do projeto Reféns.'),
+    ('refens-kaique-varela', 'Kaique Varela Zaluski', 'Kaique Varela', 'Produção', 'Direção executiva / Produção executiva', null, '00.000.002/0001-00', 'Jaraguá do Sul | SC', null, null, 'Produção executiva do projeto.'),
+    ('refens-jones-andre', 'Jones Alves Pereira', 'Jones André', 'Equipe técnica', 'Técnico de som', '000.000.002-00', null, 'Jaraguá do Sul | SC', null, null, 'Técnico de som.'),
+    ('refens-cassius-venera', 'Cassius András Goetzke Venera', 'Cassius Venera', 'Equipe técnica', 'Técnico de iluminação', '000.000.003-00', null, 'Jaraguá do Sul | SC', null, null, 'Técnico de luz.'),
+    ('refens-andre-brito', 'André Felipe de Mila Brito', 'André Brito', 'Equipe técnica', 'Registro audiovisual / fotográfico', '000.000.004-00', null, 'Jaraguá do Sul | SC', null, null, 'Fotógrafo / registro audiovisual.'),
     ('refens-suzi-daiane', 'Suzi Daiane', 'Suzi Daiane', 'Formação', 'Professora de inclusão, LIBRAS e acessibilidade', null, null, 'Jaraguá do Sul | SC', null, null, 'Inclusão, LIBRAS, audiodescrição, acessibilidade teatral e formação.'),
-    ('refens-katiana-souza', 'Katiana de Souza Coelho', 'Katy Souza', 'Formação', 'Professora de técnica vocal / Tecladista / Música', '052.660.544-84', null, 'Jaraguá do Sul | SC', null, null, 'Técnica vocal e música.'),
-    ('refens-renaldo-boddemberg', 'Renaldo Boddenberg', 'Renaldo Boddemberg', 'Artista', 'Ator experiente', '053.604.009-51', null, 'Jaraguá do Sul | SC', null, null, 'Ator experiente.'),
+    ('refens-katiana-souza', 'Katiana de Souza Coelho', 'Katy Souza', 'Formação', 'Professora de técnica vocal / Tecladista / Música', '000.000.005-00', null, 'Jaraguá do Sul | SC', null, null, 'Técnica vocal e música.'),
+    ('refens-renaldo-boddemberg', 'Renaldo Boddenberg', 'Renaldo Boddemberg', 'Artista', 'Ator experiente', '000.000.006-00', null, 'Jaraguá do Sul | SC', null, null, 'Ator experiente.'),
     ('refens-bruna-lazzarotto', 'Bruna Lazzarotto', 'Bruna Lazzarotto', 'Artista', 'Atriz experiente', null, null, 'Jaraguá do Sul | SC', null, null, 'Atriz experiente.'),
     ('refens-wemerson-goncalves', 'Wemerson Gonçalves', 'Wemerson Gonçalves', 'Artista', 'Ator experiente', null, null, 'Jaraguá do Sul | SC', null, null, 'Ator experiente.'),
-    ('refens-julia-titz', 'Julia Titz', 'Julia Titz', 'Artista', 'Atriz experiente', '124.713.399-05', null, 'Jaraguá do Sul | SC', null, null, 'Atriz experiente.'),
-    ('refens-karim-kamada', 'Karin Kamada', 'Karin Kamada', 'Artista', 'Artista / Atriz experiente', '182.841.878-17', null, 'Jaraguá do Sul | SC', null, null, 'Artista experiente.')
+    ('refens-julia-titz', 'Julia Titz', 'Julia Titz', 'Artista', 'Atriz experiente', '000.000.007-00', null, 'Jaraguá do Sul | SC', null, null, 'Atriz experiente.'),
+    ('refens-karim-kamada', 'Karin Kamada', 'Karin Kamada', 'Artista', 'Artista / Atriz experiente', '000.000.008-00', null, 'Jaraguá do Sul | SC', null, null, 'Artista experiente.')
   on conflict (external_key) do update set
     full_name = excluded.full_name,
     display_name = excluded.display_name,
@@ -462,4 +462,3 @@ set paid_amount = 0,
     updated_at = now()
 where project_id = (select id from public.viva_projects where slug = 'refens')
 and coalesce(paid_amount, 0) = 0;
-

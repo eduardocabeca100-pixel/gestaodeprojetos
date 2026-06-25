@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useClientReady } from "@/lib/use-client-ready";
 import { getActiveProjectScope, projectScopedKey } from "@/lib/project-scope";
 
 type DocumentStatus =
@@ -44,6 +45,8 @@ type ProjectDocumentFile = {
 };
 
 const storageKeyBase = "viva:central-cultural:documents:v1";
+const initializedKeyBase = "viva:central-cultural:documents:initialized:v1";
+export const CENTRAL_DOCUMENTS_UPDATED_EVENT = "viva:central-cultural-documents-updated";
 
 const documentTemplates = [
   "Cartão CNPJ",
@@ -62,57 +65,71 @@ const documentTemplates = [
   "Material de Divulgação",
 ];
 
-const defaultDocuments: ProjectDocumentFile[] = [
-  {
-    id: "doc-cartao-cnpj",
-    projectName: getActiveProjectScope().name,
-    name: "Cartão CNPJ",
-    category: "Proponente",
-    status: "Pendente",
-    validUntil: "",
-    notes: "",
-  },
-  {
-    id: "doc-certidao-federal",
-    projectName: getActiveProjectScope().name,
-    name: "Certidão Federal",
-    category: "Certidões",
-    status: "Pendente",
-    validUntil: "",
-    notes: "",
-  },
-  {
-    id: "doc-certidao-estadual",
-    projectName: getActiveProjectScope().name,
-    name: "Certidão Estadual",
-    category: "Certidões",
-    status: "Pendente",
-    validUntil: "",
-    notes: "",
-  },
-  {
-    id: "doc-certidao-municipal",
-    projectName: getActiveProjectScope().name,
-    name: "Certidão Municipal",
-    category: "Certidões",
-    status: "Pendente",
-    validUntil: "",
-    notes: "",
-  },
-];
+function getDefaultDocuments(projectName: string): ProjectDocumentFile[] {
+  return [
+    {
+      id: "doc-cartao-cnpj",
+      projectName,
+      name: "Cartão CNPJ",
+      category: "Proponente",
+      status: "Pendente",
+      validUntil: "",
+      notes: "",
+    },
+    {
+      id: "doc-certidao-federal",
+      projectName,
+      name: "Certidão Federal",
+      category: "Certidões",
+      status: "Pendente",
+      validUntil: "",
+      notes: "",
+    },
+    {
+      id: "doc-certidao-estadual",
+      projectName,
+      name: "Certidão Estadual",
+      category: "Certidões",
+      status: "Pendente",
+      validUntil: "",
+      notes: "",
+    },
+    {
+      id: "doc-certidao-municipal",
+      projectName,
+      name: "Certidão Municipal",
+      category: "Certidões",
+      status: "Pendente",
+      validUntil: "",
+      notes: "",
+    },
+  ];
+}
 
 function makeId() {
   return `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function readDocuments() {
-  if (typeof window === "undefined") return defaultDocuments;
+function readDocuments(projectId: string, projectName: string) {
+  if (typeof window === "undefined") return getDefaultDocuments(projectName);
 
   try {
-    const saved = window.localStorage.getItem(projectScopedKey(storageKeyBase));
-    return saved ? (JSON.parse(saved) as ProjectDocumentFile[]) : defaultDocuments;
+    const storageKey = projectScopedKey(storageKeyBase, projectId);
+    const initializedKey = projectScopedKey(initializedKeyBase, projectId);
+    const saved = window.localStorage.getItem(storageKey);
+
+    if (saved) {
+      const parsed = JSON.parse(saved) as ProjectDocumentFile[];
+      return Array.isArray(parsed) ? parsed : getDefaultDocuments(projectName);
+    }
+
+    if (window.localStorage.getItem(initializedKey) === "1") {
+      return [];
+    }
+
+    return getDefaultDocuments(projectName);
   } catch {
-    return defaultDocuments;
+    return getDefaultDocuments(projectName);
   }
 }
 
@@ -198,23 +215,41 @@ function downloadDocument(document: ProjectDocumentFile) {
 }
 
 export function ProjectDocumentsVault() {
-  const [documents, setDocuments] = useState<ProjectDocumentFile[]>(defaultDocuments);
-  const [projectFilter, setProjectFilter] = useState(() => getActiveProjectScope().name);
+  const isClient = useClientReady();
+
+  if (!isClient) {
+    return (
+      <div className="rounded-3xl border border-white bg-white p-6 text-sm font-semibold text-slate-500 shadow-sm">
+        Carregando documentos do projeto...
+      </div>
+    );
+  }
+
+  return <ProjectDocumentsVaultContent />;
+}
+
+function ProjectDocumentsVaultContent() {
+  const project = useMemo(() => getActiveProjectScope(), []);
+  const [documents, setDocuments] = useState<ProjectDocumentFile[]>(() =>
+    readDocuments(project.id, project.name),
+  );
+  const [projectFilter, setProjectFilter] = useState(project.name);
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("Documentos carregados.");
   const [preview, setPreview] = useState<ProjectDocumentFile | null>(null);
 
-  useEffect(() => {
-    const handle = window.setTimeout(() => {
-      setDocuments(readDocuments());
-    }, 0);
-
-    return () => window.clearTimeout(handle);
-  }, []);
-
   function commit(nextDocuments: ProjectDocumentFile[], nextMessage = "Documento salvo automaticamente.") {
     setDocuments(nextDocuments);
-    window.localStorage.setItem(projectScopedKey(storageKeyBase), JSON.stringify(nextDocuments));
+    window.localStorage.setItem(
+      projectScopedKey(storageKeyBase, project.id),
+      JSON.stringify(nextDocuments),
+    );
+    window.localStorage.setItem(projectScopedKey(initializedKeyBase, project.id), "1");
+    window.dispatchEvent(
+      new CustomEvent(CENTRAL_DOCUMENTS_UPDATED_EVENT, {
+        detail: { projectId: project.id, total: nextDocuments.length },
+      }),
+    );
     setMessage(nextMessage);
   }
 
@@ -229,7 +264,7 @@ export function ProjectDocumentsVault() {
   function addDocument(templateName = "Novo documento") {
     const nextDocument: ProjectDocumentFile = {
       id: makeId(),
-      projectName: projectFilter || getActiveProjectScope().name,
+      projectName: projectFilter || project.name,
       name: templateName,
       category: templateName.includes("Certidão") ? "Certidões" : "Geral",
       status: "Pendente",

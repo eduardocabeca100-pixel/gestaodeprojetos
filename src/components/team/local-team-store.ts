@@ -104,7 +104,7 @@ export const defaultLocalTeamMembers: LocalTeamMember[] = [
     avatarUrl: null,
     profileType: "Produção",
     role: "Direção geral e produção executiva",
-    email: "eduardocabeca100@gmail.com",
+    email: "producao@ciaviva.local",
     phone: "",
     document: "",
     cpf: "",

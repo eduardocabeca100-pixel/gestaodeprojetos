@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { readStoredScheduleActivities } from "@/components/schedule/local-schedule-store";
+import { getActiveProjectScope, projectScopedKey } from "@/lib/project-scope";
 import { formatCurrency } from "@/lib/utils/format-currency";
 
 type ConnectedDoc = {
@@ -72,13 +74,17 @@ function countStoredItems(pattern: RegExp) {
 }
 
 function getData() {
-  const documents = readJson<ConnectedDoc[]>("viva:central-cultural:documents:v1", []);
+  const project = getActiveProjectScope();
+  const documents = readJson<ConnectedDoc[]>(
+    projectScopedKey("viva:central-cultural:documents:v1", project.id),
+    [],
+  );
   const central = readJson<CentralData>("viva:central-cultural:v2", {});
   const assignments = readJson<Record<string, unknown[]>>("viva:project-team-assignments:v1", {});
   const roster = readJson<unknown[]>("viva:team-roster:v1", []);
 
-  const teamCount = Object.values(assignments).flat().length || roster.length;
-  const scheduleCount = countStoredItems(/viva:schedule.*activities/i);
+  const teamCount = assignments[project.id]?.length ?? roster.length;
+  const scheduleCount = readStoredScheduleActivities(project.id, []).length;
   const participantsCount = countStoredItems(/participant|participante|aluno|presenca|attendance/i);
   const approved = Number(central.financeSummary?.approved ?? 0);
   const executed = Number(central.financeSummary?.executed ?? 0);
