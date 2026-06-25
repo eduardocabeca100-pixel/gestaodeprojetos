@@ -1,6 +1,14 @@
+import "server-only";
+
+import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 import { getFeaturedProject, getProjectById } from "@/modules/projects/queries";
 import type { Project } from "@/modules/projects/types";
 
+import {
+  editalDocumentCategories,
+  mapDocumentRowToEditalAttachment,
+  type EditalDocumentRow,
+} from "./storage";
 import type { EditalAttachment } from "./types";
 
 async function getScopedProject(projectId?: string) {
@@ -55,8 +63,42 @@ function buildEditalAttachments(project: Project): EditalAttachment[] {
   ];
 }
 
+async function listStoredEditalAttachments(projectId: string) {
+  if (!hasSupabaseServerEnv()) {
+    return null;
+  }
+
+  const supabase = await createClient();
+
+  if (!supabase) {
+    return null;
+  }
+
+  const { data, error } = await (supabase as any)
+    .from("documents")
+    .select(
+      "id, project_id, activity_id, participant_id, team_member_id, file_name, storage_path, category, uploaded_by, uploaded_at, expires_at, notes, status, archived",
+    )
+    .eq("project_id", projectId)
+    .eq("archived", false)
+    .in("category", [...editalDocumentCategories])
+    .order("uploaded_at", { ascending: false });
+
+  if (error) {
+    console.error("listStoredEditalAttachments failed", error);
+    return null;
+  }
+
+  return (data as EditalDocumentRow[]).map(mapDocumentRowToEditalAttachment);
+}
+
 export async function listEditalAttachments(projectId?: string) {
   const project = await getScopedProject(projectId);
+  const storedAttachments = await listStoredEditalAttachments(project.id);
+
+  if (storedAttachments) {
+    return storedAttachments;
+  }
 
   return buildEditalAttachments(project);
 }

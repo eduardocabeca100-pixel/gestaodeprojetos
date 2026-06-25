@@ -6,6 +6,7 @@ export const editalAttachmentKinds = [
   "Autorização",
   "Ofício",
   "Resposta",
+  "Retificação",
   "Outros",
 ] as const;
 
@@ -30,3 +31,29 @@ export type EditalAttachment = {
   status: EditalAttachmentStatus;
   notes: string;
 };
+
+export function normalizeEditalAttachmentKind(kind: string): EditalAttachmentKind {
+  if (kind === "Edital e anexos") {
+    return "Edital principal";
+  }
+
+  return editalAttachmentKinds.includes(kind as EditalAttachmentKind)
+    ? (kind as EditalAttachmentKind)
+    : "Outros";
+}
+
+export function normalizeEditalAttachmentStatus(status: string): EditalAttachmentStatus {
+  if (editalAttachmentStatuses.includes(status as EditalAttachmentStatus)) {
+    return status as EditalAttachmentStatus;
+  }
+
+  if (status === "Válido" || status === "Substituído") {
+    return "Recebido";
+  }
+
+  if (status === "Vencido") {
+    return "Arquivado";
+  }
+
+  return "Pendente";
+}
