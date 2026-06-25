@@ -35,7 +35,8 @@ export function ProjectEditTeamSelector({ project }: { project: Project }) {
 
   const loadData = useCallback(() => {
     const roster = readLocalTeamRoster().filter((member) => member.active);
-    const projectAssignments = readProjectAssignments()[project.id] ?? [];
+    const allProjectAssignments = readProjectAssignments();
+    const projectAssignments = allProjectAssignments[project.id] ?? [];
 
     setMembers(roster);
     setAssignments(projectAssignments);
@@ -98,7 +99,7 @@ export function ProjectEditTeamSelector({ project }: { project: Project }) {
             <h3 className="text-base font-bold text-slate-950">Equipe do projeto</h3>
           </div>
           <p className="mt-1 text-sm text-slate-500">
-            Selecione manualmente pessoas da equipe permanente/casting. Não puxa equipe de outro projeto.
+            Selecione manualmente pessoas da equipe permanente/casting. Este projeto começa sem equipe e não puxa elenco de outro projeto.
           </p>
         </div>
 

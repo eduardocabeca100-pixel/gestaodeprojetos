@@ -1,9 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
-  CheckCircle2,
   Download,
   Eye,
   FileCheck2,
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { getActiveProjectScope, projectScopedKey } from "@/lib/project-scope";
 
 type DocumentStatus =
   | "Pendente"
@@ -42,7 +43,7 @@ type ProjectDocumentFile = {
   uploadedAt?: string;
 };
 
-const storageKey = "viva:central-cultural:documents:v1";
+const storageKeyBase = "viva:central-cultural:documents:v1";
 
 const documentTemplates = [
   "Cartão CNPJ",
@@ -64,7 +65,7 @@ const documentTemplates = [
 const defaultDocuments: ProjectDocumentFile[] = [
   {
     id: "doc-cartao-cnpj",
-    projectName: "Projeto atual",
+    projectName: getActiveProjectScope().name,
     name: "Cartão CNPJ",
     category: "Proponente",
     status: "Pendente",
@@ -73,7 +74,7 @@ const defaultDocuments: ProjectDocumentFile[] = [
   },
   {
     id: "doc-certidao-federal",
-    projectName: "Projeto atual",
+    projectName: getActiveProjectScope().name,
     name: "Certidão Federal",
     category: "Certidões",
     status: "Pendente",
@@ -82,7 +83,7 @@ const defaultDocuments: ProjectDocumentFile[] = [
   },
   {
     id: "doc-certidao-estadual",
-    projectName: "Projeto atual",
+    projectName: getActiveProjectScope().name,
     name: "Certidão Estadual",
     category: "Certidões",
     status: "Pendente",
@@ -91,7 +92,7 @@ const defaultDocuments: ProjectDocumentFile[] = [
   },
   {
     id: "doc-certidao-municipal",
-    projectName: "Projeto atual",
+    projectName: getActiveProjectScope().name,
     name: "Certidão Municipal",
     category: "Certidões",
     status: "Pendente",
@@ -108,7 +109,7 @@ function readDocuments() {
   if (typeof window === "undefined") return defaultDocuments;
 
   try {
-    const saved = window.localStorage.getItem(storageKey);
+    const saved = window.localStorage.getItem(projectScopedKey(storageKeyBase));
     return saved ? (JSON.parse(saved) as ProjectDocumentFile[]) : defaultDocuments;
   } catch {
     return defaultDocuments;
@@ -198,7 +199,7 @@ function downloadDocument(document: ProjectDocumentFile) {
 
 export function ProjectDocumentsVault() {
   const [documents, setDocuments] = useState<ProjectDocumentFile[]>(defaultDocuments);
-  const [projectFilter, setProjectFilter] = useState("Projeto atual");
+  const [projectFilter, setProjectFilter] = useState(() => getActiveProjectScope().name);
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("Documentos carregados.");
   const [preview, setPreview] = useState<ProjectDocumentFile | null>(null);
@@ -213,7 +214,7 @@ export function ProjectDocumentsVault() {
 
   function commit(nextDocuments: ProjectDocumentFile[], nextMessage = "Documento salvo automaticamente.") {
     setDocuments(nextDocuments);
-    window.localStorage.setItem(storageKey, JSON.stringify(nextDocuments));
+    window.localStorage.setItem(projectScopedKey(storageKeyBase), JSON.stringify(nextDocuments));
     setMessage(nextMessage);
   }
 
@@ -228,7 +229,7 @@ export function ProjectDocumentsVault() {
   function addDocument(templateName = "Novo documento") {
     const nextDocument: ProjectDocumentFile = {
       id: makeId(),
-      projectName: projectFilter || "Projeto sem identificação",
+      projectName: projectFilter || getActiveProjectScope().name,
       name: templateName,
       category: templateName.includes("Certidão") ? "Certidões" : "Geral",
       status: "Pendente",
