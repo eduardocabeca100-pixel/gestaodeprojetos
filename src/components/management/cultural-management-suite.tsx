@@ -14,12 +14,10 @@ import {
   AlertTriangle,
   BarChart3,
   BellRing,
-  CalendarClock,
   CheckCircle2,
   ChevronRight,
   ClipboardCheck,
   Download,
-  FileSignature,
   FileText,
   FolderCheck,
   Plus,
@@ -31,6 +29,10 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { CulturalReportWorkspace } from "@/components/management/cultural-report-workspace";
+import { ProjectDataResetPanel } from "@/components/projects/project-data-reset-panel";
+import { AdministrativeDemonstratives } from "@/components/management/administrative-demonstratives";
+import { AccountabilityEditor } from "@/components/management/accountability-editor";
 import { ProjectDocumentsVault } from "@/components/management/project-documents-vault";
 import { formatCurrency } from "@/lib/utils/format-currency";
 
@@ -328,22 +330,6 @@ function alertTone(item: AlertItem) {
   return "border-sky-200 bg-sky-50 text-sky-700";
 }
 
-function statusTone(status: string) {
-  if (["Aprovado", "Pago", "Assinado", "Concluído"].includes(status)) {
-    return "border-emerald-200 bg-emerald-50 text-emerald-700";
-  }
-
-  if (["Enviado", "Emitido"].includes(status)) {
-    return "border-sky-200 bg-sky-50 text-sky-700";
-  }
-
-  if (["Precisa corrigir", "Vencido"].includes(status)) {
-    return "border-red-200 bg-red-50 text-red-700";
-  }
-
-  return "border-amber-200 bg-amber-50 text-amber-800";
-}
-
 function TextInput(props: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className="form-input" />;
 }
@@ -605,7 +591,6 @@ Saldo estimado: ${formatCurrency(totals.remaining)}
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
-                variant="outline"
                 onClick={() => downloadText("relatorio-execucao-cultural.txt", generatedReport)}
               >
                 <Download className="size-4" />
@@ -614,7 +599,6 @@ Saldo estimado: ${formatCurrency(totals.remaining)}
 
               <Button
                 type="button"
-                variant="outline"
                 onClick={() => {
                   if (window.confirm("Restaurar dados de exemplo da Central Cultural?")) {
                     commit(defaultState, "Dados de exemplo restaurados.");
@@ -634,6 +618,8 @@ Saldo estimado: ${formatCurrency(totals.remaining)}
           </div>
         </div>
       </div>
+
+      <ProjectDataResetPanel />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         {tabs.map((tab) => (
@@ -909,387 +895,12 @@ Saldo estimado: ${formatCurrency(totals.remaining)}
 
       {activeTab === "documents" ? <ProjectDocumentsVault /> : null}
 
-      {activeTab === "reports" ? (
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
-            <h3 className="text-lg font-black text-slate-950">Relatório de execução</h3>
-            <p className="mt-1 text-sm text-slate-500">
-              Base narrativa com salvamento automático. O próximo módulo transforma isso em editor avançado e PDF bonito.
-            </p>
+      {activeTab === "reports" ? <CulturalReportWorkspace /> : null}
 
-            <div className="mt-5 grid gap-4">
-              <Field label="Nome do projeto">
-                <TextInput
-                  value={state.report.projectName}
-                  onChange={(event) =>
-                    commit({ ...state, report: { ...state.report, projectName: event.target.value } }, "Relatório salvo.")
-                  }
-                />
-              </Field>
+      {activeTab === "accountability" ? <AccountabilityEditor /> : null}
 
-              <div className="grid gap-3 md:grid-cols-3">
-                <Field label="Início">
-                  <TextInput
-                    type="date"
-                    value={state.report.periodStart}
-                    onChange={(event) =>
-                      commit({ ...state, report: { ...state.report, periodStart: event.target.value } }, "Período salvo.")
-                    }
-                  />
-                </Field>
-                <Field label="Fim previsto">
-                  <TextInput
-                    type="date"
-                    value={state.report.periodEnd}
-                    onChange={(event) =>
-                      commit({ ...state, report: { ...state.report, periodEnd: event.target.value } }, "Período salvo.")
-                    }
-                  />
-                </Field>
-                <Field label="Emissão">
-                  <TextInput
-                    type="date"
-                    value={state.report.emittedAt}
-                    onChange={(event) =>
-                      commit({ ...state, report: { ...state.report, emittedAt: event.target.value } }, "Emissão salva.")
-                    }
-                  />
-                </Field>
-              </div>
+      {activeTab === "demonstratives" ? <AdministrativeDemonstratives /> : null}
 
-              <Field label="Público alcançado">
-                <TextInput
-                  value={state.report.audience}
-                  onChange={(event) =>
-                    commit({ ...state, report: { ...state.report, audience: event.target.value } }, "Público salvo.")
-                  }
-                />
-              </Field>
-
-              <Field label="Ações realizadas">
-                <TextArea
-                  value={state.report.activities}
-                  onChange={(event) =>
-                    commit({ ...state, report: { ...state.report, activities: event.target.value } }, "Ações salvas.")
-                  }
-                />
-              </Field>
-
-              <Field label="Desenvolvimento do projeto">
-                <TextArea
-                  value={state.report.development}
-                  onChange={(event) =>
-                    commit({ ...state, report: { ...state.report, development: event.target.value } }, "Desenvolvimento salvo.")
-                  }
-                />
-              </Field>
-
-              <Field label="Resultados alcançados">
-                <TextArea
-                  value={state.report.results}
-                  onChange={(event) =>
-                    commit({ ...state, report: { ...state.report, results: event.target.value } }, "Resultados salvos.")
-                  }
-                />
-              </Field>
-
-              <Field label="Evidências">
-                <TextArea
-                  value={state.report.evidence}
-                  onChange={(event) =>
-                    commit({ ...state, report: { ...state.report, evidence: event.target.value } }, "Evidências salvas.")
-                  }
-                />
-              </Field>
-            </div>
-          </div>
-
-          <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-lg font-black text-slate-950">Prévia do relatório</h3>
-              <Button
-                type="button"
-                onClick={() => downloadText("relatorio-execucao-cultural.txt", generatedReport)}
-              >
-                <Download className="size-4" />
-                Baixar TXT
-              </Button>
-            </div>
-            <pre className="mt-5 max-h-[720px] overflow-auto whitespace-pre-wrap rounded-3xl border border-slate-200 bg-slate-950 p-5 text-sm leading-6 text-white">
-              {generatedReport}
-            </pre>
-          </div>
-        </div>
-      ) : null}
-
-      {activeTab === "accountability" ? (
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-black text-slate-950">Prestação de contas</h3>
-              <p className="text-sm text-slate-500">
-                Checklist com campos de observação. O próximo módulo coloca editor tipo Word e anexos.
-              </p>
-            </div>
-            <Button
-              type="button"
-              onClick={() =>
-                commit(
-                  {
-                    ...state,
-                    accountability: [
-                      {
-                        id: makeId("acc"),
-                        title: "Nova pendência",
-                        done: false,
-                        notes: "",
-                      },
-                      ...state.accountability,
-                    ],
-                  },
-                  "Item criado.",
-                )
-              }
-            >
-              <Plus className="size-4" />
-              Novo item
-            </Button>
-          </div>
-
-          <div className="mt-5 h-4 overflow-hidden rounded-full bg-slate-100">
-            <div
-              className="h-full rounded-full bg-primary"
-              style={{ width: `${totals.accountabilityPercent}%` }}
-            />
-          </div>
-          <p className="mt-2 text-sm font-bold text-slate-600">
-            {totals.accountabilityPercent}% concluído
-          </p>
-
-          <div className="mt-5 grid gap-3 xl:grid-cols-2">
-            {state.accountability.map((item) => (
-              <div
-                key={item.id}
-                className={
-                  item.done
-                    ? "rounded-3xl border border-emerald-200 bg-emerald-50 p-4"
-                    : "rounded-3xl border border-slate-200 bg-slate-50 p-4"
-                }
-              >
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={item.done}
-                    onChange={() =>
-                      commit(
-                        {
-                          ...state,
-                          accountability: state.accountability.map((acc) =>
-                            acc.id === item.id ? { ...acc, done: !acc.done } : acc,
-                          ),
-                        },
-                        "Prestação atualizada.",
-                      )
-                    }
-                    className="mt-3 size-4"
-                  />
-                  <div className="flex-1 space-y-3">
-                    <TextInput
-                      value={item.title}
-                      onChange={(event) =>
-                        commit(
-                          {
-                            ...state,
-                            accountability: state.accountability.map((acc) =>
-                              acc.id === item.id ? { ...acc, title: event.target.value } : acc,
-                            ),
-                          },
-                          "Item atualizado.",
-                        )
-                      }
-                    />
-                    <TextArea
-                      value={item.notes}
-                      placeholder="Escreva observações, links, pendências ou encaminhamentos..."
-                      onChange={(event) =>
-                        commit(
-                          {
-                            ...state,
-                            accountability: state.accountability.map((acc) =>
-                              acc.id === item.id ? { ...acc, notes: event.target.value } : acc,
-                            ),
-                          },
-                          "Observação salva.",
-                        )
-                      }
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    onClick={() =>
-                      commit(
-                        { ...state, accountability: state.accountability.filter((acc) => acc.id !== item.id) },
-                        "Item removido.",
-                      )
-                    }
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-
-      {activeTab === "demonstratives" ? (
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-black text-slate-950">
-                Demonstrativos administrativos
-              </h3>
-              <p className="text-sm text-slate-500">
-                Base para recibos/demonstrativos. O próximo módulo cria o PDF bonito no modelo institucional.
-              </p>
-            </div>
-            <Button
-              type="button"
-              onClick={() =>
-                commit(
-                  {
-                    ...state,
-                    demonstratives: [
-                      {
-                        id: makeId("demo"),
-                        number: String(state.demonstratives.length + 1).padStart(4, "0"),
-                        client: "Nome/Razão social",
-                        dueDate: "",
-                        total: 0,
-                        status: "Rascunho",
-                      },
-                      ...state.demonstratives,
-                    ],
-                  },
-                  "Demonstrativo criado.",
-                )
-              }
-            >
-              <Plus className="size-4" />
-              Novo demonstrativo
-            </Button>
-          </div>
-
-          <div className="mt-5 space-y-3">
-            {state.demonstratives.map((item) => (
-              <div
-                key={item.id}
-                className="grid gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 xl:grid-cols-[120px_1fr_170px_170px_150px_44px]"
-              >
-                <TextInput
-                  value={item.number}
-                  onChange={(event) =>
-                    commit(
-                      {
-                        ...state,
-                        demonstratives: state.demonstratives.map((demo) =>
-                          demo.id === item.id ? { ...demo, number: event.target.value } : demo,
-                        ),
-                      },
-                      "Número atualizado.",
-                    )
-                  }
-                />
-                <TextInput
-                  value={item.client}
-                  onChange={(event) =>
-                    commit(
-                      {
-                        ...state,
-                        demonstratives: state.demonstratives.map((demo) =>
-                          demo.id === item.id ? { ...demo, client: event.target.value } : demo,
-                        ),
-                      },
-                      "Cliente atualizado.",
-                    )
-                  }
-                />
-                <TextInput
-                  type="date"
-                  value={item.dueDate}
-                  onChange={(event) =>
-                    commit(
-                      {
-                        ...state,
-                        demonstratives: state.demonstratives.map((demo) =>
-                          demo.id === item.id ? { ...demo, dueDate: event.target.value } : demo,
-                        ),
-                      },
-                      "Vencimento atualizado.",
-                    )
-                  }
-                />
-                <TextInput
-                  type="number"
-                  value={item.total}
-                  onChange={(event) =>
-                    commit(
-                      {
-                        ...state,
-                        demonstratives: state.demonstratives.map((demo) =>
-                          demo.id === item.id ? { ...demo, total: Number(event.target.value) } : demo,
-                        ),
-                      },
-                      "Valor atualizado.",
-                    )
-                  }
-                />
-                <SelectInput
-                  value={item.status}
-                  onChange={(event) =>
-                    commit(
-                      {
-                        ...state,
-                        demonstratives: state.demonstratives.map((demo) =>
-                          demo.id === item.id
-                            ? { ...demo, status: event.target.value as DemonstrativeItem["status"] }
-                            : demo,
-                        ),
-                      },
-                      "Status atualizado.",
-                    )
-                  }
-                >
-                  <option>Rascunho</option>
-                  <option>Emitido</option>
-                  <option>Pago</option>
-                  <option>Vencido</option>
-                </SelectInput>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() =>
-                    commit(
-                      {
-                        ...state,
-                        demonstratives: state.demonstratives.filter((demo) => demo.id !== item.id),
-                      },
-                      "Demonstrativo removido.",
-                    )
-                  }
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-5 rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-            Este demonstrativo administrativo não substitui Nota Fiscal quando o edital, órgão público ou legislação exigir NF oficial.
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
