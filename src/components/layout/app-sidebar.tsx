@@ -51,7 +51,7 @@ const navigation = [
   { label: "Mídia", href: "/midia", icon: ImageIcon, projectScoped: true },
   { label: "Gestão", href: "/gestao", icon: ClipboardList, projectScoped: true }, { label: "Relatórios", href: "/relatorios", icon: BarChart3, projectScoped: true },
   { label: "Notificações", href: "/notificacoes", icon: Bell, badge: "3" },
-  { label: "Modelo de PDF", href: "/configuracoes/pdf", icon: FileText }, { label: "Importar Reféns", href: "/configuracoes/importar-refens", icon: Database },  { label: "Configurações", href: "/configuracoes/geral", icon: Settings },
+  { label: "Modelo de PDF", href: "/configuracoes/pdf", icon: FileText }, { label: "Exportar ZIP", href: "/configuracoes/exportar-projeto", icon: Database },  { label: "Configurações", href: "/configuracoes/geral", icon: Settings },
 ];
 
 function getProjectIdFromPathname(pathname: string) {

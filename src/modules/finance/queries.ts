@@ -166,11 +166,27 @@ async function getScopedProject(projectId?: string) {
     : getFeaturedProject();
 }
 
+function isRefensProject(project: Project) {
+  const name = project.name.toLowerCase();
+  const slug = project.slug.toLowerCase();
+
+  return (
+    project.id === "refens" ||
+    slug.includes("refens") ||
+    name.includes("reféns") ||
+    name.includes("refens")
+  );
+}
+
 function roundAmount(value: number) {
   return Math.round(value / 100) * 100;
 }
 
 function buildBudgetItems(project: Project): BudgetItem[] {
+  if (!isRefensProject(project)) {
+    return [];
+  }
+
   return budgetPlan.map((item) => ({
     id: `${project.id}-${item.id}`,
     projectId: project.id,
@@ -190,6 +206,10 @@ function buildBudgetItems(project: Project): BudgetItem[] {
 }
 
 function buildExpenses(project: Project, items: BudgetItem[]): Expense[] {
+  if (!isRefensProject(project)) {
+    return [];
+  }
+
   if (project.executedAmount <= 0) {
     return [];
   }
@@ -267,7 +287,7 @@ export async function getFinancialSummary(projectId?: string) {
   const items = buildBudgetItems(project);
   const projectExpenses = buildExpenses(project, items);
   const approved = items.reduce((total, item) => total + item.approvedAmount, 0);
-  const executed = project.executedAmount;
+  const executed = isRefensProject(project) ? project.executedAmount : 0;
 
   return {
     approved,

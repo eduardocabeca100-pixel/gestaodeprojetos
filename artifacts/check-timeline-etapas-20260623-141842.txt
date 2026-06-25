@@ -1,0 +1,14 @@
+CHECK TIMELINE ETAPAS - 20260623-141842
+
+Arquivos corrigidos:
+- src/modules/projects/stage-actions.ts
+- src/components/projects/project-status-timeline.tsx
+- src/components/dashboard/project-stages-panel.tsx
+- src/app/(protected)/dashboard/page.tsx
+- src/app/(protected)/projetos/[id]/page.tsx
+
+O que foi ajustado:
+- Timeline da página do projeto agora é clicável.
+- Timeline do dashboard agora é clicável.
+- Clique em etapa atualiza current_stage e status no Supabase.
+- Botão Editar projeto leva para /projetos/[id]#editar-projeto.

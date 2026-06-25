@@ -16,6 +16,15 @@ type RefensTeamWorkspaceProps = {
   };
 };
 
+function isRefensProject(project: RefensTeamWorkspaceProps["activeProject"]) {
+  const value = `${project.id} ${project.name}`
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  return value.includes("refens");
+}
+
 export function RefensTeamWorkspace({
   initialTab = "project",
   activeProject,
@@ -25,7 +34,7 @@ export function RefensTeamWorkspace({
   if (!isClient) {
     return (
       <div className="rounded-[2rem] border border-slate-200 bg-white p-6 text-sm font-semibold text-slate-500 shadow-sm">
-        Carregando equipe oficial do projeto Reféns...
+        Carregando equipe do projeto...
       </div>
     );
   }
@@ -43,16 +52,20 @@ function RefensTeamWorkspaceContent({
   initialTab,
   activeProject,
 }: RefensTeamWorkspaceProps) {
-  const [workspaceKey] = useState(() => {
-    seedRefensTeamForProject(activeProject.id);
-    applyRefensOfficialCostBreakdowns(activeProject.id);
+  const shouldSeedRefens = isRefensProject(activeProject);
 
-    return `refens-team-${activeProject.id}-${initialTab}`;
+  const [workspaceKey] = useState(() => {
+    if (shouldSeedRefens) {
+      seedRefensTeamForProject(activeProject.id);
+      applyRefensOfficialCostBreakdowns(activeProject.id);
+    }
+
+    return `team-${activeProject.id}-${initialTab}`;
   });
 
   return (
     <>
-      <RefensCleanup />
+      {shouldSeedRefens ? <RefensCleanup /> : null}
 
       <LocalTeamWorkspace
         key={workspaceKey}

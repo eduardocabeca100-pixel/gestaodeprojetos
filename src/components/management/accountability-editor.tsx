@@ -571,7 +571,7 @@ export function AccountabilityEditor() {
   }
 
   return (
-    <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_430px]">
+    <div className="grid gap-6 2xl:grid-cols-[minmax(0,0.9fr)_minmax(560px,0.7fr)]">
       <div className="space-y-6">
         <div className="overflow-hidden rounded-[2rem] border border-white bg-white shadow-sm">
           <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-primary p-6 text-white">
@@ -607,7 +607,7 @@ export function AccountabilityEditor() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+        <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
           <h4 className="text-lg font-black text-slate-950">Dados principais</h4>
           <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <Field label="Projeto" span="xl:col-span-2">
@@ -625,7 +625,7 @@ export function AccountabilityEditor() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+        <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <h4 className="text-lg font-black text-slate-950">Dados conectados</h4>
@@ -662,7 +662,7 @@ export function AccountabilityEditor() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-          <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+          <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h4 className="text-lg font-black text-slate-950">Seções</h4>
@@ -745,7 +745,7 @@ export function AccountabilityEditor() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
-          <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+          <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h4 className="text-lg font-black text-slate-950">Fotos e evidências</h4>
@@ -788,7 +788,7 @@ export function AccountabilityEditor() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+          <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h4 className="text-lg font-black text-slate-950">Links de comprovação</h4>
@@ -838,11 +838,11 @@ export function AccountabilityEditor() {
         </div>
       </div>
 
-      <aside className="sticky top-4 h-fit rounded-3xl border border-white bg-white p-5 shadow-sm">
+      <aside className="sticky top-4 h-fit rounded-3xl border border-white bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Prévia lateral</p>
-            <h4 className="mt-1 text-lg font-black text-slate-950">Relatório PDF</h4>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Prévia ampliada</p>
+            <h4 className="mt-1 text-lg font-black text-slate-950">Visualização PDF</h4>
           </div>
           <Button type="button" onClick={() => printPdf("prestacao-contas", reportHtml)}>
             <Download className="size-4" />
@@ -850,7 +850,7 @@ export function AccountabilityEditor() {
           </Button>
         </div>
 
-        <div className="mt-5 max-h-[78vh] overflow-auto rounded-3xl border border-slate-200 bg-slate-100 p-4">
+        <div className="mt-5 max-h-[84vh] overflow-auto rounded-3xl border border-slate-200 bg-slate-100 p-4">
           <div className="rounded-2xl bg-white p-5 shadow-sm">
             <div className="rounded-2xl bg-slate-950 p-5 text-white">
               <p className="text-xs font-black uppercase tracking-[0.24em] text-white/50">Cia de Artes Viva</p>

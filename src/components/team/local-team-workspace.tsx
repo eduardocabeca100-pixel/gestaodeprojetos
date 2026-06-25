@@ -811,6 +811,24 @@ export function LocalTeamWorkspace({
   }
 
 
+  function clearProjectTeam() {
+    if (!window.confirm(`Remover toda a equipe selecionada deste projeto?\\n\\nProjeto: ${activeProject.name}\\n\\nA equipe permanente/casting será mantida.`)) {
+      return;
+    }
+
+    const nextAssignments = {
+      ...assignmentsByProject,
+      [projectId]: [],
+    };
+
+    persistAssignments(nextAssignments);
+    setOpenHistory([]);
+    setPaymentDrafts({});
+    setCostDrafts({});
+    resetProjectForm();
+    setMessage(`Equipe do projeto ${activeProject.name} foi limpa. A equipe permanente foi mantida.`);
+  }
+
   function removeAssignment(assignmentId: string) {
     persistAssignments({
       ...assignmentsByProject,

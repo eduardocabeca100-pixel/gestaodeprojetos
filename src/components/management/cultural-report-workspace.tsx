@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useClientReady } from "@/lib/use-client-ready";
 import { formatCurrency } from "@/lib/utils/format-currency";
 import { getActiveProjectScope, projectScopedKey } from "@/lib/project-scope";
 
@@ -124,6 +125,10 @@ const defaultSections: ReportSection[] = [
   },
 ];
 
+function cloneDefaultSections() {
+  return defaultSections.map((section) => ({ ...section }));
+}
+
 function makeId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -190,6 +195,33 @@ function getConnectedData(): ConnectedData {
     participants: countStoredItems(/participant|participante|aluno|presenca|attendance/i),
     team: assignments[project.id]?.length ?? 0,
     activities: countStoredItems(/viva:schedule.*activities/i),
+  };
+}
+
+function createInitialReportState(): ReportState {
+  const projectName = getActiveProjectScope().name;
+  const saved = readJson<Partial<ReportState>>(projectScopedKey(storageKeyBase), {});
+  const baseState: ReportState = {
+    title: "Relatório de Execução Cultural",
+    projectName,
+    responsible: "Cia de Artes Viva",
+    periodStart: "",
+    periodEnd: "",
+    emittedAt: new Date().toISOString().slice(0, 10),
+    objective:
+      "Registrar a execução, os resultados, os documentos, as evidências e os dados administrativos do projeto cultural.",
+    sections: cloneDefaultSections(),
+    photos: [],
+    links: [],
+  };
+
+  return {
+    ...baseState,
+    ...saved,
+    projectName: saved.projectName || projectName,
+    sections: saved.sections?.length ? saved.sections : cloneDefaultSections(),
+    photos: saved.photos ?? [],
+    links: saved.links ?? [],
   };
 }
 
@@ -393,45 +425,29 @@ function printPdf(title: string, html: string) {
 }
 
 export function CulturalReportWorkspace() {
-  const project = getActiveProjectScope();
-  const [ready, setReady] = useState(false);
-  const [state, setState] = useState<ReportState>({
-    title: "Relatório de Execução Cultural",
-    projectName: project.name,
-    responsible: "Cia de Artes Viva",
-    periodStart: "",
-    periodEnd: "",
-    emittedAt: new Date().toISOString().slice(0, 10),
-    objective:
-      "Registrar a execução, os resultados, os documentos, as evidências e os dados administrativos do projeto cultural.",
-    sections: defaultSections,
-    photos: [],
-    links: [],
-  });
+  const isClient = useClientReady();
+
+  if (!isClient) {
+    return (
+      <div className="rounded-3xl border border-white bg-white p-6 text-sm font-semibold text-slate-500 shadow-sm">
+        Carregando relatório...
+      </div>
+    );
+  }
+
+  return <CulturalReportWorkspaceContent />;
+}
+
+function CulturalReportWorkspaceContent() {
+  const initialState = useMemo(() => createInitialReportState(), []);
+  const [state, setState] = useState<ReportState>(initialState);
   const [data, setData] = useState<ConnectedData>(() => getConnectedData());
-  const [activeSectionId, setActiveSectionId] = useState(defaultSections[0]?.id ?? "");
+  const [activeSectionId, setActiveSectionId] = useState(initialState.sections[0]?.id ?? "");
   const [message, setMessage] = useState("Relatório carregado.");
   const saveTimer = useRef<number | null>(null);
   const editorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const saved = readJson<Partial<ReportState>>(projectScopedKey(storageKeyBase), {});
-
-    setState((current) => ({
-      ...current,
-      ...saved,
-      projectName: saved.projectName || getActiveProjectScope().name,
-      sections: saved.sections?.length ? saved.sections : defaultSections,
-      photos: saved.photos ?? [],
-      links: saved.links ?? [],
-    }));
-    setData(getConnectedData());
-    setReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!ready) return;
-
     if (saveTimer.current) {
       window.clearTimeout(saveTimer.current);
     }
@@ -444,7 +460,7 @@ export function CulturalReportWorkspace() {
     return () => {
       if (saveTimer.current) window.clearTimeout(saveTimer.current);
     };
-  }, [ready, state]);
+  }, [state]);
 
   const activeSection = useMemo(
     () => state.sections.find((section) => section.id === activeSectionId) ?? state.sections[0],
@@ -550,7 +566,7 @@ export function CulturalReportWorkspace() {
     });
   }
 
-  if (!ready || !activeSection) {
+  if (!activeSection) {
     return (
       <div className="rounded-3xl border border-white bg-white p-6 text-sm font-semibold text-slate-500 shadow-sm">
         Carregando relatório...
@@ -559,7 +575,7 @@ export function CulturalReportWorkspace() {
   }
 
   return (
-    <div className="grid gap-6 2xl:grid-cols-[minmax(0,1fr)_430px]">
+    <div className="grid gap-6 2xl:grid-cols-[minmax(0,0.9fr)_minmax(560px,0.7fr)]">
       <div className="space-y-6">
         <div className="overflow-hidden rounded-[2rem] border border-white bg-white shadow-sm">
           <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-primary p-6 text-white">
@@ -599,7 +615,7 @@ export function CulturalReportWorkspace() {
           </div>
         </div>
 
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+        <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
           <h4 className="text-lg font-black text-slate-950">Dados do relatório</h4>
           <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <Field label="Título" span="xl:col-span-2">
@@ -630,7 +646,7 @@ export function CulturalReportWorkspace() {
           </Field>
         </div>
 
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+        <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <h4 className="text-lg font-black text-slate-950">Dados conectados</h4>
@@ -664,7 +680,7 @@ export function CulturalReportWorkspace() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
-          <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+          <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h4 className="text-lg font-black text-slate-950">Seções</h4>
@@ -738,7 +754,7 @@ export function CulturalReportWorkspace() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">
-          <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+          <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h4 className="text-lg font-black text-slate-950">Fotos do relatório</h4>
@@ -780,7 +796,7 @@ export function CulturalReportWorkspace() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+          <div className="rounded-3xl border border-white bg-white p-6 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h4 className="text-lg font-black text-slate-950">Links e vídeos</h4>
@@ -827,11 +843,11 @@ export function CulturalReportWorkspace() {
         </div>
       </div>
 
-      <aside className="sticky top-4 h-fit rounded-3xl border border-white bg-white p-5 shadow-sm">
+      <aside className="sticky top-4 h-fit rounded-3xl border border-white bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Prévia lateral</p>
-            <h4 className="mt-1 text-lg font-black text-slate-950">Relatório PDF</h4>
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Prévia ampliada</p>
+            <h4 className="mt-1 text-lg font-black text-slate-950">Visualização PDF</h4>
           </div>
           <Button type="button" onClick={() => printPdf("relatorio-cultural", reportHtml)}>
             <Download className="size-4" />
@@ -839,7 +855,7 @@ export function CulturalReportWorkspace() {
           </Button>
         </div>
 
-        <div className="mt-5 max-h-[78vh] overflow-auto rounded-3xl border border-slate-200 bg-slate-100 p-4">
+        <div className="mt-5 max-h-[84vh] overflow-auto rounded-3xl border border-slate-200 bg-slate-100 p-4">
           <div className="rounded-2xl bg-white p-5 shadow-sm">
             <div className="rounded-2xl bg-slate-950 p-5 text-white">
               <p className="text-xs font-black uppercase tracking-[0.24em] text-white/50">Cia de Artes Viva</p>

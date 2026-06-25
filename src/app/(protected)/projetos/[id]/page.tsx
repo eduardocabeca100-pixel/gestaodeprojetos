@@ -2,11 +2,11 @@ import { notFound } from "next/navigation";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { SectionCard } from "@/components/layout/section-card";
+import { ActiveProjectScope } from "@/components/projects/active-project-scope";
 import { ProjectActionsMenu } from "@/components/projects/project-actions-menu";
 import { ProjectBannerUpload } from "@/components/projects/project-banner-upload";
 import { ProjectCoverUpload } from "@/components/projects/project-cover-upload";
 import { ProjectForm } from "@/components/projects/project-form";
-import { ActiveProjectScope } from "@/components/projects/active-project-scope";
 import { ProjectEditTeamSelector } from "@/components/projects/project-edit-team-selector";
 import { ProjectHeader } from "@/components/projects/project-header";
 import { ProjectStatusTimeline } from "@/components/projects/project-status-timeline";
@@ -37,14 +37,14 @@ export default async function ProjectDetailPage({
       title={project.name}
       description={project.currentStage}
       actions={
-        <ActiveProjectScope project={project} />
-      <ProjectActionsMenu
+        <ProjectActionsMenu
           projectId={project.id}
           canDuplicate={can(profile.role, "create_project")}
           canArchive={can(profile.role, "archive_project")}
         />
       }
     >
+      <ActiveProjectScope project={project} />
       <ProjectHeader project={project} />
       <ProjectWorkspaceNav project={project} />
 
@@ -59,15 +59,6 @@ export default async function ProjectDetailPage({
           <ProjectForm project={project} />
           <ProjectEditTeamSelector project={project} />
         </div>
-
-        <div className="space-y-6">
-          <ProjectCoverUpload project={project} />
-          <ProjectBannerUpload project={project} />
-        </div>
-      </div>
-
-      <div id="editar-projeto" className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_390px]">
-        <ProjectForm project={project} />
 
         <div className="space-y-6">
           <ProjectCoverUpload project={project} />

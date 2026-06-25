@@ -23,6 +23,7 @@ import {
   setActiveProjectScope,
   type ActiveProjectScope,
 } from "@/lib/project-scope";
+import { useClientReady } from "@/lib/use-client-ready";
 
 type ExportArea = {
   folder: string;
@@ -332,15 +333,67 @@ function countArea(payload: Record<string, unknown>, area: ExportArea) {
   return Object.keys(payloadForArea(payload, area)).length;
 }
 
-export function ProjectZipExportWorkspace({ registeredProjects = [] }: ProjectZipExportWorkspaceProps) {
-  const [project, setProject] = useState<ActiveProjectScope>(() => registeredProjects[0] ?? getActiveProjectScope());
-  const [summary, setSummary] = useState<Record<string, number>>({});
-  const [message, setMessage] = useState("Selecione um projeto cadastrado e clique em Baixar ZIP.");
-  const [isExporting, setIsExporting] = useState(false);
+function summarizeProject(selectedProject: ActiveProjectScope) {
+  const payload = collectProjectPayload(selectedProject);
+  const nextSummary: Record<string, number> = {};
 
+  for (const area of exportAreas) {
+    nextSummary[area.folder] = countArea(payload, area);
+  }
+
+  return {
+    summary: nextSummary,
+    message: `Projeto pronto para exportação: ${selectedProject.name}.`,
+  };
+}
+
+export function ProjectZipExportWorkspace({ registeredProjects = [] }: ProjectZipExportWorkspaceProps) {
+  const isClient = useClientReady();
+
+  if (!isClient) {
+    return (
+      <div className="rounded-[2rem] border border-slate-200 bg-white p-6 text-sm font-semibold text-slate-500 shadow-sm">
+        Carregando exportador de projeto...
+      </div>
+    );
+  }
+
+  return <ProjectZipExportWorkspaceContent registeredProjects={registeredProjects} />;
+}
+
+function ProjectZipExportWorkspaceContent({ registeredProjects }: ProjectZipExportWorkspaceProps) {
+  const [isExporting, setIsExporting] = useState(false);
   const projectOptions = useMemo(() => {
     return registeredProjects.filter((item) => item.id && item.name);
   }, [registeredProjects]);
+  const initialState = useMemo(() => {
+    const fallbackProject = projectOptions[0] ?? getActiveProjectScope();
+
+    if (!projectOptions.length) {
+      return {
+        project: fallbackProject,
+        summary: {} as Record<string, number>,
+        message: "Nenhum projeto cadastrado encontrado para exportar.",
+      };
+    }
+
+    const active = getActiveProjectScope();
+    const matched = projectOptions.find((item) => item.id === active.id) ?? projectOptions[0];
+
+    return {
+      project: matched,
+      ...summarizeProject(matched),
+    };
+  }, [projectOptions]);
+  const [project, setProject] = useState<ActiveProjectScope>(initialState.project);
+  const [summary, setSummary] = useState<Record<string, number>>(initialState.summary);
+  const [message, setMessage] = useState(initialState.message);
+
+  useEffect(() => {
+    if (project?.id && project.id !== "sem-projeto") {
+      setActiveProjectScope(project);
+    }
+  }, [project]);
 
   function refresh(selectedProject = project) {
     if (!selectedProject?.id || selectedProject.id === "sem-projeto") {
@@ -348,27 +401,12 @@ export function ProjectZipExportWorkspace({ registeredProjects = [] }: ProjectZi
       return;
     }
 
-    setActiveProjectScope(selectedProject);
-    const payload = collectProjectPayload(selectedProject);
-    const nextSummary: Record<string, number> = {};
-
-    for (const area of exportAreas) {
-      nextSummary[area.folder] = countArea(payload, area);
-    }
+    const nextState = summarizeProject(selectedProject);
 
     setProject(selectedProject);
-    setSummary(nextSummary);
-    setMessage(`Projeto pronto para exportação: ${selectedProject.name}.`);
+    setSummary(nextState.summary);
+    setMessage(nextState.message);
   }
-
-  useEffect(() => {
-    if (projectOptions.length) {
-      const active = getActiveProjectScope();
-      const matched = projectOptions.find((item) => item.id === active.id) ?? projectOptions[0];
-      refresh(matched);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectOptions.length]);
 
   function handleSelect(projectId: string) {
     const selected = projectOptions.find((item) => item.id === projectId);

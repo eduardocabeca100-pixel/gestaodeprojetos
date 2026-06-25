@@ -1,0 +1,23 @@
+
+> viva-gestao-cultural@0.1.0 build
+> next build
+
+▲ Next.js 16.2.9 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 4.5s
+  Running TypeScript ...
+Failed to type check.
+
+./src/components/management/accountability-editor.tsx:227:5
+Type error: Type 'number' is not assignable to type 'Timeout'.
+
+  [90m225 |[0m     }
+  [90m226 |[0m
+[31m[1m>[0m [90m227 |[0m     saveTimer.current = window.setTimeout(() => {
+  [90m    |[0m     [31m[1m^[0m
+  [90m228 |[0m       window.localStorage.setItem(storageKey, [33mJSON[0m.stringify(state));
+  [90m229 |[0m       setMessage([32m`Salvo automaticamente às [0m${[36mnew[0m [33mDate[0m().toLocaleTimeString([32m"pt-BR"[0m, { hou...
+  [90m230 |[0m     }, [35m500[0m);
+Next.js build worker exited with code: 1 and signal: null
