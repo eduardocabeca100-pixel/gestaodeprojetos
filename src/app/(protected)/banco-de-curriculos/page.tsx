@@ -5,7 +5,7 @@ export default function ResumeBankPage() {
   return (
     <PageContainer
       title="Banco de Currículos"
-      description="Cadastro de profissionais, arquivos, modelos de edital e geração de currículos em PDF ou Word."
+      description="Cadastro de profissionais, modelos por edital e geração de currículos em PDF e Word."
     >
       <ResumeBankWorkspace />
     </PageContainer>

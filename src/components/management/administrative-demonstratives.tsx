@@ -563,7 +563,7 @@ function printPdf(demo: Demonstrative) {
   const win = originalOpen("", "_blank", "noopener,noreferrer,width=1200,height=850");
 
   if (!win) {
-    window.alert("O navegador bloqueou a janela do demonstrativo. Libere pop-ups para este site.");
+    window.alert("Não foi possível preparar o demonstrativo.");
     return;
   }
 
@@ -572,6 +572,54 @@ function printPdf(demo: Demonstrative) {
   win.document.close();
   win.focus();
 }
+
+
+function printDemonstrativeWithoutPopup(html: string) {
+  if (typeof window === "undefined") return;
+
+  const frameId = "viva-demonstrative-print-frame";
+  const oldFrame = window.document.getElementById(frameId);
+  oldFrame?.remove();
+
+  const iframe = window.document.createElement("iframe");
+  iframe.id = frameId;
+  iframe.title = "Demonstrativo";
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  iframe.style.opacity = "0";
+  iframe.style.pointerEvents = "none";
+
+  window.document.body.appendChild(iframe);
+
+  const frameWindow = iframe.contentWindow;
+  const frameDocument = frameWindow?.document;
+
+  if (!frameWindow || !frameDocument) {
+    window.alert("Não foi possível preparar o demonstrativo.");
+    iframe.remove();
+    return;
+  }
+
+  frameDocument.open();
+  frameDocument.write(html);
+  frameDocument.close();
+
+  window.setTimeout(() => {
+    try {
+      frameWindow.focus();
+      frameWindow.print();
+    } catch {
+      window.alert("Não foi possível abrir a impressão do demonstrativo.");
+    }
+
+    window.setTimeout(() => iframe.remove(), 1500);
+  }, 450);
+}
+
 
 export function AdministrativeDemonstratives() {
   const [items, setItems] = useState<Demonstrative[]>([newDemo(1)]);

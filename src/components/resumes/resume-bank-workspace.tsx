@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Download,
   FileText,
-  FolderDown,
   ImagePlus,
   Plus,
   Search,
@@ -26,18 +25,13 @@ type ResumePerson = {
   id: string;
   name: string;
   area: string;
-  miniBio: string;
-  academicFormation: string;
+  formation: string;
   courses: string;
   actingTime: string;
-  professionalExperience: string;
-  culturalProjectsExperience: string;
+  experience: string;
   works: string;
-  functions: string;
-  contact: string;
+  additionalInfo: string;
   cityState: string;
-  document: string;
-  notes: string;
   files: ResumeFile[];
 };
 
@@ -46,67 +40,43 @@ type ResumeTemplate = {
   name: string;
   editalName: string;
   title: string;
-  description: string;
   headerMode: "text" | "images";
   headerText: string;
   headerImages: ResumeFile[];
   referenceFile?: ResumeFile;
-  showName: boolean;
-  showArea: boolean;
-  showFormation: boolean;
   showCourses: boolean;
   showActingTime: boolean;
-  showProfessionalExperience: boolean;
-  showCulturalProjectsExperience: boolean;
-  showWorks: boolean;
   showAdditionalInfo: boolean;
-  showLocalDate: boolean;
-  onePersonPerPage: boolean;
 };
 
-const peopleStorageKey = "viva:banco-curriculos:pessoas:v2";
-const templatesStorageKey = "viva:banco-curriculos:modelos:v2";
+const peopleStorageKey = "viva:banco-curriculos:pessoas:final-v1";
+const templatesStorageKey = "viva:banco-curriculos:modelos:final-v1";
 
 const defaultTemplate: ResumeTemplate = {
-  id: "modelo-fcc-anexo-v",
+  id: "fcc-anexo-v",
   name: "Modelo FCC - Anexo V",
   editalName: "Circuito Catarinense de Cultura PNAB SC 2026",
   title: "ANEXO V",
-  description:
-    "Modelo com cabeçalho do edital, Nome, Área de atuação e currículo completo da pessoa.",
   headerMode: "text",
   headerText:
     "Fundação Catarinense de Cultura • Governo de Santa Catarina • Sistema Nacional de Cultura • Ministério da Cultura • Governo do Brasil",
   headerImages: [],
-  showName: true,
-  showArea: true,
-  showFormation: true,
   showCourses: false,
   showActingTime: true,
-  showProfessionalExperience: true,
-  showCulturalProjectsExperience: false,
-  showWorks: true,
   showAdditionalInfo: true,
-  showLocalDate: true,
-  onePersonPerPage: true,
 };
 
 const emptyPerson: ResumePerson = {
   id: "",
   name: "",
   area: "",
-  miniBio: "",
-  academicFormation: "",
+  formation: "",
   courses: "",
   actingTime: "",
-  professionalExperience: "",
-  culturalProjectsExperience: "",
+  experience: "",
   works: "",
-  functions: "",
-  contact: "",
+  additionalInfo: "",
   cityState: "Jaraguá do Sul/SC",
-  document: "",
-  notes: "",
   files: [],
 };
 
@@ -144,9 +114,7 @@ function toParagraphs(value: string) {
     .map((line) => line.trim())
     .filter(Boolean);
 
-  if (lines.length === 0) {
-    return "<p>Não informado.</p>";
-  }
+  if (lines.length === 0) return "<p>Não informado.</p>";
 
   return lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("");
 }
@@ -159,11 +127,6 @@ function todayLongBr() {
   }).format(new Date());
 }
 
-function fileSize(size: number) {
-  if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`;
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 function sanitizeFileName(value: string) {
   return value
     .normalize("NFD")
@@ -171,6 +134,11 @@ function sanitizeFileName(value: string) {
     .replace(/[^a-zA-Z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "")
     .toLowerCase();
+}
+
+function fileSize(size: number) {
+  if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function fileToDataUrl(file: File) {
@@ -200,10 +168,7 @@ function buildHeader(template: ResumeTemplate) {
     return `
       <div class="logo-strip">
         ${template.headerImages
-          .map(
-            (image) =>
-              `<img src="${image.dataUrl}" alt="${escapeHtml(image.name)}" />`,
-          )
+          .map((image) => `<img src="${image.dataUrl}" alt="${escapeHtml(image.name)}" />`)
           .join("")}
       </div>
     `;
@@ -213,12 +178,6 @@ function buildHeader(template: ResumeTemplate) {
 }
 
 function buildResumeHtml(person: ResumePerson, template: ResumeTemplate) {
-  const location = person.cityState || "Jaraguá do Sul/SC";
-
-  const additionalInfo = [person.notes, person.functions]
-    .filter(Boolean)
-    .join("\n");
-
   return `
     <section class="resume-page">
       <header class="resume-header">
@@ -228,24 +187,13 @@ function buildResumeHtml(person: ResumePerson, template: ResumeTemplate) {
 
       <main class="resume-box">
         <section class="identity">
-          ${
-            template.showName
-              ? `<p><strong>Nome:</strong> ${escapeHtml(person.name || "Nome não informado")}</p>`
-              : ""
-          }
-          ${
-            template.showArea
-              ? `<p><strong>Área de atuação:</strong> ${escapeHtml(person.area || "Não informado")}</p>`
-              : ""
-          }
+          <p><strong>Nome:</strong> ${escapeHtml(person.name || "Nome não informado")}</p>
+          <p><strong>Área de atuação:</strong> ${escapeHtml(person.area || "Não informado")}</p>
         </section>
 
         <section class="content">
-          ${
-            template.showFormation
-              ? `<h2>Formação:</h2>${toParagraphs(person.academicFormation)}`
-              : ""
-          }
+          <h2>Formação:</h2>
+          ${toParagraphs(person.formation)}
 
           ${
             template.showCourses
@@ -259,35 +207,19 @@ function buildResumeHtml(person: ResumePerson, template: ResumeTemplate) {
               : ""
           }
 
-          ${
-            template.showProfessionalExperience
-              ? `<h2>Experiência profissional:</h2>${toParagraphs(person.professionalExperience || person.miniBio)}`
-              : ""
-          }
+          <h2>Experiência profissional:</h2>
+          ${toParagraphs(person.experience)}
 
-          ${
-            template.showCulturalProjectsExperience
-              ? `<h2>Experiência em projetos culturais:</h2>${toParagraphs(person.culturalProjectsExperience)}`
-              : ""
-          }
-
-          ${
-            template.showWorks
-              ? `<h2>Trabalhos:</h2>${toParagraphs(person.works)}`
-              : ""
-          }
+          <h2>Trabalhos:</h2>
+          ${toParagraphs(person.works)}
 
           ${
             template.showAdditionalInfo
-              ? `<h2>Informações adicionais:</h2>${toParagraphs(additionalInfo)}`
+              ? `<h2>Informações adicionais:</h2>${toParagraphs(person.additionalInfo)}`
               : ""
           }
 
-          ${
-            template.showLocalDate
-              ? `<p class="local-date">Local ${escapeHtml(location)}, ${escapeHtml(todayLongBr())}.</p>`
-              : ""
-          }
+          <p class="local-date">Local ${escapeHtml(person.cityState || "Jaraguá do Sul/SC")}, ${escapeHtml(todayLongBr())}.</p>
         </section>
       </main>
     </section>
@@ -316,7 +248,7 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
 
     body {
       margin: 0;
-      background: ${forWord ? "#ffffff" : "#f3f4f6"};
+      background: ${forWord ? "#fff" : "#f3f4f6"};
       color: #111827;
       font-family: Arial, Helvetica, sans-serif;
       font-size: 10.5pt;
@@ -329,7 +261,6 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
       right: 18px;
       z-index: 20;
       display: ${forWord ? "none" : "flex"};
-      gap: 8px;
     }
 
     .print-actions button {
@@ -383,6 +314,7 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
       font-weight: 900;
       line-height: 1.3;
       text-transform: uppercase;
+      text-align: center;
     }
 
     .resume-header h1 {
@@ -453,7 +385,7 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
 </html>`;
 }
 
-function openPrintHtml(html: string) {
+function printHtmlWithoutPopup(html: string) {
   const frameId = "viva-resume-print-frame";
   const oldFrame = window.document.getElementById(frameId);
   oldFrame?.remove();
@@ -488,7 +420,7 @@ function openPrintHtml(html: string) {
   window.setTimeout(() => {
     frameWindow.focus();
     frameWindow.print();
-    window.setTimeout(() => iframe.remove(), 1600);
+    window.setTimeout(() => iframe.remove(), 1500);
   }, 450);
 }
 
@@ -519,10 +451,7 @@ export function ResumeBankWorkspace() {
     if (!value) return people;
 
     return people.filter((person) =>
-      [person.name, person.area, person.functions, person.cityState]
-        .join(" ")
-        .toLowerCase()
-        .includes(value),
+      [person.name, person.area, person.cityState].join(" ").toLowerCase().includes(value),
     );
   }, [people, search]);
 
@@ -570,11 +499,6 @@ export function ResumeBankWorkspace() {
   async function uploadPersonFile(file: File | null, category: string) {
     if (!file || !selectedPerson) return;
 
-    if (file.size > 10 * 1024 * 1024) {
-      setMessage("Arquivo muito grande. Use até 10 MB por arquivo nesta versão.");
-      return;
-    }
-
     const dataUrl = await fileToDataUrl(file);
     const nextFile: ResumeFile = {
       id: makeId("file"),
@@ -586,14 +510,13 @@ export function ResumeBankWorkspace() {
     };
 
     updatePerson({ files: [nextFile, ...selectedPerson.files] });
-    setMessage("Arquivo anexado à pessoa.");
   }
 
   async function addHeaderImage(file: File | null) {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      setMessage("Use imagem PNG, JPG ou WEBP para logo/cabeçalho.");
+      setMessage("Use PNG, JPG ou WEBP para o cabeçalho.");
       return;
     }
 
@@ -611,8 +534,6 @@ export function ResumeBankWorkspace() {
       headerMode: "images",
       headerImages: [...selectedTemplate.headerImages, nextImage],
     });
-
-    setMessage("Logo adicionada ao modelo.");
   }
 
   async function uploadTemplateReference(file: File | null) {
@@ -633,12 +554,10 @@ export function ResumeBankWorkspace() {
       id: makeId("template"),
       name: `Modelo do edital - ${file.name.replace(/\.[^.]+$/, "")}`,
       editalName: file.name.replace(/\.[^.]+$/, ""),
-      description:
-        "Modelo criado a partir de anexo de referência. Ajuste título, cabeçalho e campos conforme o edital.",
       referenceFile,
     };
 
-    commitTemplates([nextTemplate, ...templates], "Modelo de edital criado a partir do anexo.");
+    commitTemplates([nextTemplate, ...templates], "Modelo criado a partir do anexo.");
     setSelectedTemplateId(nextTemplate.id);
   }
 
@@ -668,7 +587,7 @@ export function ResumeBankWorkspace() {
       return;
     }
 
-    openPrintHtml(buildFullHtml(peopleToGenerate, selectedTemplate));
+    printHtmlWithoutPopup(buildFullHtml(peopleToGenerate, selectedTemplate));
   }
 
   function generateWord(selectedOnly = true) {
@@ -696,14 +615,6 @@ export function ResumeBankWorkspace() {
     );
   }
 
-  function exportBackup() {
-    downloadBlob(
-      JSON.stringify({ people, templates }, null, 2),
-      "banco-de-curriculos-backup.json",
-      "application/json;charset=utf-8",
-    );
-  }
-
   return (
     <div className="space-y-6">
       <section className="rounded-[2rem] border border-white bg-white p-5 shadow-sm">
@@ -716,21 +627,14 @@ export function ResumeBankWorkspace() {
               Pessoas, modelos por edital e geração em PDF/Word
             </h2>
             <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">
-              Cadastre os dados uma vez. Para cada edital, suba o modelo de referência, ajuste o cabeçalho/logos e gere currículos no formato exigido.
+              Cadastre a pessoa uma vez. Para cada edital, suba o modelo de referência, ajuste o cabeçalho/logos e gere os currículos.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <button type="button" className="btn-secondary" onClick={exportBackup}>
-              <FolderDown className="size-4" />
-              Backup
-            </button>
-
-            <button type="button" className="btn-primary" onClick={addPerson}>
-              <Plus className="size-4" />
-              Nova pessoa
-            </button>
-          </div>
+          <button type="button" className="btn-primary" onClick={addPerson}>
+            <Plus className="size-4" />
+            Nova pessoa
+          </button>
         </div>
 
         <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
@@ -758,7 +662,7 @@ export function ResumeBankWorkspace() {
                 className="form-input pl-10"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Nome, área, função..."
+                placeholder="Nome ou área..."
               />
             </div>
           </label>
@@ -766,7 +670,7 @@ export function ResumeBankWorkspace() {
           <div className="mt-4 space-y-2">
             {filteredPeople.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-500">
-                Nenhuma pessoa cadastrada ainda.
+                Nenhuma pessoa cadastrada.
               </div>
             ) : null}
 
@@ -785,12 +689,7 @@ export function ResumeBankWorkspace() {
                   onClick={() => setSelectedPersonId(person.id)}
                 >
                   <p className="font-black text-slate-950">{person.name}</p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {person.area || "Área não informada"}
-                  </p>
-                  <p className="mt-2 text-xs font-bold text-slate-400">
-                    {person.files.length} arquivo(s)
-                  </p>
+                  <p className="mt-1 text-sm text-slate-500">{person.area || "Área não informada"}</p>
                 </button>
               );
             })}
@@ -810,11 +709,7 @@ export function ResumeBankWorkspace() {
               </div>
 
               {selectedPerson ? (
-                <button
-                  type="button"
-                  className="btn-danger"
-                  onClick={() => removePerson(selectedPerson.id)}
-                >
+                <button type="button" className="btn-danger" onClick={() => removePerson(selectedPerson.id)}>
                   <Trash2 className="size-4" />
                   Excluir
                 </button>
@@ -835,28 +730,12 @@ export function ResumeBankWorkspace() {
                   <input className="form-input" value={selectedPerson.actingTime} onChange={(event) => updatePerson({ actingTime: event.target.value })} />
                 </Field>
 
-                <Field label="Funções que exerce">
-                  <input className="form-input" value={selectedPerson.functions} onChange={(event) => updatePerson({ functions: event.target.value })} />
-                </Field>
-
-                <Field label="Contato">
-                  <input className="form-input" value={selectedPerson.contact} onChange={(event) => updatePerson({ contact: event.target.value })} />
-                </Field>
-
                 <Field label="Cidade/Estado">
                   <input className="form-input" value={selectedPerson.cityState} onChange={(event) => updatePerson({ cityState: event.target.value })} />
                 </Field>
 
-                <Field label="CPF/CNPJ ou documento">
-                  <input className="form-input" value={selectedPerson.document} onChange={(event) => updatePerson({ document: event.target.value })} />
-                </Field>
-
-                <Field label="Mini biografia">
-                  <textarea className="form-input min-h-28" value={selectedPerson.miniBio} onChange={(event) => updatePerson({ miniBio: event.target.value })} />
-                </Field>
-
-                <Field label="Formação acadêmica">
-                  <textarea className="form-input min-h-28" value={selectedPerson.academicFormation} onChange={(event) => updatePerson({ academicFormation: event.target.value })} />
+                <Field label="Formação">
+                  <textarea className="form-input min-h-28" value={selectedPerson.formation} onChange={(event) => updatePerson({ formation: event.target.value })} />
                 </Field>
 
                 <Field label="Cursos">
@@ -864,24 +743,20 @@ export function ResumeBankWorkspace() {
                 </Field>
 
                 <Field label="Experiência profissional">
-                  <textarea className="form-input min-h-28" value={selectedPerson.professionalExperience} onChange={(event) => updatePerson({ professionalExperience: event.target.value })} />
+                  <textarea className="form-input min-h-28" value={selectedPerson.experience} onChange={(event) => updatePerson({ experience: event.target.value })} />
                 </Field>
 
-                <Field label="Experiência em projetos culturais">
-                  <textarea className="form-input min-h-28" value={selectedPerson.culturalProjectsExperience} onChange={(event) => updatePerson({ culturalProjectsExperience: event.target.value })} />
-                </Field>
-
-                <Field label="Trabalhos realizados">
+                <Field label="Trabalhos">
                   <textarea className="form-input min-h-28" value={selectedPerson.works} onChange={(event) => updatePerson({ works: event.target.value })} />
                 </Field>
 
                 <Field label="Informações adicionais">
-                  <textarea className="form-input min-h-28" value={selectedPerson.notes} onChange={(event) => updatePerson({ notes: event.target.value })} />
+                  <textarea className="form-input min-h-28" value={selectedPerson.additionalInfo} onChange={(event) => updatePerson({ additionalInfo: event.target.value })} />
                 </Field>
               </div>
             ) : (
               <div className="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
-                Crie ou selecione uma pessoa para editar o currículo.
+                Crie ou selecione uma pessoa.
               </div>
             )}
           </div>
@@ -889,10 +764,6 @@ export function ResumeBankWorkspace() {
           {selectedPerson ? (
             <div className="rounded-[2rem] border border-white bg-white p-5 shadow-sm">
               <h3 className="text-lg font-black text-slate-950">Arquivos da pessoa</h3>
-              <p className="mt-1 text-sm text-slate-500">
-                Guarde currículo original, certificados, diplomas, portfólio, fotos e documentos.
-              </p>
-
               <div className="mt-4 flex flex-wrap gap-2">
                 {["Currículo PDF", "Currículo Word", "Certificado", "Diploma", "Portfólio", "Foto", "Documento"].map((category) => (
                   <label key={category} className="btn-secondary cursor-pointer">
@@ -934,10 +805,10 @@ export function ResumeBankWorkspace() {
                   Modelos por edital
                 </p>
                 <h3 className="mt-1 text-xl font-black text-slate-950">
-                  Modelo ativo: {selectedTemplate.name}
+                  {selectedTemplate.name}
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  Cada edital pode ter seu próprio cabeçalho, logos e campos.
+                  Cada edital pode ter suas logos e seu próprio anexo.
                 </p>
               </div>
 
@@ -1004,16 +875,20 @@ export function ResumeBankWorkspace() {
                 />
               </label>
 
-              {selectedTemplate.referenceFile ? (
-                <a
-                  className="btn-secondary"
-                  href={selectedTemplate.referenceFile.dataUrl}
-                  download={selectedTemplate.referenceFile.name}
-                >
-                  <FileText className="size-4" />
-                  Baixar modelo referência
-                </a>
-              ) : null}
+              <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
+                <input type="checkbox" checked={selectedTemplate.showCourses} onChange={(event) => updateTemplate({ showCourses: event.target.checked })} />
+                Cursos
+              </label>
+
+              <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
+                <input type="checkbox" checked={selectedTemplate.showActingTime} onChange={(event) => updateTemplate({ showActingTime: event.target.checked })} />
+                Tempo de atuação
+              </label>
+
+              <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
+                <input type="checkbox" checked={selectedTemplate.showAdditionalInfo} onChange={(event) => updateTemplate({ showAdditionalInfo: event.target.checked })} />
+                Informações adicionais
+              </label>
             </div>
 
             {selectedTemplate.headerImages.length > 0 ? (
@@ -1022,27 +897,10 @@ export function ResumeBankWorkspace() {
                   <div key={image.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
                     <img src={image.dataUrl} alt={image.name} className="h-16 w-full object-contain" />
                     <p className="mt-2 truncate text-xs font-bold text-slate-600">{image.name}</p>
-                    <button type="button" className="mt-2 text-xs font-black text-red-600" onClick={() => removeHeaderImage(image.id)}>
-                      Remover
-                    </button>
                   </div>
                 ))}
               </div>
             ) : null}
-
-            <div className="mt-5 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-              <Check label="Nome" checked={selectedTemplate.showName} onChange={(value) => updateTemplate({ showName: value })} />
-              <Check label="Área de atuação" checked={selectedTemplate.showArea} onChange={(value) => updateTemplate({ showArea: value })} />
-              <Check label="Formação" checked={selectedTemplate.showFormation} onChange={(value) => updateTemplate({ showFormation: value })} />
-              <Check label="Cursos" checked={selectedTemplate.showCourses} onChange={(value) => updateTemplate({ showCourses: value })} />
-              <Check label="Tempo de atuação" checked={selectedTemplate.showActingTime} onChange={(value) => updateTemplate({ showActingTime: value })} />
-              <Check label="Experiência profissional" checked={selectedTemplate.showProfessionalExperience} onChange={(value) => updateTemplate({ showProfessionalExperience: value })} />
-              <Check label="Projetos culturais" checked={selectedTemplate.showCulturalProjectsExperience} onChange={(value) => updateTemplate({ showCulturalProjectsExperience: value })} />
-              <Check label="Trabalhos" checked={selectedTemplate.showWorks} onChange={(value) => updateTemplate({ showWorks: value })} />
-              <Check label="Informações adicionais" checked={selectedTemplate.showAdditionalInfo} onChange={(value) => updateTemplate({ showAdditionalInfo: value })} />
-              <Check label="Local e data atual" checked={selectedTemplate.showLocalDate} onChange={(value) => updateTemplate({ showLocalDate: value })} />
-              <Check label="Uma pessoa por página" checked={selectedTemplate.onePersonPerPage} onChange={(value) => updateTemplate({ onePersonPerPage: value })} />
-            </div>
           </div>
 
           <div className="rounded-[2rem] border border-white bg-white p-5 shadow-sm">
@@ -1054,9 +912,6 @@ export function ResumeBankWorkspace() {
                 <h3 className="mt-1 text-xl font-black text-slate-950">
                   PDF, Word, individual ou lote
                 </h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  O sistema usa o mesmo front do modelo e troca os dados da equipe selecionada.
-                </p>
               </div>
 
               <div className="flex flex-wrap gap-2">
@@ -1095,23 +950,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
         {label}
       </span>
       <div className="mt-1">{children}</div>
-    </label>
-  );
-}
-
-function Check({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (value: boolean) => void;
-}) {
-  return (
-    <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
-      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
-      {label}
     </label>
   );
 }

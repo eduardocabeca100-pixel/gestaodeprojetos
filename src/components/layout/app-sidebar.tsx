@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import type { ComponentType } from "react";
 import {
   Bell,
   CalendarDays,
@@ -13,7 +14,6 @@ import {
   LogOut,
   Newspaper,
   Plus,
-  Receipt,
   Settings,
   Users,
   UsersRound,
@@ -29,9 +29,8 @@ type CurrentProfile = {
 type SidebarItem = {
   label: string;
   href: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   projectScoped?: boolean;
-  badge?: string;
 };
 
 const navigation: SidebarItem[] = [
@@ -47,7 +46,6 @@ const navigation: SidebarItem[] = [
   { label: "Banco de Currículos", href: "/banco-de-curriculos", icon: UsersRound },
   { label: "Participantes", href: "/participantes", icon: Users, projectScoped: true },
   { label: "Mídia", href: "/midia", icon: ImageIcon, projectScoped: true },
-  { label: "Relatórios", href: "/relatorios", icon: Receipt, projectScoped: true },
   { label: "Notificações", href: "/notificacoes", icon: Bell, projectScoped: true },
   { label: "Configurações", href: "/configuracoes", icon: Settings },
 ];
@@ -122,11 +120,6 @@ export function AppSidebar({ profile }: { profile?: CurrentProfile | null }) {
               >
                 <Icon className="size-4 shrink-0" />
                 <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                {item.badge ? (
-                  <span className="rounded-full bg-emerald-400 px-2 py-0.5 text-xs font-black text-slate-950">
-                    {item.badge}
-                  </span>
-                ) : null}
               </Link>
             );
           })}
