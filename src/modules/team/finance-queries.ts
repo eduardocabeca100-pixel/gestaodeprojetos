@@ -76,9 +76,25 @@ function mapTeamRow(
       normalizeNumber(row.payment_amount) ||
       normalizeNumber(row.budget_amount) ||
       normalizeNumber(row.planned_amount),
+    expectedAmount:
+      normalizeNumber(row.expectedAmount) ||
+      normalizeNumber(row.expected_amount) ||
+      normalizeNumber(row.amount) ||
+      normalizeNumber(row.value) ||
+      normalizeNumber(row.payment_amount) ||
+      normalizeNumber(row.budget_amount) ||
+      normalizeNumber(row.planned_amount),
+    paidAmount:
+      normalizeNumber(row.paidAmount) ||
+      normalizeNumber(row.paid_amount),
+    paymentStatus:
+      normalizeText(row.paymentStatus) ||
+      normalizeText(row.payment_status) ||
+      "Pendente",
+    documents: Array.isArray(row.documents) ? row.documents : [],
     status: normalizeText(row.status) || "Ativo",
     notes: normalizeText(row.notes),
-  } as TeamMember;
+  } as unknown as TeamMember;
 }
 
 function teamKey(member: TeamMember) {

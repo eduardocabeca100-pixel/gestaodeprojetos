@@ -301,9 +301,13 @@ function normalizeLocalTeamMember(row: Record<string, unknown>, index: number, p
     email: String(row.email || ""),
     phone: String(row.phone || row.telefone || row.whatsapp || ""),
     amount: Number(row.amount || row.value || row.payment_amount || 0),
+    expectedAmount: Number(row.expectedAmount || row.expected_amount || row.amount || row.value || row.payment_amount || 0),
+    paidAmount: Number(row.paidAmount || row.paid_amount || 0),
+    paymentStatus: String(row.paymentStatus || row.payment_status || "Pendente"),
+    documents: Array.isArray(row.documents) ? row.documents : [],
     status: String(row.status || "Ativo"),
     notes: String(row.notes || ""),
-  } as TeamMember;
+  } as unknown as TeamMember;
 }
 
 function mergeTeamMembersForFinance(baseMembers: TeamMember[], projectId: string) {
