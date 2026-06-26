@@ -548,7 +548,7 @@ export function ResumeBankWorkspace({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto w-full max-w-[1440px] space-y-6 px-2 pb-10">
       <section className="rounded-[2rem] border border-white bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
@@ -581,8 +581,8 @@ export function ResumeBankWorkspace({
         <InfoCard title="Saída" value="PDF / Word" helper="uma pessoa por folha" />
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
-        <section className="rounded-[2rem] border border-white bg-white p-5 shadow-sm">
+      <div className="grid gap-6 2xl:grid-cols-[420px_minmax(0,1fr)]">
+        <section className="rounded-[2rem] border border-white bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h3 className="text-lg font-black text-slate-950">Profissionais</h3>
@@ -664,7 +664,7 @@ export function ResumeBankWorkspace({
         </section>
 
         <section className="space-y-6">
-          <section className="rounded-[2rem] border border-white bg-white p-5 shadow-sm">
+          <section className="rounded-[2rem] border border-white bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
@@ -728,7 +728,7 @@ export function ResumeBankWorkspace({
           </section>
 
           {selectedPerson ? (
-            <section className="rounded-[2rem] border border-white bg-white p-5 shadow-sm">
+            <section className="rounded-[2rem] border border-white bg-white p-6 shadow-sm">
               <h3 className="text-lg font-black text-slate-950">Arquivos do profissional</h3>
               <p className="mt-1 text-sm text-slate-500">
                 Guarde currículo original, certificados, diplomas, portfólio e documentos.
@@ -770,7 +770,7 @@ export function ResumeBankWorkspace({
             </section>
           ) : null}
 
-          <section className="rounded-[2rem] border border-white bg-white p-5 shadow-sm">
+          <section className="rounded-[2rem] border border-white bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
@@ -811,7 +811,7 @@ export function ResumeBankWorkspace({
             )}
           </section>
 
-          <section className="rounded-[2rem] border border-white bg-white p-5 shadow-sm">
+          <section className="rounded-[2rem] border border-white bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">

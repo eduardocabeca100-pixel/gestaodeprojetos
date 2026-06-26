@@ -3,14 +3,16 @@
 import { useMemo, useState } from "react";
 import { Download, Plus, Receipt, Trash2, UserRound } from "lucide-react";
 
-type DemonstrativePerson = {
-  id: string;
-  type: "Equipe" | "Fornecedor";
-  name: string;
-  document: string;
-  role: string;
-  phone: string;
-  address: string;
+import { printHtmlInHiddenFrame } from "@/lib/browser/print-html";
+
+type TeamOption = {
+  id?: string;
+  name?: string;
+  role?: string;
+  document?: string;
+  phone?: string;
+  email?: string;
+  notes?: string;
 };
 
 type DemonstrativeItem = {
@@ -22,20 +24,26 @@ type DemonstrativeItem = {
 
 type Demonstrative = {
   id: string;
+  kind: "RECIBO" | "DEMONSTRATIVO";
   number: string;
   docNumber: string;
   nfNumber: string;
   issueDate: string;
   dueDate: string;
   competence: string;
-  status: string;
   payerName: string;
-  payerDocument: string;
   payerAddress: string;
   payerContact: string;
-  person: DemonstrativePerson;
+  payerDocument: string;
+  beneficiaryName: string;
+  beneficiaryDocument: string;
+  beneficiaryAddress: string;
+  beneficiaryPhone: string;
+  beneficiaryCode: string;
+  beneficiaryRole: string;
+  referenceTitle: string;
+  paymentText: string;
   items: DemonstrativeItem[];
-  reference: string;
 };
 
 function makeId(prefix: string) {
@@ -46,11 +54,8 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function monthCompetence() {
-  return new Intl.DateTimeFormat("pt-BR", {
-    month: "long",
-    year: "numeric",
-  }).format(new Date());
+function currentMonth() {
+  return new Intl.DateTimeFormat("pt-BR", { month: "2-digit", year: "numeric" }).format(new Date());
 }
 
 function formatDate(value: string) {
@@ -61,7 +66,8 @@ function formatDate(value: string) {
 }
 
 function numberValue(value: string) {
-  const parsed = Number(String(value || "0").replace(",", "."));
+  const normalized = String(value || "0").replace(/\./g, "").replace(",", ".");
+  const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
@@ -82,26 +88,25 @@ function escapeHtml(value: string) {
 
 const initialDemonstrative: Demonstrative = {
   id: "demo-1",
+  kind: "RECIBO",
   number: "0001",
   docNumber: "411391",
   nfNumber: "",
   issueDate: todayIso(),
   dueDate: todayIso(),
-  competence: monthCompetence(),
-  status: "Rascunho",
-  payerName: "Cia de Artes Viva",
-  payerDocument: "CNPJ/CPF: preencher no cadastro",
+  competence: currentMonth(),
+  payerName: "CIA DE ARTES VIVA",
   payerAddress: "Jaraguá do Sul | SC",
   payerContact: "Fone: (47) 992747545 - www.ciaviva.com - eduardo@ciaviva.com",
-  person: {
-    id: "person-1",
-    type: "Equipe",
-    name: "Julia Titz",
-    document: "",
-    role: "Atriz",
-    phone: "",
-    address: "Endereço não informado",
-  },
+  payerDocument: "CNPJ/CPF: preencher no cadastro da companhia",
+  beneficiaryName: "Julia Titz",
+  beneficiaryDocument: "",
+  beneficiaryAddress: "Endereço não informado",
+  beneficiaryPhone: "",
+  beneficiaryCode: "",
+  beneficiaryRole: "Atriz",
+  referenceTitle: "SERVIÇOS CULTURAIS PRESTADOS AO PROJETO",
+  paymentText: "A quitação deste recibo se dará mediante ao comprovante de pagamento.",
   items: [
     {
       id: "item-1",
@@ -110,276 +115,323 @@ const initialDemonstrative: Demonstrative = {
       unitValue: "0",
     },
   ],
-  reference: "Serviços prestados ao projeto cultural. A quitação deste recibo se dará mediante comprovante de pagamento.",
 };
 
-function buildPdfHtml(demonstrative: Demonstrative) {
-  const total = demonstrative.items.reduce((sum, item) => {
+function getTotal(demo: Demonstrative) {
+  return demo.items.reduce((sum, item) => {
     return sum + numberValue(item.quantity) * numberValue(item.unitValue);
   }, 0);
+}
 
-  const rows = demonstrative.items
-    .map((item) => {
-      const quantity = numberValue(item.quantity);
-      const unit = numberValue(item.unitValue);
-      const subtotal = quantity * unit;
+function buildBlockHtml(demo: Demonstrative, title: "RECIBO" | "Demonstrativo") {
+  const total = getTotal(demo);
 
-      return `
-        <tr>
-          <td>${escapeHtml(item.quantity)}</td>
-          <td>${escapeHtml(item.description)}</td>
-          <td>${currency(unit)}</td>
-          <td>${currency(subtotal)}</td>
-        </tr>
-      `;
-    })
-    .join("");
+  const rows = demo.items.map((item) => {
+    const quantity = numberValue(item.quantity);
+    const unitValue = numberValue(item.unitValue);
+    const rowTotal = quantity * unitValue;
 
-  return `<!doctype html>
-<html lang="pt-BR">
-<head>
-<meta charset="utf-8" />
-<title>Demonstrativo ${escapeHtml(demonstrative.number)}</title>
-<style>
-  @page { size: A4; margin: 14mm; }
-  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  body {
-    margin: 0;
-    background: #f3f4f6;
-    color: #111827;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 10.5pt;
-    line-height: 1.25;
-  }
-  .sheet {
-    width: 210mm;
-    min-height: 297mm;
-    margin: 16px auto;
-    background: #fff;
-    padding: 14mm;
-    box-shadow: 0 20px 60px rgba(0,0,0,.12);
-  }
-  .box {
-    border: 1.5px solid #111827;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-  .header {
-    display: grid;
-    grid-template-columns: 34mm 1fr;
-    gap: 8mm;
-    padding: 8mm;
-    border-bottom: 1.5px solid #111827;
-  }
-  .logo {
-    width: 24mm;
-    height: 24mm;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    background: #173b8f;
-    color: #fff;
-    font-weight: 900;
-  }
-  h1 {
-    margin: 0;
-    font-size: 15pt;
-    font-weight: 900;
-    text-transform: uppercase;
-  }
-  .muted { color: #4b5563; }
-  .meta {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    border-bottom: 1.5px solid #111827;
-  }
-  .meta div {
-    padding: 3mm;
-    border-right: 1px solid #111827;
-    font-size: 9pt;
-    font-weight: 700;
-  }
-  .meta div:last-child { border-right: 0; }
-  .person {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border-bottom: 1.5px solid #111827;
-  }
-  .person div {
-    padding: 4mm;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  th, td {
-    border-right: 1px solid #111827;
-    border-bottom: 1px solid #111827;
-    padding: 3mm;
-    text-align: left;
-  }
-  th:last-child, td:last-child { border-right: 0; }
-  th {
-    background: #f3f4f6;
-    font-weight: 900;
-  }
-  .total {
-    padding: 5mm;
-    text-align: right;
-    font-size: 13pt;
-    font-weight: 900;
-  }
-  .footer {
-    padding: 5mm;
-    border-top: 1.5px solid #111827;
-    font-size: 9.5pt;
-  }
-  @media print {
-    body { background: #fff; }
-    .sheet { margin: 0; box-shadow: none; }
-  }
-</style>
-</head>
-<body>
-  <section class="sheet">
-    <div class="box">
-      <div class="header">
+    return `
+      <tr>
+        <td class="center">${escapeHtml(item.quantity)}</td>
+        <td class="desc">${escapeHtml(item.description)}</td>
+        <td class="money">${currency(unitValue)}</td>
+        <td class="money">${currency(rowTotal)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  return `
+    <section class="doc-block">
+      <header class="doc-header">
         <div class="logo">VIVA</div>
-        <div>
-          <h1>${escapeHtml(demonstrative.payerName)}</h1>
-          <p class="muted">Demonstrativo administrativo de pagamento</p>
-          <p>${escapeHtml(demonstrative.payerAddress)}</p>
-          <p>${escapeHtml(demonstrative.payerContact)}</p>
-          <p>${escapeHtml(demonstrative.payerDocument)}</p>
+        <div class="header-text">
+          <strong>${escapeHtml(demo.payerName)}</strong><br />
+          ${escapeHtml(demo.payerAddress)}<br />
+          ${escapeHtml(demo.payerContact)}<br />
+          ${escapeHtml(demo.payerDocument)}
         </div>
+      </header>
+
+      <div class="doc-meta">
+        <div><strong>${title}</strong> Nº ${escapeHtml(demo.number)}</div>
+        <div><strong>Nº Doc.:</strong> ${escapeHtml(demo.docNumber)}</div>
+        <div><strong>Nº NF.:</strong> ${escapeHtml(demo.nfNumber || "-")}</div>
+        <div><strong>Emissão:</strong> ${formatDate(demo.issueDate)}</div>
+        <div><strong>Vencimento:</strong> ${formatDate(demo.dueDate)}</div>
       </div>
 
-      <div class="meta">
-        <div>Nº ${escapeHtml(demonstrative.number)}</div>
-        <div>Doc. ${escapeHtml(demonstrative.docNumber)}</div>
-        <div>NF ${escapeHtml(demonstrative.nfNumber || "-")}</div>
-        <div>${formatDate(demonstrative.issueDate)}</div>
-        <div>${formatDate(demonstrative.dueDate)}</div>
-      </div>
-
-      <div class="person">
+      <div class="beneficiary">
         <div>
-          <strong>${escapeHtml(demonstrative.person.name)}</strong><br />
-          ${escapeHtml(demonstrative.person.role)}<br />
-          ${escapeHtml(demonstrative.person.address)}
+          <strong>${escapeHtml(demo.beneficiaryName.toUpperCase())}</strong><br />
+          ${escapeHtml(demo.beneficiaryAddress)}<br />
+          ${escapeHtml(demo.beneficiaryRole)}
         </div>
         <div>
-          <strong>CPF/CNPJ:</strong> ${escapeHtml(demonstrative.person.document || "-")}<br />
-          <strong>Fone:</strong> ${escapeHtml(demonstrative.person.phone || "-")}<br />
-          <strong>Status:</strong> ${escapeHtml(demonstrative.status)}
+          <strong>CPF/CNPJ:</strong> ${escapeHtml(demo.beneficiaryDocument || "-")}<br />
+          <strong>Fone:</strong> ${escapeHtml(demo.beneficiaryPhone || "-")}<br />
+          <strong>Cód.:</strong> ${escapeHtml(demo.beneficiaryCode || "-")}
         </div>
       </div>
 
       <table>
         <thead>
           <tr>
-            <th style="width: 18mm;">Quant.</th>
+            <th>Quant.</th>
             <th>Discriminação</th>
-            <th style="width: 32mm;">Unit.</th>
-            <th style="width: 32mm;">Total</th>
+            <th>Valor Unitário</th>
+            <th>Valor Total</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
       </table>
 
-      <div class="total">TOTAL: ${currency(total)}</div>
-
-      <div class="footer">
-        <p><strong>Ref. competência:</strong> ${escapeHtml(demonstrative.competence)}</p>
-        <p><strong>Referência:</strong> ${escapeHtml(demonstrative.reference)}</p>
+      <div class="summary">
+        <div>
+          <strong>${escapeHtml(demo.beneficiaryName.toUpperCase())}</strong><br />
+          <em>Ref. competência: ${escapeHtml(demo.competence)}</em><br />
+          ${escapeHtml(demo.referenceTitle)}
+        </div>
+        <div class="summary-values">
+          <strong>TOTAL: ${currency(total)}</strong><br />
+          <strong>VALOR PARCELA: ${currency(total)}</strong>
+        </div>
       </div>
-    </div>
-  </section>
+
+      <div class="signature">
+        <div>
+          Recebido em: ______/______/_______<br />
+          ${escapeHtml(demo.paymentText)}
+        </div>
+        <div class="sig-line">
+          ___________________________________________<br />
+          Assinatura
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function buildPdfHtml(demo: Demonstrative) {
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<title>Demonstrativo ${escapeHtml(demo.number)}</title>
+<style>
+  @page { size: A4; margin: 8mm; }
+
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    margin: 0;
+    background: #f3f4f6;
+    color: #111;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9.2pt;
+    line-height: 1.18;
+  }
+
+  .sheet {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    background: #fff;
+    padding: 4mm;
+  }
+
+  .doc-block {
+    height: 137mm;
+    border: 1.5px solid #111;
+    margin-bottom: 5mm;
+    overflow: hidden;
+  }
+
+  .doc-block + .doc-block {
+    border-top-style: dashed;
+  }
+
+  .doc-header {
+    display: grid;
+    grid-template-columns: 28mm 1fr;
+    gap: 5mm;
+    padding: 4mm 5mm 3mm;
+  }
+
+  .logo {
+    width: 20mm;
+    height: 20mm;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #173b8f;
+    color: #fff;
+    font-weight: 900;
+    font-size: 8pt;
+  }
+
+  .header-text {
+    font-size: 9pt;
+  }
+
+  .doc-meta {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr .8fr 1fr 1fr;
+    border-top: 1.5px solid #111;
+    border-bottom: 1.5px solid #111;
+  }
+
+  .doc-meta div {
+    padding: 2mm;
+    border-right: 1px solid #111;
+    font-size: 8.5pt;
+    font-weight: 700;
+  }
+
+  .doc-meta div:last-child {
+    border-right: 0;
+  }
+
+  .beneficiary {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    padding: 3mm 4mm;
+    border-bottom: 1.5px solid #111;
+    font-weight: 700;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  th, td {
+    border-right: 1px solid #111;
+    border-bottom: 1px solid #111;
+    padding: 1.8mm;
+  }
+
+  th:last-child, td:last-child {
+    border-right: 0;
+  }
+
+  th {
+    font-weight: 900;
+    text-align: center;
+    background: #f5f5f5;
+  }
+
+  .center {
+    text-align: center;
+    width: 18mm;
+  }
+
+  .desc {
+    font-family: "Courier New", monospace;
+    text-align: center;
+  }
+
+  .money {
+    text-align: right;
+    width: 32mm;
+    white-space: nowrap;
+  }
+
+  tbody {
+    height: 32mm;
+  }
+
+  .summary {
+    display: grid;
+    grid-template-columns: 1fr 48mm;
+    gap: 8mm;
+    padding: 3mm 4mm 2mm;
+    min-height: 20mm;
+  }
+
+  .summary-values {
+    text-align: right;
+    font-size: 10pt;
+    line-height: 1.5;
+  }
+
+  .signature {
+    display: grid;
+    grid-template-columns: 1fr 70mm;
+    gap: 8mm;
+    padding: 0 4mm 3mm;
+    align-items: end;
+  }
+
+  .sig-line {
+    text-align: center;
+    font-family: "Courier New", monospace;
+  }
+
+  @media print {
+    body { background: #fff; }
+    .sheet { margin: 0; }
+  }
+</style>
+</head>
+<body>
+  <main class="sheet">
+    ${buildBlockHtml(demo, "RECIBO")}
+    ${buildBlockHtml({ ...demo, kind: "DEMONSTRATIVO" }, "Demonstrativo")}
+  </main>
 </body>
 </html>`;
 }
 
-function printDemonstrative(html: string) {
-  if (typeof window === "undefined") return;
-
-  const frameId = "viva-demonstrative-frame";
-  const oldFrame = window.document.getElementById(frameId);
-  oldFrame?.remove();
-
-  const iframe = window.document.createElement("iframe");
-  iframe.id = frameId;
-  iframe.title = "Demonstrativo";
-  iframe.style.position = "fixed";
-  iframe.style.right = "0";
-  iframe.style.bottom = "0";
-  iframe.style.width = "0";
-  iframe.style.height = "0";
-  iframe.style.border = "0";
-  iframe.style.opacity = "0";
-  iframe.style.pointerEvents = "none";
-
-  window.document.body.appendChild(iframe);
-
-  const frameWindow = iframe.contentWindow;
-  const frameDocument = frameWindow?.document;
-
-  if (!frameWindow || !frameDocument) {
-    window.alert("Não foi possível preparar o demonstrativo.");
-    iframe.remove();
-    return;
-  }
-
-  frameDocument.open();
-  frameDocument.write(html);
-  frameDocument.close();
-
-  window.setTimeout(() => {
-    try {
-      frameWindow.focus();
-      frameWindow.print();
-    } catch {
-      window.alert("Não foi possível abrir a impressão do demonstrativo.");
-    }
-
-    window.setTimeout(() => iframe.remove(), 1500);
-  }, 300);
-}
-
-export function AdministrativeDemonstratives() {
+export function AdministrativeDemonstratives({
+  teamMembers = [],
+}: {
+  teamMembers?: TeamOption[];
+}) {
   const [demonstratives, setDemonstratives] = useState<Demonstrative[]>([initialDemonstrative]);
   const [activeId, setActiveId] = useState(initialDemonstrative.id);
 
-  const active = demonstratives.find((item) => item.id === activeId) ?? demonstratives[0];
-
-  const total = useMemo(() => {
-    return active.items.reduce((sum, item) => {
-      return sum + numberValue(item.quantity) * numberValue(item.unitValue);
-    }, 0);
-  }, [active]);
+  const active = demonstratives.find((demo) => demo.id === activeId) ?? demonstratives[0];
+  const total = useMemo(() => getTotal(active), [active]);
 
   function updateActive(patch: Partial<Demonstrative>) {
     setDemonstratives((current) =>
-      current.map((item) =>
-        item.id === active.id ? { ...item, ...patch } : item,
-      ),
+      current.map((demo) => (demo.id === active.id ? { ...demo, ...patch } : demo)),
     );
-  }
-
-  function updatePerson(patch: Partial<DemonstrativePerson>) {
-    updateActive({
-      person: {
-        ...active.person,
-        ...patch,
-      },
-    });
   }
 
   function updateItem(itemId: string, patch: Partial<DemonstrativeItem>) {
     updateActive({
-      items: active.items.map((item) =>
-        item.id === itemId ? { ...item, ...patch } : item,
-      ),
+      items: active.items.map((item) => (item.id === itemId ? { ...item, ...patch } : item)),
     });
+  }
+
+  function selectTeamMember(memberId: string) {
+    const member = teamMembers.find((item) => String(item.id) === memberId);
+    if (!member) return;
+
+    updateActive({
+      beneficiaryName: member.name || active.beneficiaryName,
+      beneficiaryRole: member.role || active.beneficiaryRole,
+      beneficiaryDocument: member.document || active.beneficiaryDocument,
+      beneficiaryPhone: member.phone || active.beneficiaryPhone,
+    });
+  }
+
+  function addDemonstrative() {
+    const next: Demonstrative = {
+      ...initialDemonstrative,
+      id: makeId("demo"),
+      number: String(demonstratives.length + 1).padStart(4, "0"),
+    };
+
+    setDemonstratives((current) => [next, ...current]);
+    setActiveId(next.id);
   }
 
   function addItem() {
@@ -402,51 +454,20 @@ export function AdministrativeDemonstratives() {
     });
   }
 
-  function addDemonstrative(type: DemonstrativePerson["type"]) {
-    const next: Demonstrative = {
-      ...initialDemonstrative,
-      id: makeId("demo"),
-      number: String(demonstratives.length + 1).padStart(4, "0"),
-      person: {
-        ...initialDemonstrative.person,
-        id: makeId("person"),
-        type,
-        name: type === "Equipe" ? "Nova pessoa da equipe" : "Novo fornecedor",
-      },
-    };
-
-    setDemonstratives((current) => [next, ...current]);
-    setActiveId(next.id);
-  }
-
-  function removeActive() {
-    if (demonstratives.length <= 1) return;
-    const next = demonstratives.filter((item) => item.id !== active.id);
-    setDemonstratives(next);
-    setActiveId(next[0].id);
-  }
-
   function generatePdf() {
-    printDemonstrative(buildPdfHtml(active));
+    printHtmlInHiddenFrame(buildPdfHtml(active), "Demonstrativo");
   }
 
   return (
     <div className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)_360px]">
       <section className="rounded-3xl border border-slate-200 bg-white p-4">
         <h3 className="text-lg font-black text-slate-950">Demonstrativos</h3>
-        <p className="text-sm text-slate-500">Equipe e fornecedores.</p>
+        <p className="text-sm text-slate-500">Recibos e demonstrativos administrativos.</p>
 
-        <div className="mt-4 grid gap-2">
-          <button type="button" className="btn-primary justify-center" onClick={() => addDemonstrative("Equipe")}>
-            <UserRound className="size-4" />
-            Novo para equipe
-          </button>
-
-          <button type="button" className="btn-secondary justify-center" onClick={() => addDemonstrative("Fornecedor")}>
-            <Plus className="size-4" />
-            Novo fornecedor
-          </button>
-        </div>
+        <button type="button" className="btn-primary mt-4 w-full justify-center" onClick={addDemonstrative}>
+          <Plus className="size-4" />
+          Novo demonstrativo
+        </button>
 
         <div className="mt-4 space-y-2">
           {demonstratives.map((demo) => (
@@ -461,18 +482,18 @@ export function AdministrativeDemonstratives() {
               onClick={() => setActiveId(demo.id)}
             >
               <p className="font-black text-slate-950">Nº {demo.number}</p>
-              <p className="mt-1 text-sm text-slate-500">{demo.person.name}</p>
-              <p className="mt-1 text-sm font-black text-primary">{currency(total)}</p>
+              <p className="mt-1 text-sm text-slate-500">{demo.beneficiaryName}</p>
+              <p className="mt-1 text-sm font-black text-primary">{currency(getTotal(demo))}</p>
             </button>
           ))}
         </div>
       </section>
 
       <section className="rounded-3xl border border-slate-200 bg-white p-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="text-lg font-black text-slate-950">Editar demonstrativo</h3>
-            <p className="text-sm text-slate-500">Documento administrativo para controle de pagamento.</p>
+            <p className="text-sm text-slate-500">Modelo com recibo e demonstrativo na mesma folha.</p>
           </div>
 
           <button type="button" className="btn-primary" onClick={generatePdf}>
@@ -482,9 +503,7 @@ export function AdministrativeDemonstratives() {
         </div>
 
         <div className="mt-4 rounded-3xl border border-emerald-200 bg-emerald-50 p-4">
-          <p className="mb-3 text-sm font-black text-emerald-900">
-            Cabeçalho do demonstrativo
-          </p>
+          <p className="mb-3 text-sm font-black text-emerald-900">Cabeçalho do emitente</p>
 
           <div className="grid gap-3 md:grid-cols-2">
             <Field label="Instituição / emitente">
@@ -529,49 +548,50 @@ export function AdministrativeDemonstratives() {
           <Field label="Competência">
             <input className="form-input" value={active.competence} onChange={(event) => updateActive({ competence: event.target.value })} />
           </Field>
+        </div>
 
-          <Field label="Tipo">
-            <select className="form-input" value={active.person.type} onChange={(event) => updatePerson({ type: event.target.value as DemonstrativePerson["type"] })}>
-              <option>Equipe</option>
-              <option>Fornecedor</option>
-            </select>
-          </Field>
-
-          <Field label="Status">
-            <select className="form-input" value={active.status} onChange={(event) => updateActive({ status: event.target.value })}>
-              <option>Rascunho</option>
-              <option>Conferido</option>
-              <option>Pago</option>
-              <option>Cancelado</option>
+        <div className="mt-4">
+          <Field label="Selecionar pessoa da equipe">
+            <select className="form-input" defaultValue="" onChange={(event) => selectTeamMember(event.target.value)}>
+              <option value="">Escolha uma pessoa...</option>
+              {teamMembers.map((member) => (
+                <option key={String(member.id)} value={String(member.id)}>
+                  {member.name} — {member.role || "Equipe"}
+                </option>
+              ))}
             </select>
           </Field>
         </div>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <Field label="Nome/Razão social">
-            <input className="form-input" value={active.person.name} onChange={(event) => updatePerson({ name: event.target.value })} />
+            <input className="form-input" value={active.beneficiaryName} onChange={(event) => updateActive({ beneficiaryName: event.target.value })} />
           </Field>
 
           <Field label="CPF/CNPJ">
-            <input className="form-input" value={active.person.document} onChange={(event) => updatePerson({ document: event.target.value })} />
+            <input className="form-input" value={active.beneficiaryDocument} onChange={(event) => updateActive({ beneficiaryDocument: event.target.value })} />
           </Field>
 
           <Field label="Função/serviço">
-            <input className="form-input" value={active.person.role} onChange={(event) => updatePerson({ role: event.target.value })} />
+            <input className="form-input" value={active.beneficiaryRole} onChange={(event) => updateActive({ beneficiaryRole: event.target.value })} />
           </Field>
 
           <Field label="Telefone">
-            <input className="form-input" value={active.person.phone} onChange={(event) => updatePerson({ phone: event.target.value })} />
+            <input className="form-input" value={active.beneficiaryPhone} onChange={(event) => updateActive({ beneficiaryPhone: event.target.value })} />
           </Field>
 
           <Field label="Endereço do favorecido">
-            <input className="form-input" value={active.person.address} onChange={(event) => updatePerson({ address: event.target.value })} />
+            <input className="form-input" value={active.beneficiaryAddress} onChange={(event) => updateActive({ beneficiaryAddress: event.target.value })} />
+          </Field>
+
+          <Field label="Código associado / interno">
+            <input className="form-input" value={active.beneficiaryCode} onChange={(event) => updateActive({ beneficiaryCode: event.target.value })} />
           </Field>
         </div>
 
         <div className="mt-5 rounded-3xl border border-slate-200 bg-slate-50 p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h4 className="font-black text-slate-950">Itens</h4>
+            <h4 className="font-black text-slate-950">Itens do demonstrativo</h4>
             <button type="button" className="btn-primary" onClick={addItem}>
               <Plus className="size-4" />
               Item
@@ -596,25 +616,22 @@ export function AdministrativeDemonstratives() {
           </div>
         </div>
 
-        <div className="mt-4">
-          <Field label="Referência">
-            <textarea className="form-input min-h-24" value={active.reference} onChange={(event) => updateActive({ reference: event.target.value })} />
+        <div className="mt-4 grid gap-3">
+          <Field label="Referência / locação / descrição geral">
+            <input className="form-input" value={active.referenceTitle} onChange={(event) => updateActive({ referenceTitle: event.target.value })} />
+          </Field>
+
+          <Field label="Texto de quitação no rodapé">
+            <textarea className="form-input min-h-20" value={active.paymentText} onChange={(event) => updateActive({ paymentText: event.target.value })} />
           </Field>
         </div>
-
-        {demonstratives.length > 1 ? (
-          <button type="button" className="btn-danger mt-4" onClick={removeActive}>
-            <Trash2 className="size-4" />
-            Excluir demonstrativo
-          </button>
-        ) : null}
       </section>
 
       <section className="rounded-3xl border border-slate-200 bg-white p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">Prévia</p>
-            <h3 className="text-lg font-black text-slate-950">Demonstrativo</h3>
+            <h3 className="text-lg font-black text-slate-950">Recibo + demonstrativo</h3>
           </div>
 
           <button type="button" className="btn-primary" onClick={generatePdf}>
@@ -629,7 +646,7 @@ export function AdministrativeDemonstratives() {
               VIVA
             </div>
             <div>
-              <p className="font-black">{active.payerName.toUpperCase()}</p>
+              <p className="font-black">{active.payerName}</p>
               <p>{active.payerAddress}</p>
               <p>{active.payerContact}</p>
               <p>{active.payerDocument}</p>
@@ -646,12 +663,14 @@ export function AdministrativeDemonstratives() {
 
           <div className="grid grid-cols-2 border-b border-slate-900">
             <div className="p-3">
-              <p className="font-black">{active.person.name.toUpperCase()}</p>
-              <p>{active.person.address}</p>
+              <p className="font-black">{active.beneficiaryName.toUpperCase()}</p>
+              <p>{active.beneficiaryAddress}</p>
+              <p>{active.beneficiaryRole}</p>
             </div>
             <div className="p-3">
-              <p><strong>CPF/CNPJ:</strong> {active.person.document || "-"}</p>
-              <p><strong>Fone:</strong> {active.person.phone || "-"}</p>
+              <p><strong>CPF/CNPJ:</strong> {active.beneficiaryDocument || "-"}</p>
+              <p><strong>Fone:</strong> {active.beneficiaryPhone || "-"}</p>
+              <p><strong>Cód.:</strong> {active.beneficiaryCode || "-"}</p>
             </div>
           </div>
 
@@ -681,11 +700,8 @@ export function AdministrativeDemonstratives() {
           </table>
 
           <p className="mt-3 text-right text-base font-black">TOTAL: {currency(total)}</p>
-
-          <div className="mt-4 text-[10px]">
-            <p><strong>Ref. competência:</strong> {active.competence}</p>
-            <p><strong>Referência:</strong> {active.reference}</p>
-          </div>
+          <p className="mt-3 text-[10px]"><strong>Ref. competência:</strong> {active.competence}</p>
+          <p className="text-[10px]"><strong>Referência:</strong> {active.referenceTitle}</p>
         </div>
       </section>
     </div>
