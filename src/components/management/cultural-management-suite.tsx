@@ -462,7 +462,7 @@ function MetricCard({
   );
 }
 
-export function CulturalManagementSuite() {
+export function CulturalManagementSuite(_props: { project?: unknown } = {}) {
   const [activeTab, setActiveTab] = useState<TabKey>("dashboard");
   const [state, setState] = useState<SuiteState>(defaultState);
   const [clientReady, setClientReady] = useState(false);
@@ -941,7 +941,7 @@ Saldo estimado: ${formatCurrency(totals.remaining)}
         </div>
       ) : null}
 
-      {activeTab === "documents" ? <ProjectDocumentsVault project={{ id: project.id, name: project.name }} /> : null}
+      {activeTab === "documents" ? <ProjectDocumentsVault /> : null}
 
       {activeTab === "reports" ? <CulturalReportWorkspace /> : null}
 
