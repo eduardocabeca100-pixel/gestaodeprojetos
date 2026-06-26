@@ -10,6 +10,7 @@ import {
   Search,
   Trash2,
   UploadCloud,
+  UserRound,
   UsersRound,
 } from "lucide-react";
 
@@ -45,186 +46,46 @@ type ResumeTemplate = {
   referenceFile?: ResumeFile;
 };
 
-const peopleStorageKey = "viva:banco-curriculos:pessoas:clean-v1";
-const templateStorageKey = "viva:banco-curriculos:modelo-atual:clean-v1";
+type ApiTeamRow = Record<string, unknown>;
+
+const peopleStorageKey = "viva:banco-curriculos:pessoas:layout-final-v1";
+const templateStorageKey = "viva:banco-curriculos:modelo:layout-final-v1";
 
 const defaultTemplate: ResumeTemplate = {
   id: "modelo-atual",
   editalName: "Modelo por edital",
 };
 
-
 const refensFallbackPeople: ResumePerson[] = [
-  {
-    id: "fallback-marcel-eduardo",
-    name: "Marcel Eduardo Cabeça Domingues",
-    area: "Formador, diretor, ator e produtor",
-    formation: "",
-    courses: "",
-    actingTime: "",
-    experience: "",
-    works: "",
-    additionalInfo: "",
-    cityState: "Jaraguá do Sul/SC",
-    files: [],
-    source: "project",
-  },
-  {
-    id: "fallback-kaique-varela",
-    name: "Kaique Varela Zalusk",
-    area: "Produção executiva",
-    formation: "",
-    courses: "",
-    actingTime: "",
-    experience: "",
-    works: "",
-    additionalInfo: "",
-    cityState: "Jaraguá do Sul/SC",
-    files: [],
-    source: "project",
-  },
-  {
-    id: "fallback-suzi-daiane",
-    name: "Suzi Daiane",
-    area: "Professora de inclusão, LIBRAS e acessibilidade",
-    formation: "",
-    courses: "",
-    actingTime: "",
-    experience: "",
-    works: "",
-    additionalInfo: "",
-    cityState: "Jaraguá do Sul/SC",
-    files: [],
-    source: "project",
-  },
-  {
-    id: "fallback-jones-andre",
-    name: "Jones André",
-    area: "Técnico de som",
-    formation: "",
-    courses: "",
-    actingTime: "",
-    experience: "",
-    works: "",
-    additionalInfo: "",
-    cityState: "Jaraguá do Sul/SC",
-    files: [],
-    source: "project",
-  },
-  {
-    id: "fallback-cassius-venera",
-    name: "Cassius Venera",
-    area: "Técnico de iluminação",
-    formation: "",
-    courses: "",
-    actingTime: "",
-    experience: "",
-    works: "",
-    additionalInfo: "",
-    cityState: "Jaraguá do Sul/SC",
-    files: [],
-    source: "project",
-  },
-  {
-    id: "fallback-andre-brito",
-    name: "André Brito",
-    area: "Registro audiovisual / fotográfico",
-    formation: "",
-    courses: "",
-    actingTime: "",
-    experience: "",
-    works: "",
-    additionalInfo: "",
-    cityState: "Jaraguá do Sul/SC",
-    files: [],
-    source: "project",
-  },
-  {
-    id: "fallback-renaldo-boddemberg",
-    name: "Renaldo Boddemberg",
-    area: "Ator experiente",
-    formation: "",
-    courses: "",
-    actingTime: "",
-    experience: "",
-    works: "",
-    additionalInfo: "",
-    cityState: "Jaraguá do Sul/SC",
-    files: [],
-    source: "project",
-  },
-  {
-    id: "fallback-bruna-lazzarotto",
-    name: "Bruna Lazzarotto",
-    area: "Atriz experiente",
-    formation: "",
-    courses: "",
-    actingTime: "",
-    experience: "",
-    works: "",
-    additionalInfo: "",
-    cityState: "Jaraguá do Sul/SC",
-    files: [],
-    source: "project",
-  },
-  {
-    id: "fallback-wemerson-goncalves",
-    name: "Wemerson Gonçalves",
-    area: "Ator experiente",
-    formation: "",
-    courses: "",
-    actingTime: "",
-    experience: "",
-    works: "",
-    additionalInfo: "",
-    cityState: "Jaraguá do Sul/SC",
-    files: [],
-    source: "project",
-  },
-  {
-    id: "fallback-julia-titz",
-    name: "Julia Titz",
-    area: "Atriz experiente",
-    formation: "",
-    courses: "",
-    actingTime: "",
-    experience: "",
-    works: "",
-    additionalInfo: "",
-    cityState: "Jaraguá do Sul/SC",
-    files: [],
-    source: "project",
-  },
-  {
-    id: "fallback-karim-kamada",
-    name: "Karim Kamada",
-    area: "Artista / Atriz experiente",
-    formation: "",
-    courses: "",
-    actingTime: "",
-    experience: "",
-    works: "",
-    additionalInfo: "",
-    cityState: "Jaraguá do Sul/SC",
-    files: [],
-    source: "project",
-  },
-  {
-    id: "fallback-katiana-coelho",
-    name: "Katiana de Souza Coelho",
-    area: "Professora de técnica vocal / Tecladista / Música",
-    formation: "",
-    courses: "",
-    actingTime: "",
-    experience: "",
-    works: "",
-    additionalInfo: "",
-    cityState: "Jaraguá do Sul/SC",
-    files: [],
-    source: "project",
-  },
-];
-
+  ["Marcel Eduardo Cabeça Domingues", "Formador, diretor, ator e produtor"],
+  ["Kaique Varela Zalusk", "Produção executiva"],
+  ["Suzi Daiane", "Professora de inclusão, LIBRAS e acessibilidade"],
+  ["Jones André", "Técnico de som"],
+  ["Cassius Venera", "Técnico de iluminação"],
+  ["André Brito", "Registro audiovisual / fotográfico"],
+  ["Renaldo Boddemberg", "Ator experiente"],
+  ["Bruna Lazzarotto", "Atriz experiente"],
+  ["Wemerson Gonçalves", "Ator experiente"],
+  ["Julia Titz", "Atriz experiente"],
+  ["Karim Kamada", "Artista / Atriz experiente"],
+  ["Katiana de Souza Coelho", "Professora de técnica vocal / Tecladista / Música"],
+  ["Mariane Santos de Lima", "Produtora cultural"],
+  ["Bruno", "Equipe artística"],
+  ["Equipe técnica", "Apoio técnico"],
+].map(([name, area]) => ({
+  id: `fallback-${name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-")}`,
+  name,
+  area,
+  formation: "",
+  courses: "",
+  actingTime: "",
+  experience: "",
+  works: "",
+  additionalInfo: "",
+  cityState: "Jaraguá do Sul/SC",
+  files: [],
+  source: "project",
+}));
 
 function makeId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -234,28 +95,99 @@ function safeText(value: unknown) {
   return String(value ?? "").trim();
 }
 
+function readStorage<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
 
+  try {
+    const saved = window.localStorage.getItem(key);
+    return saved ? (JSON.parse(saved) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
-type ApiTeamRow = Record<string, unknown>;
+function writeStorage<T>(key: string, value: T) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(key, JSON.stringify(value));
+}
+
+function escapeHtml(value: string) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function toParagraphs(value: string) {
+  const lines = String(value ?? "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  if (lines.length === 0) return "<p>Não informado.</p>";
+
+  return lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("");
+}
+
+function todayLongBr() {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
+}
+
+function sanitizeFileName(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .toLowerCase();
+}
+
+function fileSize(size: number) {
+  if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function fileToDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function downloadBlob(content: string, fileName: string, type: string) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = window.document.createElement("a");
+
+  link.href = url;
+  link.download = fileName;
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
 
 function getNestedObjects(row: ApiTeamRow) {
   const objects: ApiTeamRow[] = [row];
 
-  function pushObject(value: unknown) {
-    if (!value || Array.isArray(value) || typeof value !== "object") return;
+  for (const value of Object.values(row)) {
+    if (value && !Array.isArray(value) && typeof value === "object") {
+      const nested = value as ApiTeamRow;
+      objects.push(nested);
 
-    const nested = value as ApiTeamRow;
-    objects.push(nested);
-
-    for (const secondLevel of Object.values(nested)) {
-      if (secondLevel && !Array.isArray(secondLevel) && typeof secondLevel === "object") {
-        objects.push(secondLevel as ApiTeamRow);
+      for (const second of Object.values(nested)) {
+        if (second && !Array.isArray(second) && typeof second === "object") {
+          objects.push(second as ApiTeamRow);
+        }
       }
     }
-  }
-
-  for (const value of Object.values(row)) {
-    pushObject(value);
   }
 
   return objects;
@@ -278,20 +210,6 @@ function pickApiValue(row: ApiTeamRow, keys: string[]) {
 function flattenApiRows(payload: unknown): ApiTeamRow[] {
   const rows: ApiTeamRow[] = [];
 
-  function hasPersonName(row: ApiTeamRow) {
-    return Boolean(
-      pickApiValue(row, [
-        "name",
-        "full_name",
-        "fullName",
-        "member_name",
-        "person_name",
-        "display_name",
-        "nome",
-      ]),
-    );
-  }
-
   function walk(value: unknown) {
     if (!value) return;
 
@@ -302,15 +220,20 @@ function flattenApiRows(payload: unknown): ApiTeamRow[] {
 
     if (typeof value === "object") {
       const objectValue = value as ApiTeamRow;
+      const name = pickApiValue(objectValue, [
+        "name",
+        "full_name",
+        "fullName",
+        "member_name",
+        "person_name",
+        "display_name",
+        "nome",
+      ]);
 
-      if (hasPersonName(objectValue)) {
-        rows.push(objectValue);
-      }
+      if (name) rows.push(objectValue);
 
       for (const nested of Object.values(objectValue)) {
-        if (nested && typeof nested === "object") {
-          walk(nested);
-        }
+        if (nested && typeof nested === "object") walk(nested);
       }
     }
   }
@@ -332,7 +255,7 @@ function flattenApiRows(payload: unknown): ApiTeamRow[] {
       ]),
     );
 
-    if (!name || name === "Pessoa sem nome") continue;
+    if (!name) continue;
 
     const role = safeText(
       pickApiValue(row, [
@@ -348,23 +271,7 @@ function flattenApiRows(payload: unknown): ApiTeamRow[] {
       ]),
     );
 
-    const documentValue = safeText(
-      pickApiValue(row, [
-        "document",
-        "cpf",
-        "cnpj",
-        "cpf_cnpj",
-        "document_number",
-      ]),
-    );
-
-    const email = safeText(pickApiValue(row, ["email"]));
-
-    const key =
-      documentValue.toLowerCase() ||
-      email.toLowerCase() ||
-      `${name.toLowerCase()}|${role.toLowerCase()}`;
-
+    const key = `${name.toLowerCase()}|${role.toLowerCase()}`;
     map.set(key, row);
   }
 
@@ -399,11 +306,9 @@ function apiRowToResumePerson(row: ApiTeamRow): ResumePerson {
   );
 
   return {
-    id: `api-team-${safeText(
-      pickApiValue(row, ["id", "member_id", "person_id", "team_roster_id", "teamRosterId"]) || name,
-    )
-      .replace(/\s+/g, "-")
-      .toLowerCase()}`,
+    id: `api-${sanitizeFileName(
+      safeText(pickApiValue(row, ["id", "member_id", "person_id", "team_roster_id"])) || name,
+    )}`,
     name: name || "Pessoa sem nome",
     area: area || "Equipe",
     formation: safeText(pickApiValue(row, ["formation", "formacao"])),
@@ -458,87 +363,6 @@ function emptyPerson(): ResumePerson {
   };
 }
 
-function readStorage<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-
-  try {
-    const saved = window.localStorage.getItem(key);
-    return saved ? (JSON.parse(saved) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function writeStorage<T>(key: string, value: T) {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(key, JSON.stringify(value));
-}
-
-function escapeHtml(value: string) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
-
-function toParagraphs(value: string) {
-  const lines = String(value ?? "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  if (lines.length === 0) {
-    return "<p>Não informado.</p>";
-  }
-
-  return lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("");
-}
-
-function todayLongBr() {
-  return new Intl.DateTimeFormat("pt-BR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(new Date());
-}
-
-function sanitizeFileName(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .toLowerCase();
-}
-
-function fileSize(size: number) {
-  if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`;
-  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function fileToDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
-function downloadBlob(content: string, fileName: string, type: string) {
-  const blob = new Blob([content], { type });
-  const url = URL.createObjectURL(blob);
-  const link = window.document.createElement("a");
-
-  link.href = url;
-  link.download = fileName;
-  link.click();
-
-  URL.revokeObjectURL(url);
-}
-
 function buildResumeHtml(person: ResumePerson) {
   return `
     <section class="resume-page">
@@ -552,11 +376,7 @@ function buildResumeHtml(person: ResumePerson) {
           <h2>Formação:</h2>
           ${toParagraphs(person.formation)}
 
-          ${
-            person.courses.trim()
-              ? `<h2>Cursos:</h2>${toParagraphs(person.courses)}`
-              : ""
-          }
+          ${person.courses.trim() ? `<h2>Cursos:</h2>${toParagraphs(person.courses)}` : ""}
 
           ${
             person.actingTime.trim()
@@ -604,25 +424,6 @@ function buildFullHtml(people: ResumePerson[], forWord = false) {
       line-height: 1.23;
     }
 
-    .print-actions {
-      position: fixed;
-      top: 18px;
-      right: 18px;
-      z-index: 20;
-      display: ${forWord ? "none" : "flex"};
-    }
-
-    .print-actions button {
-      border: 0;
-      border-radius: 999px;
-      padding: 12px 18px;
-      color: #fff;
-      background: #111827;
-      font-weight: 900;
-      cursor: pointer;
-      box-shadow: 0 12px 30px rgba(0,0,0,.18);
-    }
-
     .resume-page {
       width: 210mm;
       min-height: 297mm;
@@ -660,17 +461,11 @@ function buildFullHtml(people: ResumePerson[], forWord = false) {
 
     @media print {
       body { background: #fff; }
-      .print-actions { display: none; }
       .resume-page { margin: 0; box-shadow: none; }
     }
   </style>
 </head>
-<body>
-  <div class="print-actions">
-    <button onclick="window.print()">Salvar como PDF</button>
-  </div>
-  ${pages}
-</body>
+<body>${pages}</body>
 </html>`;
 }
 
@@ -710,7 +505,7 @@ function printHtmlWithoutPopup(html: string) {
     frameWindow.focus();
     frameWindow.print();
     window.setTimeout(() => iframe.remove(), 1500);
-  }, 450);
+  }, 350);
 }
 
 export function ResumeBankWorkspace({
@@ -736,7 +531,6 @@ export function ResumeBankWorkspace({
     setTemplate(savedTemplate);
   }, []);
 
-
   useEffect(() => {
     let cancelled = false;
 
@@ -756,15 +550,12 @@ export function ResumeBankWorkspace({
       for (const url of urls) {
         try {
           const response = await fetch(url, { cache: "no-store" });
-
           if (!response.ok) continue;
 
           const payload = await response.json();
-          const rows = flattenApiRows(payload);
-
-          collected.push(...rows.map((row) => apiRowToResumePerson(row)));
+          collected.push(...flattenApiRows(payload).map((row) => apiRowToResumePerson(row)));
         } catch {
-          // mantém a tela funcionando mesmo se alguma API não responder
+          // mantém a tela funcionando
         }
       }
 
@@ -787,25 +578,22 @@ export function ResumeBankWorkspace({
     };
   }, [project.id]);
 
-
   const projectPeople = useMemo(() => {
     const initialPeople = initialTeamMembers.map((member) => teamToResumePerson(member));
     return [...initialPeople, ...apiTeamPeople];
   }, [initialTeamMembers, apiTeamPeople]);
 
   const allPeople = useMemo(() => {
-    const map = new Map<string, ResumePerson>();
-
     const projectName = project.name.toLowerCase();
-    const shouldUseRefensFallback =
-      projectName.includes("reféns") ||
-      projectName.includes("refens") ||
-      projectName.includes("r efens");
+    const shouldUseFallback =
+      projectName.includes("reféns") || projectName.includes("refens");
 
     const sourcePeople =
-      shouldUseRefensFallback && projectPeople.length < refensFallbackPeople.length
+      shouldUseFallback && projectPeople.length < refensFallbackPeople.length
         ? [...projectPeople, ...refensFallbackPeople]
         : projectPeople;
+
+    const map = new Map<string, ResumePerson>();
 
     for (const person of [...sourcePeople, ...manualPeople]) {
       const key = `${person.name.toLowerCase()}|${person.area.toLowerCase()}`;
@@ -828,7 +616,8 @@ export function ResumeBankWorkspace({
     );
   }, [allPeople, search]);
 
-  const selectedPerson = allPeople.find((person) => person.id === selectedPersonId) ?? filteredPeople[0] ?? null;
+  const selectedPerson =
+    allPeople.find((person) => person.id === selectedPersonId) ?? filteredPeople[0] ?? null;
 
   useEffect(() => {
     if (!selectedPersonId && filteredPeople[0]) {
@@ -863,13 +652,11 @@ export function ResumeBankWorkspace({
       ...selectedPerson,
       ...patch,
       source: existingManual?.source ?? "manual",
-      id: existingManual?.id ?? selectedPerson.id.replace(/^team-/, "manual-copy-"),
+      id: existingManual?.id ?? selectedPerson.id.replace(/^team-|^api-|^fallback-/, "manual-copy-"),
     };
 
     const nextPeople = existingManual
-      ? manualPeople.map((person) =>
-          person.id === existingManual.id ? updatedPerson : person,
-        )
+      ? manualPeople.map((person) => (person.id === existingManual.id ? updatedPerson : person))
       : [updatedPerson, ...manualPeople];
 
     saveManualPeople(nextPeople);
@@ -919,7 +706,7 @@ export function ResumeBankWorkspace({
           category: "Modelo do edital",
         },
       },
-      "Modelo do edital anexado. O currículo será gerado uma pessoa por folha.",
+      "Modelo do edital anexado.",
     );
   }
 
@@ -975,8 +762,8 @@ export function ResumeBankWorkspace({
   }
 
   return (
-    <div className="w-full max-w-none space-y-6 px-4 pb-10">
-      <section className="rounded-[1.5rem] border border-white bg-white p-5 shadow-sm">
+    <div className="w-full max-w-none space-y-6 pb-10">
+      <section className="rounded-[2rem] border border-white/80 bg-white p-6 shadow-sm">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
@@ -985,8 +772,8 @@ export function ResumeBankWorkspace({
             <h2 className="mt-1 text-2xl font-black text-slate-950">
               Profissionais do projeto e geração por edital
             </h2>
-            <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">
-              Projeto ativo: <strong>{project.name}</strong>. Selecione os profissionais, suba o modelo do edital e gere currículos em PDF ou Word, uma pessoa por folha.
+            <p className="mt-2 max-w-5xl text-sm leading-6 text-slate-500">
+              Projeto ativo: <strong>{project.name}</strong>. Selecione os profissionais em cards, complete os dados e gere currículos em PDF ou Word.
             </p>
           </div>
 
@@ -1008,19 +795,19 @@ export function ResumeBankWorkspace({
         <InfoCard title="Saída" value="PDF / Word" helper="uma pessoa por folha" />
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
-        <section className="rounded-[1.5rem] border border-white bg-white p-5 shadow-sm">
+      <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
+        <section className="rounded-[2rem] border border-white/80 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-lg font-black text-slate-950">Profissionais</h3>
-              <p className="text-sm text-slate-500">Equipe cadastrada no projeto e pessoas manuais.</p>
+              <h3 className="text-lg font-black text-slate-950">Equipe do projeto</h3>
+              <p className="text-sm text-slate-500">Cards selecionáveis para gerar currículos.</p>
             </div>
             <UsersRound className="size-5 text-primary" />
           </div>
 
           <label className="mt-4 block">
             <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
-              Buscar
+              Buscar profissional
             </span>
             <div className="relative mt-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
@@ -1028,7 +815,7 @@ export function ResumeBankWorkspace({
                 className="form-input pl-10"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Nome ou área..."
+                placeholder="Nome, função ou área..."
               />
             </div>
           </label>
@@ -1038,11 +825,11 @@ export function ResumeBankWorkspace({
               Selecionar todos
             </button>
             <button type="button" className="btn-secondary" onClick={clearSelection}>
-              Limpar seleção
+              Limpar
             </button>
           </div>
 
-          <div className="mt-4 space-y-3">
+          <div className="mt-4 grid max-h-[760px] gap-3 overflow-y-auto pr-1">
             {filteredPeople.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-500">
                 Nenhum profissional encontrado neste projeto.
@@ -1054,54 +841,63 @@ export function ResumeBankWorkspace({
               const selected = selectedIds.includes(person.id);
 
               return (
-                <div
+                <button
                   key={person.id}
+                  type="button"
                   className={
                     active
-                      ? "rounded-2xl border border-primary bg-primary/10 p-4"
-                      : "rounded-2xl border border-slate-200 bg-slate-50 p-4"
+                      ? "rounded-3xl border border-primary bg-primary/10 p-4 text-left shadow-sm"
+                      : "rounded-3xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-primary/40 hover:bg-white"
                   }
+                  onClick={() => setSelectedPersonId(person.id)}
                 >
-                  <div className="flex gap-3">
+                  <div className="flex items-start gap-3">
                     <input
                       type="checkbox"
                       checked={selected}
-                      onChange={() => toggleSelected(person.id)}
+                      onChange={(event) => {
+                        event.stopPropagation();
+                        toggleSelected(person.id);
+                      }}
+                      onClick={(event) => event.stopPropagation()}
                       className="mt-1"
                     />
 
-                    <button
-                      type="button"
-                      className="min-w-0 flex-1 text-left"
-                      onClick={() => setSelectedPersonId(person.id)}
-                    >
-                      <p className="font-black text-slate-950">{person.name}</p>
-                      <p className="mt-1 text-sm text-slate-500">{person.area || "Área não informada"}</p>
-                      <p className="mt-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
-                        {person.source === "project" ? "Projeto" : "Manual"}
-                      </p>
-                    </button>
+                    <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-sm font-black text-primary">
+                      {person.name.slice(0, 1).toUpperCase()}
+                    </div>
 
-                    {selected ? <CheckCircle2 className="size-5 text-emerald-500" /> : null}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-black text-slate-950">{person.name}</p>
+                        {selected ? <CheckCircle2 className="size-5 shrink-0 text-emerald-500" /> : null}
+                      </div>
+
+                      <p className="mt-1 text-sm text-slate-500">{person.area || "Área não informada"}</p>
+
+                      <span className="mt-3 inline-flex rounded-full bg-slate-900/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+                        {person.source === "project" ? "Projeto" : "Manual"}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
         </section>
 
         <section className="space-y-6">
-          <section className="rounded-[1.5rem] border border-white bg-white p-5 shadow-sm">
+          <section className="rounded-[2rem] border border-white/80 bg-white p-6 shadow-sm">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
                   Cadastro / complementação
                 </p>
-                <h3 className="mt-1 text-xl font-black text-slate-950">
+                <h3 className="mt-1 text-2xl font-black text-slate-950">
                   {selectedPerson?.name || "Selecione uma pessoa"}
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  Complete os dados que não vierem automaticamente da equipe.
+                  Complete formação, experiências e trabalhos para gerar o currículo no modelo do edital.
                 </p>
               </div>
 
@@ -1114,7 +910,7 @@ export function ResumeBankWorkspace({
             </div>
 
             {selectedPerson ? (
-              <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <div className="mt-5 grid gap-4 lg:grid-cols-2">
                 <Field label="Nome completo">
                   <input className="form-input" value={selectedPerson.name} onChange={(event) => updatePerson({ name: event.target.value })} />
                 </Field>
@@ -1147,19 +943,26 @@ export function ResumeBankWorkspace({
                   <textarea className="form-input min-h-36" value={selectedPerson.works} onChange={(event) => updatePerson({ works: event.target.value })} />
                 </Field>
 
-                <Field label="Informações adicionais">
-                  <textarea className="form-input min-h-28" value={selectedPerson.additionalInfo} onChange={(event) => updatePerson({ additionalInfo: event.target.value })} />
-                </Field>
+                <div className="lg:col-span-2">
+                  <Field label="Informações adicionais">
+                    <textarea className="form-input min-h-28" value={selectedPerson.additionalInfo} onChange={(event) => updatePerson({ additionalInfo: event.target.value })} />
+                  </Field>
+                </div>
               </div>
             ) : null}
           </section>
 
-          {selectedPerson ? (
-            <section className="rounded-[1.5rem] border border-white bg-white p-5 shadow-sm">
-              <h3 className="text-lg font-black text-slate-950">Arquivos do profissional</h3>
-              <p className="mt-1 text-sm text-slate-500">
-                Guarde currículo original, certificados, diplomas, portfólio e documentos.
-              </p>
+          <section className="grid gap-6 xl:grid-cols-2">
+            <section className="rounded-[2rem] border border-white/80 bg-white p-5 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-black text-slate-950">Arquivos do profissional</h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Currículo original, certificados, diplomas, portfólio e documentos.
+                  </p>
+                </div>
+                <UserRound className="size-5 text-primary" />
+              </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {["Currículo PDF", "Currículo Word", "Certificado", "Diploma", "Portfólio", "Foto", "Documento"].map((category) => (
@@ -1179,8 +982,8 @@ export function ResumeBankWorkspace({
                 ))}
               </div>
 
-              {selectedPerson.files.length > 0 ? (
-                <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {selectedPerson && selectedPerson.files.length > 0 ? (
+                <div className="mt-4 grid gap-3">
                   {selectedPerson.files.map((file) => (
                     <div key={file.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                       <p className="font-black text-slate-950">{file.category}</p>
@@ -1195,51 +998,51 @@ export function ResumeBankWorkspace({
                 </div>
               ) : null}
             </section>
-          ) : null}
 
-          <section className="rounded-[1.5rem] border border-white bg-white p-5 shadow-sm">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
-                  Modelos por edital
-                </p>
-                <h3 className="mt-1 text-xl font-black text-slate-950">
-                  Subir anexo/modelo do edital
-                </h3>
-                <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-500">
-                  Envie o modelo que o edital pede. O sistema gera os currículos usando o padrão base: nome, área de atuação, currículo completo e data atual, uma pessoa por folha.
-                </p>
+            <section className="rounded-[2rem] border border-white/80 bg-white p-5 shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
+                    Modelos por edital
+                  </p>
+                  <h3 className="mt-1 text-lg font-black text-slate-950">
+                    Subir anexo/modelo
+                  </h3>
+                  <p className="mt-1 text-sm leading-6 text-slate-500">
+                    Envie o modelo que o edital pede. O sistema gera uma pessoa por folha.
+                  </p>
+                </div>
+
+                <label className="btn-primary cursor-pointer">
+                  <UploadCloud className="size-4" />
+                  Subir
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept=".pdf,.doc,.docx"
+                    onChange={(event) => {
+                      void uploadTemplateReference(event.target.files?.[0] ?? null);
+                      event.currentTarget.value = "";
+                    }}
+                  />
+                </label>
               </div>
 
-              <label className="btn-primary cursor-pointer">
-                <UploadCloud className="size-4" />
-                Subir anexo
-                <input
-                  type="file"
-                  className="hidden"
-                  accept=".pdf,.doc,.docx"
-                  onChange={(event) => {
-                    void uploadTemplateReference(event.target.files?.[0] ?? null);
-                    event.currentTarget.value = "";
-                  }}
-                />
-              </label>
-            </div>
-
-            {template.referenceFile ? (
-              <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                <p className="font-black text-emerald-800">Modelo anexado</p>
-                <p className="mt-1 text-sm text-emerald-700">{template.referenceFile.name}</p>
-              </div>
-            ) : (
-              <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
-                Nenhum modelo anexado ainda.
-              </div>
-            )}
+              {template.referenceFile ? (
+                <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                  <p className="font-black text-emerald-800">Modelo anexado</p>
+                  <p className="mt-1 text-sm text-emerald-700">{template.referenceFile.name}</p>
+                </div>
+              ) : (
+                <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
+                  Nenhum modelo anexado ainda.
+                </div>
+              )}
+            </section>
           </section>
 
-          <section className="rounded-[1.5rem] border border-white bg-white p-5 shadow-sm">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <section className="rounded-[2rem] border border-white/80 bg-white p-5 shadow-sm">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
                   Gerar currículos
@@ -1294,9 +1097,9 @@ function InfoCard({
   helper: string;
 }) {
   return (
-    <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+    <div className="rounded-[1.75rem] border border-white/80 bg-white p-5 shadow-sm">
       <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{title}</p>
-      <p className="mt-2 text-2xl font-black text-slate-950">{value}</p>
+      <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
   );

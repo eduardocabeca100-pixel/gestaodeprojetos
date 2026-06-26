@@ -1,42 +1,60 @@
 import type { ReactNode } from "react";
 
+type PageContainerProps = {
+  title?: ReactNode;
+  description?: ReactNode;
+  eyebrow?: ReactNode;
+  actions?: ReactNode;
+  children: ReactNode;
+  className?: string;
+  headerClassName?: string;
+  [key: string]: unknown;
+};
+
 export function PageContainer({
   title,
   description,
+  eyebrow = "VIVA GESTÃO CULTURAL",
   actions,
-  headerless = false,
   children,
-}: {
-  title: string;
-  description?: string;
-  actions?: ReactNode;
-  headerless?: boolean;
-  children: ReactNode;
-}) {
+  className = "",
+  headerClassName = "",
+}: PageContainerProps) {
   return (
-    <main className="content-safe flex w-full flex-1 flex-col gap-4 px-[var(--viva-page-padding-x)] py-[var(--viva-page-padding-y)] sm:px-5 lg:px-6">
-      {headerless ? null : (
-        <div className="relative overflow-hidden rounded-[1.8rem] border border-white/80 bg-[linear-gradient(135deg,rgba(255,255,255,0.96),rgba(244,247,255,0.96))] px-5 py-5 soft-shadow md:px-6">
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-64 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.16),transparent_58%)]" />
-          <div className="relative flex flex-col gap-2.5 md:flex-row md:items-end md:justify-between">
+    <main className={`w-full max-w-none space-y-6 px-4 py-6 sm:px-6 lg:px-8 ${className}`}>
+      {title || description || actions ? (
+        <section
+          className={`w-full rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-sm backdrop-blur ${headerClassName}`}
+        >
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0">
-              <p className="text-[0.72rem] font-black uppercase tracking-[0.32em] text-primary/70">
-                Viva Gestão Cultural
-              </p>
-              <h1 className="text-balance text-[1.8rem] font-semibold tracking-normal text-foreground">
-                {title}
-              </h1>
+              {eyebrow ? (
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">
+                  {eyebrow}
+                </p>
+              ) : null}
+
+              {title ? (
+                <h1 className="mt-1 text-3xl font-black tracking-tight text-slate-950">
+                  {title}
+                </h1>
+              ) : null}
+
               {description ? (
-                <p className="mt-1.5 max-w-3xl text-[0.9rem] leading-6 text-muted-foreground">
+                <p className="mt-2 max-w-5xl text-sm leading-6 text-slate-500">
                   {description}
                 </p>
               ) : null}
             </div>
-            {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
+
+            {actions ? <div className="shrink-0">{actions}</div> : null}
           </div>
-        </div>
-      )}
-      {children}
+        </section>
+      ) : null}
+
+      <div className="w-full max-w-none">{children}</div>
     </main>
   );
 }
+
+export default PageContainer;
