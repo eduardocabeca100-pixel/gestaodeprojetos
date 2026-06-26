@@ -621,6 +621,78 @@ function printDemonstrativeWithoutPopup(html: string) {
 }
 
 
+
+function createDemonstrativePrintTarget() {
+  let html = "";
+  let printed = false;
+
+  function printHtml() {
+    if (printed || !html.trim() || typeof window === "undefined") return;
+    printed = true;
+
+    const frameId = "viva-demonstrative-print-frame";
+    const oldFrame = window.document.getElementById(frameId);
+    oldFrame?.remove();
+
+    const iframe = window.document.createElement("iframe");
+    iframe.id = frameId;
+    iframe.title = "Demonstrativo";
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.style.opacity = "0";
+    iframe.style.pointerEvents = "none";
+
+    window.document.body.appendChild(iframe);
+
+    const frameWindow = iframe.contentWindow;
+    const frameDocument = frameWindow?.document;
+
+    if (!frameWindow || !frameDocument) {
+      window.alert("Não foi possível preparar o demonstrativo.");
+      iframe.remove();
+      return;
+    }
+
+    frameDocument.open();
+    frameDocument.write(html);
+    frameDocument.close();
+
+    window.setTimeout(() => {
+      try {
+        frameWindow.focus();
+        frameWindow.print();
+      } catch {
+        window.alert("Não foi possível abrir a impressão do demonstrativo.");
+      }
+
+      window.setTimeout(() => iframe.remove(), 1500);
+    }, 450);
+  }
+
+  return {
+    document: {
+      open() {
+        html = "";
+      },
+      write(value: string) {
+        html += String(value ?? "");
+      },
+      close() {
+        printHtml();
+      },
+    },
+    focus() {},
+    print() {
+      printHtml();
+    },
+  } as unknown as Window;
+}
+
+
 export function AdministrativeDemonstratives() {
   const [items, setItems] = useState<Demonstrative[]>([newDemo(1)]);
   const [selectedId, setSelectedId] = useState("");

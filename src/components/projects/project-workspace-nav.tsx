@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Users,
   Wallet,
+  UsersRound,
 } from "lucide-react";
 
 import type { Project } from "@/modules/projects/types";
@@ -23,6 +24,7 @@ const tabs = [
   { label: "Edital e anexos", href: "/edital", icon: Paperclip },
   { label: "Financeiro", href: "/financeiro", icon: Wallet },
   { label: "Equipe", href: "/equipe", icon: Users },
+  { label: "Banco de Currículos", href: "/banco-de-curriculos", icon: UsersRound },
   { label: "Participantes", href: "/participantes", icon: Users },
   { label: "Mídia", href: "/midia", icon: ImageIcon },
   { label: "Relatórios", href: "/relatorios", icon: BarChart3 },

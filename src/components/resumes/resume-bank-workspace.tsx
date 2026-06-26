@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import {
   Download,
@@ -49,8 +50,8 @@ type ResumeTemplate = {
   showAdditionalInfo: boolean;
 };
 
-const peopleStorageKey = "viva:banco-curriculos:pessoas:final-v1";
-const templatesStorageKey = "viva:banco-curriculos:modelos:final-v1";
+const peopleStorageKey = "viva:banco-curriculos:pessoas:final-v2";
+const templatesStorageKey = "viva:banco-curriculos:modelos:final-v2";
 
 const defaultTemplate: ResumeTemplate = {
   id: "fcc-anexo-v",
@@ -235,16 +236,8 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
   <meta charset="utf-8" />
   <title>${escapeHtml(template.name)}</title>
   <style>
-    @page {
-      size: A4;
-      margin: 12mm;
-    }
-
-    * {
-      box-sizing: border-box;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
+    @page { size: A4; margin: 12mm; }
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 
     body {
       margin: 0;
@@ -336,13 +329,8 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
       font-weight: 700;
     }
 
-    .identity p {
-      margin: 0 0 1.3mm;
-    }
-
-    .content {
-      padding: 5mm 13mm;
-    }
+    .identity p { margin: 0 0 1.3mm; }
+    .content { padding: 5mm 13mm; }
 
     h2 {
       margin: 2mm 0 .8mm;
@@ -351,27 +339,13 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
       font-weight: 900;
     }
 
-    p {
-      margin: 0 0 1.15mm;
-    }
-
-    .local-date {
-      margin-top: 2.8mm;
-    }
+    p { margin: 0 0 1.15mm; }
+    .local-date { margin-top: 2.8mm; }
 
     @media print {
-      body {
-        background: #fff;
-      }
-
-      .print-actions {
-        display: none;
-      }
-
-      .resume-page {
-        margin: 0;
-        box-shadow: none;
-      }
+      body { background: #fff; }
+      .print-actions { display: none; }
+      .resume-page { margin: 0; box-shadow: none; }
     }
   </style>
 </head>
@@ -379,7 +353,6 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
   <div class="print-actions">
     <button onclick="window.print()">Salvar como PDF</button>
   </div>
-
   ${pages}
 </body>
 </html>`;
@@ -447,9 +420,7 @@ export function ResumeBankWorkspace() {
 
   const filteredPeople = useMemo(() => {
     const value = search.trim().toLowerCase();
-
     if (!value) return people;
-
     return people.filter((person) =>
       [person.name, person.area, person.cityState].join(" ").toLowerCase().includes(value),
     );
@@ -567,12 +538,6 @@ export function ResumeBankWorkspace() {
         template.id === selectedTemplate.id ? { ...template, ...patch } : template,
       ),
     );
-  }
-
-  function removeHeaderImage(imageId: string) {
-    updateTemplate({
-      headerImages: selectedTemplate.headerImages.filter((image) => image.id !== imageId),
-    });
   }
 
   function generatePdf(selectedOnly = true) {
@@ -875,20 +840,9 @@ export function ResumeBankWorkspace() {
                 />
               </label>
 
-              <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
-                <input type="checkbox" checked={selectedTemplate.showCourses} onChange={(event) => updateTemplate({ showCourses: event.target.checked })} />
-                Cursos
-              </label>
-
-              <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
-                <input type="checkbox" checked={selectedTemplate.showActingTime} onChange={(event) => updateTemplate({ showActingTime: event.target.checked })} />
-                Tempo de atuação
-              </label>
-
-              <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
-                <input type="checkbox" checked={selectedTemplate.showAdditionalInfo} onChange={(event) => updateTemplate({ showAdditionalInfo: event.target.checked })} />
-                Informações adicionais
-              </label>
+              <Check label="Cursos" checked={selectedTemplate.showCourses} onChange={(value) => updateTemplate({ showCourses: value })} />
+              <Check label="Tempo de atuação" checked={selectedTemplate.showActingTime} onChange={(value) => updateTemplate({ showActingTime: value })} />
+              <Check label="Informações adicionais" checked={selectedTemplate.showAdditionalInfo} onChange={(value) => updateTemplate({ showAdditionalInfo: value })} />
             </div>
 
             {selectedTemplate.headerImages.length > 0 ? (
@@ -943,13 +897,30 @@ export function ResumeBankWorkspace() {
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="block">
       <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
         {label}
       </span>
       <div className="mt-1">{children}</div>
+    </label>
+  );
+}
+
+function Check({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
+      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
+      {label}
     </label>
   );
 }
