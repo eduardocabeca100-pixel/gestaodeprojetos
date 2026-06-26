@@ -1,22 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
 import {
+  Bell,
   CalendarDays,
   ClipboardList,
+  FileArchive,
+  FileCheck2,
   FileText,
   Folder,
   Home,
   ImageIcon,
+  LayoutDashboard,
   LogOut,
-  Menu,
-  Plus,
+  Newspaper,
+  Receipt,
   Settings,
   Users,
-  Wallet,
-  X,,
   UsersRound,
+  Wallet,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
