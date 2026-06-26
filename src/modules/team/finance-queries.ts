@@ -1,120 +1,88 @@
 import "server-only";
 
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
-import { getFeaturedProject, getProjectById } from "@/modules/projects/queries";
+import { listTeamMembers } from "@/modules/team/queries";
+import type { TeamMember } from "@/modules/team/types";
 
-import type { TeamMember } from "./types";
+type AnyRow = Record<string, unknown>;
 
-async function getScopedProject(projectId?: string) {
-  return projectId
-    ? (await getProjectById(projectId)) ?? (await getFeaturedProject())
-    : getFeaturedProject();
-}
-
-function normalizeText(value: unknown) {
+function text(value: unknown) {
   return String(value ?? "").trim();
 }
 
-function normalizeNumber(value: unknown) {
+function number(value: unknown) {
   const parsed = Number(value ?? 0);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function makeFallbackId(row: Record<string, unknown>, index: number) {
-  const name = normalizeText(row.name ?? row.full_name ?? row.fullName ?? row.member_name);
-  const document = normalizeText(row.document ?? row.cpf ?? row.cnpj ?? row.cpf_cnpj);
-  const email = normalizeText(row.email);
-
-  return `finance-team-${name || email || document || index}`
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
+function makeId(row: AnyRow, index: number) {
+  return text(row.id) || text(row.user_id) || `finance-team-${index}`;
 }
 
-function mapTeamRow(
-  row: Record<string, unknown>,
-  projectId: string,
-  index: number,
-): TeamMember {
-  const profile = (row.profile ?? row.profiles ?? {}) as Record<string, unknown>;
+function mapRow(row: AnyRow, projectId: string, index: number): TeamMember {
+  const name =
+    text(row.name) ||
+    text(row.full_name) ||
+    text(row.fullName) ||
+    text(row.member_name) ||
+    text(row.person_name) ||
+    "Pessoa sem nome";
+
+  const expected =
+    number(row.expectedAmount) ||
+    number(row.expected_amount) ||
+    number(row.amount) ||
+    number(row.value) ||
+    number(row.payment_amount) ||
+    number(row.budget_amount) ||
+    number(row.planned_amount);
 
   return {
-    id: normalizeText(row.id) || normalizeText(row.user_id) || makeFallbackId(row, index),
-    projectId: normalizeText(row.project_id) || projectId,
-    name:
-      normalizeText(row.name) ||
-      normalizeText(row.full_name) ||
-      normalizeText(row.fullName) ||
-      normalizeText(row.member_name) ||
-      normalizeText(row.person_name) ||
-      normalizeText(profile.name) ||
-      "Pessoa sem nome",
+    id: makeId(row, index),
+    projectId: text(row.project_id) || projectId,
+    name,
     role:
-      normalizeText(row.role) ||
-      normalizeText(row.function) ||
-      normalizeText(row.position) ||
-      normalizeText(row.rubric) ||
-      normalizeText(row.category) ||
+      text(row.role) ||
+      text(row.function) ||
+      text(row.position) ||
+      text(row.rubric) ||
+      text(row.category) ||
       "Equipe",
     document:
-      normalizeText(row.document) ||
-      normalizeText(row.cpf) ||
-      normalizeText(row.cnpj) ||
-      normalizeText(row.cpf_cnpj) ||
-      normalizeText(row.document_number),
-    email: normalizeText(row.email) || normalizeText(profile.email),
-    phone:
-      normalizeText(row.phone) ||
-      normalizeText(row.telefone) ||
-      normalizeText(row.whatsapp) ||
-      normalizeText(row.mobile),
-    amount:
-      normalizeNumber(row.amount) ||
-      normalizeNumber(row.value) ||
-      normalizeNumber(row.payment_amount) ||
-      normalizeNumber(row.budget_amount) ||
-      normalizeNumber(row.planned_amount),
-    expectedAmount:
-      normalizeNumber(row.expectedAmount) ||
-      normalizeNumber(row.expected_amount) ||
-      normalizeNumber(row.amount) ||
-      normalizeNumber(row.value) ||
-      normalizeNumber(row.payment_amount) ||
-      normalizeNumber(row.budget_amount) ||
-      normalizeNumber(row.planned_amount),
-    paidAmount:
-      normalizeNumber(row.paidAmount) ||
-      normalizeNumber(row.paid_amount),
-    paymentStatus:
-      normalizeText(row.paymentStatus) ||
-      normalizeText(row.payment_status) ||
-      "Pendente",
+      text(row.document) ||
+      text(row.cpf) ||
+      text(row.cnpj) ||
+      text(row.cpf_cnpj) ||
+      text(row.document_number),
+    email: text(row.email),
+    phone: text(row.phone) || text(row.telefone) || text(row.whatsapp) || text(row.mobile),
+    expectedAmount: expected,
+    paidAmount: number(row.paidAmount) || number(row.paid_amount),
+    paymentStatus: text(row.paymentStatus) || text(row.payment_status) || "Pendente",
     documents: Array.isArray(row.documents) ? row.documents : [],
-    status: normalizeText(row.status) || "Ativo",
-    notes: normalizeText(row.notes),
-  } as unknown as TeamMember;
+    status: text(row.status) || "Ativo",
+    notes: text(row.notes),
+  } as TeamMember;
 }
 
-function teamKey(member: TeamMember) {
-  const document = normalizeText(member.document).toLowerCase();
-  const email = normalizeText(member.email).toLowerCase();
-  const nameRole = `${normalizeText(member.name).toLowerCase()}|${normalizeText(member.role).toLowerCase()}`;
-
-  return document || email || nameRole || member.id;
+function key(member: TeamMember) {
+  return (
+    text(member.document).toLowerCase() ||
+    text(member.email).toLowerCase() ||
+    `${text(member.name).toLowerCase()}|${text(member.role).toLowerCase()}`
+  );
 }
 
-function dedupeTeam(members: TeamMember[]) {
+function dedupe(members: TeamMember[]) {
   const map = new Map<string, TeamMember>();
 
   for (const member of members) {
     if (!member.name || member.name === "Pessoa sem nome") continue;
 
-    const key = teamKey(member);
-    const previous = map.get(key);
+    const memberKey = key(member);
+    const previous = map.get(memberKey);
 
-    map.set(key, {
+    map.set(memberKey, {
       ...(previous ?? member),
       ...member,
       document: member.document || previous?.document || "",
@@ -131,82 +99,45 @@ function dedupeTeam(members: TeamMember[]) {
   return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 }
 
-async function trySelect(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  table: string,
-  mode:
-    | { type: "eq"; column: string; value: string | boolean }
-    | { type: "is-null"; column: string }
-    | { type: "all" },
-) {
-  if (!supabase) return [] as Record<string, unknown>[];
-
-  let query = (supabase as any).from(table).select("*");
-
-  if (mode.type === "eq") {
-    query = query.eq(mode.column, mode.value);
-  }
-
-  if (mode.type === "is-null") {
-    query = query.is(mode.column, null);
-  }
-
-  const { data, error } = await query;
-
-  if (error || !data) {
-    return [] as Record<string, unknown>[];
-  }
-
-  return data as Record<string, unknown>[];
-}
-
-export async function listFinanceTeamMembers(projectId?: string) {
-  const project = await getScopedProject(projectId);
-
-  if (!hasSupabaseServerEnv()) {
-    return [] satisfies TeamMember[];
-  }
+async function trySelect(table: string, mode: "project" | "global" | "all", projectId: string) {
+  if (!hasSupabaseServerEnv()) return [] as AnyRow[];
 
   const supabase = await createClient();
 
-  if (!supabase) {
-    return [] satisfies TeamMember[];
+  if (!supabase) return [] as AnyRow[];
+
+  try {
+    let query = (supabase as any).from(table).select("*");
+
+    if (mode === "project") {
+      query = query.eq("project_id", projectId);
+    }
+
+    if (mode === "global") {
+      query = query.or("project_id.is.null,project_id.eq.global,is_global.eq.true,scope.eq.global");
+    }
+
+    const { data, error } = await query;
+
+    if (error || !data) return [];
+
+    return data as AnyRow[];
+  } catch {
+    return [] as AnyRow[];
   }
+}
 
-  const rows: Record<string, unknown>[] = [];
+export async function listFinanceTeamMembers(projectId: string) {
+  const projectMembers = await listTeamMembers(projectId);
 
-  rows.push(...(await trySelect(supabase, "team_members", {
-    type: "eq",
-    column: "project_id",
-    value: project.id,
-  })));
+  const rows = [
+    ...(await trySelect("team_members", "project", projectId)),
+    ...(await trySelect("team_members", "global", projectId)),
+    ...(await trySelect("team_roster", "all", projectId)),
+    ...(await trySelect("people", "all", projectId)),
+  ];
 
-  rows.push(...(await trySelect(supabase, "team_members", {
-    type: "is-null",
-    column: "project_id",
-  })));
+  const extraMembers = rows.map((row, index) => mapRow(row, projectId, index));
 
-  rows.push(...(await trySelect(supabase, "team_members", {
-    type: "eq",
-    column: "project_id",
-    value: "global",
-  })));
-
-  rows.push(...(await trySelect(supabase, "team_members", {
-    type: "eq",
-    column: "is_global",
-    value: true,
-  })));
-
-  rows.push(...(await trySelect(supabase, "team_members", {
-    type: "eq",
-    column: "scope",
-    value: "global",
-  })));
-
-  rows.push(...(await trySelect(supabase, "team_roster", {
-    type: "all",
-  })));
-
-  return dedupeTeam(rows.map((row, index) => mapTeamRow(row, project.id, index)));
+  return dedupe([...projectMembers, ...extraMembers]);
 }

@@ -21,7 +21,7 @@ export default async function FinancePage({
   return (
     <PageContainer
       title="Financeiro"
-      description="Rubricas oficiais, despesas, favorecidos, anexos financeiros e conferência para prestação de contas."
+      description="Rubricas, despesas, anexos, documentos de pagamento, demonstrativos e prestação de contas."
     >
       <ProjectScopeBanner project={project} />
 
@@ -45,7 +45,7 @@ export default async function FinancePage({
             Demonstrativos administrativos de pagamento
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
-            Os demonstrativos foram movidos para o Financeiro para ficarem junto das rubricas, despesas e comprovantes.
+            Demonstrativos movidos para o Financeiro para ficarem junto das rubricas, despesas e comprovantes.
           </p>
         </div>
 

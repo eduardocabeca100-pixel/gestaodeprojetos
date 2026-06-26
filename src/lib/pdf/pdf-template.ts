@@ -108,9 +108,9 @@ function cleanOfficialBodyHtml(bodyHtml: string) {
   let html = String(bodyHtml ?? "");
 
   const phrasesToRemove = [
-    "Documento oficial gerado com o cabeçalho, rodapé e cores definidos em Modelo de PDF.",
-    "Documento oficial padronizado conforme o modelo institucional de PDF.",
-    "Documento exportado pelo Sistema de Gestão de Projetos.",
+    "",
+    "",
+    "",
   ];
 
   for (const phrase of phrasesToRemove) {
