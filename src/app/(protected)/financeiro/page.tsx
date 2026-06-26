@@ -3,7 +3,7 @@ import { PageContainer } from "@/components/layout/page-container";
 import { ProjectScopeBanner } from "@/components/projects/project-scope-banner";
 import { getActiveProject, type PageSearchParams } from "@/lib/utils/search-params";
 import { listBudgetItems } from "@/modules/finance/queries";
-import { listTeamMembers } from "@/modules/team/queries";
+import { listFinanceTeamMembers } from "@/modules/team/finance-queries";
 
 export default async function FinancePage({
   searchParams,
@@ -13,7 +13,7 @@ export default async function FinancePage({
   const project = await getActiveProject(searchParams);
   const [budgetItems, teamMembers] = await Promise.all([
     listBudgetItems(project.id),
-    listTeamMembers(project.id),
+    listFinanceTeamMembers(project.id),
   ]);
 
   return (

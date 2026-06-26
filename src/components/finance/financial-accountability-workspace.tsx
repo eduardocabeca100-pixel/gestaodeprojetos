@@ -288,6 +288,70 @@ function downloadAttachment(attachment: FinancialAttachment) {
   link.click();
 }
 
+
+function normalizeLocalTeamMember(row: Record<string, unknown>, index: number, projectId: string): TeamMember {
+  const name = String(row.name || row.fullName || row.full_name || row.member_name || "Pessoa sem nome").trim();
+
+  return {
+    id: String(row.id || `local-team-${index}-${name}`),
+    projectId,
+    name,
+    role: String(row.role || row.rubric || row.position || row.function || "Equipe"),
+    document: String(row.document || row.cpf || row.cnpj || row.cpf_cnpj || ""),
+    email: String(row.email || ""),
+    phone: String(row.phone || row.telefone || row.whatsapp || ""),
+    amount: Number(row.amount || row.value || row.payment_amount || 0),
+    status: String(row.status || "Ativo"),
+    notes: String(row.notes || ""),
+  } as TeamMember;
+}
+
+function mergeTeamMembersForFinance(baseMembers: TeamMember[], projectId: string) {
+  if (typeof window === "undefined") {
+    return baseMembers;
+  }
+
+  let localMembers: TeamMember[] = [];
+
+  try {
+    const saved = window.localStorage.getItem("viva:team-roster:v1");
+    const parsed = saved ? (JSON.parse(saved) as Array<Record<string, unknown>>) : [];
+    localMembers = Array.isArray(parsed)
+      ? parsed
+          .map((row, index) => normalizeLocalTeamMember(row, index, projectId))
+          .filter((member) => member.name && member.name !== "Pessoa sem nome")
+      : [];
+  } catch {
+    localMembers = [];
+  }
+
+  const map = new Map<string, TeamMember>();
+
+  for (const member of [...baseMembers, ...localMembers]) {
+    const key =
+      String(member.document || "").trim().toLowerCase() ||
+      String(member.email || "").trim().toLowerCase() ||
+      `${String(member.name || "").trim().toLowerCase()}|${String(member.role || "").trim().toLowerCase()}`;
+
+    if (!key) continue;
+
+    const previous = map.get(key);
+
+    map.set(key, {
+      ...(previous ?? member),
+      ...member,
+      document: member.document || previous?.document || "",
+      email: member.email || previous?.email || "",
+      phone: member.phone || previous?.phone || "",
+      amount: Number(member.amount || previous?.amount || 0),
+      notes: member.notes || previous?.notes || "",
+    } as TeamMember);
+  }
+
+  return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+}
+
+
 function buildNewExpense(budgetItemId: string): FinancialExpense {
   return {
     id: makeId("expense"),
@@ -339,12 +403,14 @@ export function FinancialAccountabilityWorkspace({
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("Financeiro carregado.");
   const [preview, setPreview] = useState<FinancialAttachment | null>(null);
+  const [availableTeamMembers, setAvailableTeamMembers] = useState<TeamMember[]>(teamMembers);
 
   useEffect(() => {
     const next = readState(project.id, initialBudgetItems);
     setState(next);
     setSelectedBudgetId(next.budgets[0]?.id ?? "");
     setSelectedExpenseId("");
+    setAvailableTeamMembers(mergeTeamMembersForFinance(teamMembers, project.id));
     setMessage(`Financeiro carregado para ${project.name}.`);
   }, [project.id, project.name, initialBudgetItems]);
 
@@ -519,7 +585,7 @@ export function FinancialAccountabilityWorkspace({
   }
 
   function selectTeamMember(expense: FinancialExpense, teamMemberId: string) {
-    const member = teamMembers.find((item) => item.id === teamMemberId);
+    const member = availableTeamMembers.find((item) => item.id === teamMemberId);
 
     if (!member) {
       updateExpense(expense.id, {
@@ -979,7 +1045,7 @@ export function FinancialAccountabilityWorkspace({
                 {selectedExpense ? (
                   <ExpenseEditor
                     expense={selectedExpense}
-                    teamMembers={teamMembers}
+                    teamMembers={availableTeamMembers}
                     onUpdate={(patch) => updateExpense(selectedExpense.id, patch)}
                     onRemove={() => removeExpense(selectedExpense.id)}
                     onSelectTeamMember={(teamMemberId) =>
