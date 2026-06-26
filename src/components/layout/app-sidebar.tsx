@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  UsersRound, usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   CalendarDays,
   ClipboardList,
@@ -16,7 +15,8 @@ import {
   Settings,
   Users,
   Wallet,
-  X,
+  X,,
+  UsersRound,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
