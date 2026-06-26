@@ -232,7 +232,7 @@ function buildPdfHtml(demo: Demonstrative) {
     background: #f3f4f6;
     color: #111;
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 8.8pt;
+    font-size: 8.3pt;
     line-height: 1.18;
   }
 
@@ -245,9 +245,9 @@ function buildPdfHtml(demo: Demonstrative) {
   }
 
   .doc-block {
-    min-height: 118mm;
+    min-height: 103mm;
     border: 1.5px solid #111;
-    margin-bottom: 4mm;
+    margin-bottom: 3mm;
     overflow: hidden;
   }
 
@@ -259,7 +259,7 @@ function buildPdfHtml(demo: Demonstrative) {
     display: grid;
     grid-template-columns: 28mm 1fr;
     gap: 5mm;
-    padding: 3mm 5mm 2mm;
+    padding: 2.5mm 4mm 2mm;
   }
 
   .logo {
@@ -275,7 +275,7 @@ function buildPdfHtml(demo: Demonstrative) {
   }
 
   .header-text {
-    font-size: 8.6pt;
+    font-size: 8.2pt;
   }
 
   .doc-meta {
@@ -299,7 +299,7 @@ function buildPdfHtml(demo: Demonstrative) {
   .beneficiary {
     display: grid;
     grid-template-columns: 1.4fr 1fr;
-    padding: 2.4mm 4mm;
+    padding: 2mm 3mm;
     border-bottom: 1.5px solid #111;
     font-weight: 700;
   }
@@ -313,7 +313,7 @@ function buildPdfHtml(demo: Demonstrative) {
   th, td {
     border-right: 1px solid #111;
     border-bottom: 1px solid #111;
-    padding: 1.35mm;
+    padding: 1.1mm;
   }
 
   th:last-child, td:last-child {
@@ -347,13 +347,13 @@ function buildPdfHtml(demo: Demonstrative) {
     display: grid;
     grid-template-columns: 1fr 48mm;
     gap: 8mm;
-    padding: 2.2mm 4mm 1.5mm;
-    min-height: 13mm;
+    padding: 1.8mm 3mm 1mm;
+    min-height: 10mm;
   }
 
   .summary-values {
     text-align: right;
-    font-size: 9.4pt;
+    font-size: 9pt;
     line-height: 1.5;
   }
 
@@ -361,7 +361,7 @@ function buildPdfHtml(demo: Demonstrative) {
     display: grid;
     grid-template-columns: 1fr 70mm;
     gap: 8mm;
-    padding: 0 4mm 2mm;
+    padding: 0 3mm 1.5mm;
     align-items: end;
   }
 

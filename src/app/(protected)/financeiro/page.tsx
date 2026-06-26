@@ -49,7 +49,7 @@ export default async function FinancePage({
           </p>
         </div>
 
-        <AdministrativeDemonstratives />
+        <AdministrativeDemonstratives teamMembers={teamMembers} />
       </section>
     </PageContainer>
   );

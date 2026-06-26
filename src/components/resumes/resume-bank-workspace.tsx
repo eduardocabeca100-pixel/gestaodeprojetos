@@ -62,10 +62,62 @@ function safeText(value: unknown) {
 }
 
 
+
 type ApiTeamRow = Record<string, unknown>;
+
+function getNestedObjects(row: ApiTeamRow) {
+  const objects: ApiTeamRow[] = [row];
+
+  function pushObject(value: unknown) {
+    if (!value || Array.isArray(value) || typeof value !== "object") return;
+
+    const nested = value as ApiTeamRow;
+    objects.push(nested);
+
+    for (const secondLevel of Object.values(nested)) {
+      if (secondLevel && !Array.isArray(secondLevel) && typeof secondLevel === "object") {
+        objects.push(secondLevel as ApiTeamRow);
+      }
+    }
+  }
+
+  for (const value of Object.values(row)) {
+    pushObject(value);
+  }
+
+  return objects;
+}
+
+function pickApiValue(row: ApiTeamRow, keys: string[]) {
+  for (const objectValue of getNestedObjects(row)) {
+    for (const key of keys) {
+      const value = objectValue[key];
+
+      if (value !== null && value !== undefined && String(value).trim()) {
+        return value;
+      }
+    }
+  }
+
+  return "";
+}
 
 function flattenApiRows(payload: unknown): ApiTeamRow[] {
   const rows: ApiTeamRow[] = [];
+
+  function hasPersonName(row: ApiTeamRow) {
+    return Boolean(
+      pickApiValue(row, [
+        "name",
+        "full_name",
+        "fullName",
+        "member_name",
+        "person_name",
+        "display_name",
+        "nome",
+      ]),
+    );
+  }
 
   function walk(value: unknown) {
     if (!value) return;
@@ -78,20 +130,14 @@ function flattenApiRows(payload: unknown): ApiTeamRow[] {
     if (typeof value === "object") {
       const objectValue = value as ApiTeamRow;
 
-      const possibleName =
-        objectValue.name ||
-        objectValue.full_name ||
-        objectValue.fullName ||
-        objectValue.member_name ||
-        objectValue.person_name ||
-        objectValue.nome;
-
-      if (possibleName) {
+      if (hasPersonName(objectValue)) {
         rows.push(objectValue);
       }
 
       for (const nested of Object.values(objectValue)) {
-        if (Array.isArray(nested)) walk(nested);
+        if (nested && typeof nested === "object") {
+          walk(nested);
+        }
       }
     }
   }
@@ -102,27 +148,49 @@ function flattenApiRows(payload: unknown): ApiTeamRow[] {
 
   for (const row of rows) {
     const name = safeText(
-      row.name ||
-        row.full_name ||
-        row.fullName ||
-        row.member_name ||
-        row.person_name ||
-        row.nome,
+      pickApiValue(row, [
+        "name",
+        "full_name",
+        "fullName",
+        "member_name",
+        "person_name",
+        "display_name",
+        "nome",
+      ]),
     );
 
-    if (!name) continue;
+    if (!name || name === "Pessoa sem nome") continue;
 
     const role = safeText(
-      row.role ||
-        row.function ||
-        row.position ||
-        row.funcao ||
-        row.area ||
-        row.area_atuacao ||
-        row.rubric,
+      pickApiValue(row, [
+        "role",
+        "function",
+        "position",
+        "funcao",
+        "area",
+        "area_atuacao",
+        "rubric",
+        "category",
+        "description",
+      ]),
     );
 
-    const key = `${name.toLowerCase()}|${role.toLowerCase()}`;
+    const documentValue = safeText(
+      pickApiValue(row, [
+        "document",
+        "cpf",
+        "cnpj",
+        "cpf_cnpj",
+        "document_number",
+      ]),
+    );
+
+    const email = safeText(pickApiValue(row, ["email"]));
+
+    const key =
+      documentValue.toLowerCase() ||
+      email.toLowerCase() ||
+      `${name.toLowerCase()}|${role.toLowerCase()}`;
 
     map.set(key, row);
   }
@@ -132,35 +200,52 @@ function flattenApiRows(payload: unknown): ApiTeamRow[] {
 
 function apiRowToResumePerson(row: ApiTeamRow): ResumePerson {
   const name = safeText(
-    row.name ||
-      row.full_name ||
-      row.fullName ||
-      row.member_name ||
-      row.person_name ||
-      row.nome,
+    pickApiValue(row, [
+      "name",
+      "full_name",
+      "fullName",
+      "member_name",
+      "person_name",
+      "display_name",
+      "nome",
+    ]),
   );
 
   const area = safeText(
-    row.role ||
-      row.function ||
-      row.position ||
-      row.funcao ||
-      row.area ||
-      row.area_atuacao ||
-      row.rubric,
+    pickApiValue(row, [
+      "role",
+      "function",
+      "position",
+      "funcao",
+      "area",
+      "area_atuacao",
+      "rubric",
+      "category",
+      "description",
+    ]),
   );
 
   return {
-    id: `api-team-${safeText(row.id || row.member_id || row.person_id || name).replace(/\s+/g, "-").toLowerCase()}`,
+    id: `api-team-${safeText(
+      pickApiValue(row, ["id", "member_id", "person_id", "team_roster_id", "teamRosterId"]) || name,
+    )
+      .replace(/\s+/g, "-")
+      .toLowerCase()}`,
     name: name || "Pessoa sem nome",
     area: area || "Equipe",
-    formation: safeText(row.formation || row.formacao),
-    courses: safeText(row.courses || row.cursos),
-    actingTime: safeText(row.actingTime || row.acting_time || row.tempo_atuacao),
-    experience: safeText(row.experience || row.experiencia || row.notes || row.description),
-    works: safeText(row.works || row.trabalhos || row.projects || row.projetos),
-    additionalInfo: safeText(row.additionalInfo || row.additional_info || row.observations),
-    cityState: safeText(row.cityState || row.city_state || row.city || row.cidade) || "Jaraguá do Sul/SC",
+    formation: safeText(pickApiValue(row, ["formation", "formacao"])),
+    courses: safeText(pickApiValue(row, ["courses", "cursos"])),
+    actingTime: safeText(pickApiValue(row, ["actingTime", "acting_time", "tempo_atuacao"])),
+    experience: safeText(
+      pickApiValue(row, ["experience", "experiencia", "notes", "description", "observations"]),
+    ),
+    works: safeText(pickApiValue(row, ["works", "trabalhos", "projects", "projetos"])),
+    additionalInfo: safeText(
+      pickApiValue(row, ["additionalInfo", "additional_info", "observations", "notes"]),
+    ),
+    cityState:
+      safeText(pickApiValue(row, ["cityState", "city_state", "city", "cidade", "location"])) ||
+      "Jaraguá do Sul/SC",
     files: [],
     source: "project",
   };
