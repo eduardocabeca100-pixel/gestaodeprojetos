@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  usePathname,
-  useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import type { ComponentType } from "react";
 import {
   Bell,
@@ -45,7 +43,7 @@ const navigation: SidebarItem[] = [
   { label: "Diário de classe", href: "/diario-de-classe", icon: ClipboardList, projectScoped: true },
   { label: "Financeiro", href: "/financeiro", icon: Wallet, projectScoped: true },
   { label: "Equipe", href: "/equipe", icon: Users, projectScoped: true },
-  { label: "Banco de Currículos", href: "/banco-de-curriculos", icon: UsersRound },
+  { label: "Banco de Currículos", href: "/banco-de-curriculos", icon: UsersRound, projectScoped: true },
   { label: "Participantes", href: "/participantes", icon: Users, projectScoped: true },
   { label: "Mídia", href: "/midia", icon: ImageIcon, projectScoped: true },
   { label: "Notificações", href: "/notificacoes", icon: Bell, projectScoped: true },
@@ -79,17 +77,14 @@ export function AppSidebar({ profile }: { profile?: CurrentProfile | null }) {
   const activeProjectId = searchParams.get("project");
 
   function buildHref(item: SidebarItem) {
-    if (!item.projectScoped || !activeProjectId) {
-      return item.href;
-    }
-
+    if (!item.projectScoped || !activeProjectId) return item.href;
     return `${item.href}?project=${activeProjectId}`;
   }
 
   return (
     <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-white/10 bg-[#070b24] text-white shadow-2xl lg:flex lg:flex-col">
       <div className="flex h-full flex-col px-3 py-5">
-        <Link href="/dashboard" className="mb-6 block">
+        <Link href="/dashboard" className="mb-6 block px-2">
           <div className="text-3xl font-black tracking-tight">VIVA</div>
           <div className="mt-1 text-xs font-black uppercase tracking-[0.32em] text-white/55">
             Gestão Cultural

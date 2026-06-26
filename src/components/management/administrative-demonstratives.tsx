@@ -1,18 +1,23 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { Download, Plus, ReceiptText, Trash2, UsersRound } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Download, Plus, Receipt, Trash2, UserRound } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { escapePdfHtml, getPdfSettings } from "@/lib/pdf/pdf-template";
-import { getActiveProjectScope, projectScopedKey } from "@/lib/project-scope";
-import { formatCurrency } from "@/lib/utils/format-currency";
-
-type Item = {
+type DemonstrativePerson = {
   id: string;
-  quantity: number;
+  type: "Equipe" | "Fornecedor";
+  name: string;
+  document: string;
+  role: string;
+  phone: string;
+  address: string;
+};
+
+type DemonstrativeItem = {
+  id: string;
+  quantity: string;
   description: string;
-  unitValue: number;
+  unitValue: string;
 };
 
 type Demonstrative = {
@@ -23,561 +28,281 @@ type Demonstrative = {
   issueDate: string;
   dueDate: string;
   competence: string;
-  project: string;
-  recipientType: "Equipe" | "Fornecedor";
-  recipientName: string;
-  recipientDocument: string;
-  recipientAddress: string;
-  recipientPhone: string;
-  associateCode: string;
-  issuerName: string;
-  issuerAddress: string;
-  issuerContactLine: string;
-  issuerDocumentLine: string;
+  status: string;
+  payerName: string;
+  payerDocument: string;
+  payerAddress: string;
+  payerContact: string;
+  person: DemonstrativePerson;
+  items: DemonstrativeItem[];
   reference: string;
-  paymentNote: string;
-  status: "Rascunho" | "Emitido" | "Pago" | "Vencido";
-  items: Item[];
 };
-
-declare global {
-  interface Window {
-    __vivaOriginalOpen?: typeof window.open;
-  }
-}
-
-type TeamPerson = {
-  name: string;
-  role?: string;
-  document?: string;
-  phone?: string;
-  address?: string;
-};
-
-const storageKeyBase = "viva:central-cultural:demonstratives:v4";
 
 function makeId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function readJson<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") return fallback;
-
-  try {
-    const saved = window.localStorage.getItem(key);
-    return saved ? (JSON.parse(saved) as T) : fallback;
-  } catch {
-    return fallback;
-  }
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
 }
 
-function readTeamPeople(): TeamPerson[] {
-  const roster = readJson<Array<Record<string, unknown>>>("viva:team-roster:v1", []);
-
-  return roster
-    .map((person) => ({
-      name: String(person.name || person.fullName || "Pessoa sem nome"),
-      role: String(person.role || person.rubric || ""),
-      document: String(person.cpf || person.cnpj || person.document || ""),
-      phone: String(person.phone || person.telefone || ""),
-      address: String(person.address || person.endereco || ""),
-    }))
-    .filter((person) => person.name !== "Pessoa sem nome");
+function monthCompetence() {
+  return new Intl.DateTimeFormat("pt-BR", {
+    month: "long",
+    year: "numeric",
+  }).format(new Date());
 }
 
-function getIssuerDefaults() {
-  const settings = getPdfSettings();
-  const contact = [
-    settings.phone ? `Fone: ${settings.phone}` : "",
-    settings.site || "",
-    settings.email || "",
-  ].filter(Boolean);
-
-  return {
-    issuerName: settings.companyName || "Cia de Artes Viva",
-    issuerAddress: settings.cityUf || "Jaraguá do Sul | SC",
-    issuerContactLine: contact.join(" - ") || "Contato não informado",
-    issuerDocumentLine: settings.cnpj ? `CNPJ: ${settings.cnpj}` : "CNPJ/CPF: preencher no cadastro da companhia",
-  };
-}
-
-function newDemo(index: number): Demonstrative {
-  const today = new Date().toISOString().slice(0, 10);
-  const project = getActiveProjectScope();
-  const issuer = getIssuerDefaults();
-
-  return {
-    id: makeId("demo"),
-    number: String(index).padStart(4, "0"),
-    docNumber: String(Date.now()).slice(-6),
-    nfNumber: "",
-    issueDate: today,
-    dueDate: today,
-    competence: today.slice(0, 7),
-    project: project.name,
-    recipientType: "Equipe",
-    recipientName: "",
-    recipientDocument: "",
-    recipientAddress: "",
-    recipientPhone: "",
-    associateCode: "",
-    ...issuer,
-    reference: `[${project.name}] Serviço/atividade vinculada ao projeto cultural`,
-    paymentNote: "A quitação deste recibo se dará mediante comprovante de pagamento.",
-    status: "Rascunho",
-    items: [
-      {
-        id: makeId("item"),
-        quantity: 1,
-        description: "Prestação de serviço cultural",
-        unitValue: 0,
-      },
-    ],
-  };
-}
-
-function normalizeDemo(demo: Partial<Demonstrative>, index: number): Demonstrative {
-  const base = newDemo(index + 1);
-
-  return {
-    ...base,
-    ...demo,
-    id: demo.id || base.id,
-    nfNumber: demo.nfNumber || "",
-    associateCode: demo.associateCode || "",
-    issuerName: demo.issuerName || base.issuerName,
-    issuerAddress: demo.issuerAddress || base.issuerAddress,
-    issuerContactLine: demo.issuerContactLine || base.issuerContactLine,
-    issuerDocumentLine: demo.issuerDocumentLine || base.issuerDocumentLine,
-    paymentNote: demo.paymentNote || base.paymentNote,
-    reference: demo.reference || base.reference,
-    items: Array.isArray(demo.items) && demo.items.length ? demo.items : base.items,
-  };
-}
-
-function total(demo: Demonstrative) {
-  return demo.items.reduce(
-    (sum, item) => sum + Number(item.quantity || 0) * Number(item.unitValue || 0),
-    0,
-  );
-}
-
-function formatDateBr(value: string) {
+function formatDate(value: string) {
+  if (!value) return "-";
   const [year, month, day] = value.split("-");
-
-  if (!year || !month || !day) {
-    return value;
-  }
-
+  if (!year || !month || !day) return value;
   return `${day}/${month}/${year}`;
 }
 
-function formatCompetence(value: string) {
-  const [year, month] = value.split("-");
-
-  if (!year || !month) {
-    return value;
-  }
-
-  return `${month}/${year}`;
+function numberValue(value: string) {
+  const parsed = Number(String(value || "0").replace(",", "."));
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function printPdf(demo: Demonstrative) {
-  const settings = getPdfSettings();
-  const safe = escapePdfHtml;
-  const primary = settings.primaryColor || "#2f6b2f";
-  const dark = settings.titleColor || "#173819";
-  const totalValue = total(demo);
+function currency(value: number) {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(value);
+}
 
-  const rows = demo.items
+function escapeHtml(value: string) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+const initialDemonstrative: Demonstrative = {
+  id: "demo-1",
+  number: "0001",
+  docNumber: "411391",
+  nfNumber: "",
+  issueDate: todayIso(),
+  dueDate: todayIso(),
+  competence: monthCompetence(),
+  status: "Rascunho",
+  payerName: "Cia de Artes Viva",
+  payerDocument: "CNPJ/CPF: preencher no cadastro",
+  payerAddress: "Jaraguá do Sul | SC",
+  payerContact: "Fone: (47) 992747545 - www.ciaviva.com - eduardo@ciaviva.com",
+  person: {
+    id: "person-1",
+    type: "Equipe",
+    name: "Julia Titz",
+    document: "",
+    role: "Atriz",
+    phone: "",
+    address: "Endereço não informado",
+  },
+  items: [
+    {
+      id: "item-1",
+      quantity: "1",
+      description: "PRESTAÇÃO DE SERVIÇO CULTURAL",
+      unitValue: "0",
+    },
+  ],
+  reference: "Serviços prestados ao projeto cultural. A quitação deste recibo se dará mediante comprovante de pagamento.",
+};
+
+function buildPdfHtml(demonstrative: Demonstrative) {
+  const total = demonstrative.items.reduce((sum, item) => {
+    return sum + numberValue(item.quantity) * numberValue(item.unitValue);
+  }, 0);
+
+  const rows = demonstrative.items
     .map((item) => {
-      const itemTotal = Number(item.quantity || 0) * Number(item.unitValue || 0);
+      const quantity = numberValue(item.quantity);
+      const unit = numberValue(item.unitValue);
+      const subtotal = quantity * unit;
 
       return `
         <tr>
-          <td class="qty">${safe(String(item.quantity || 0))}</td>
-          <td class="desc">${safe(item.description)}</td>
-          <td class="money">${safe(formatCurrency(item.unitValue))}</td>
-          <td class="money">${safe(formatCurrency(itemTotal))}</td>
+          <td>${escapeHtml(item.quantity)}</td>
+          <td>${escapeHtml(item.description)}</td>
+          <td>${currency(unit)}</td>
+          <td>${currency(subtotal)}</td>
         </tr>
       `;
     })
     .join("");
 
-  const logo = settings.logoDataUrl
-    ? `<img src="${settings.logoDataUrl}" alt="Logo" />`
-    : `<span>VIVA</span>`;
-
-  const html = `<!doctype html>
+  return `<!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <title>demonstrativo-${safe(demo.number)}.pdf</title>
-  <style>
-    @page {
-      size: A4 landscape;
-      margin: 8mm;
-    }
-
-    * {
-      box-sizing: border-box;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
-
-    body {
-      margin: 0;
-      background: #f3f4f6;
-      color: #111827;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 10.5pt;
-    }
-
-    .actions {
-      position: fixed;
-      top: 18px;
-      right: 18px;
-      z-index: 20;
-    }
-
-    .actions button {
-      border: 0;
-      border-radius: 999px;
-      padding: 12px 18px;
-      background: ${primary};
-      color: white;
-      font-weight: 900;
-      cursor: pointer;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.22);
-    }
-
-    .sheet {
-      width: 277mm;
-      min-height: 190mm;
-      margin: 18px auto;
-      background: white;
-      border: 1.5px solid #111827;
-      box-shadow: 0 24px 70px rgba(0,0,0,0.22);
-    }
-
-    .header {
-      display: grid;
-      grid-template-columns: 33mm 1fr;
-      gap: 8mm;
-      padding: 7mm 10mm 4mm;
-      border-bottom: 1.4px solid #111827;
-    }
-
-    .logo {
-      width: 25mm;
-      height: 25mm;
-      display: grid;
-      place-items: center;
-      border-radius: 50%;
-      overflow: hidden;
-      background: ${primary};
-      color: white;
-      font-size: 12pt;
-      font-weight: 950;
-      text-align: center;
-    }
-
-    .logo img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: white;
-      padding: 2mm;
-    }
-
-    .issuer h1 {
-      margin: 0;
-      color: ${dark};
-      font-size: 16pt;
-      line-height: 1.05;
-      text-transform: uppercase;
-    }
-
-    .issuer p {
-      margin: 1mm 0 0;
-      line-height: 1.25;
-      font-size: 9.7pt;
-    }
-
-    .issuer .doc-title {
-      margin-top: 2mm;
-      color: ${primary};
-      font-weight: 950;
-      text-transform: uppercase;
-    }
-
-    .meta {
-      display: grid;
-      grid-template-columns: 1.1fr 1fr 0.8fr 1fr 1fr;
-      border-bottom: 1.4px solid #111827;
-      font-weight: 900;
-      font-size: 9.8pt;
-    }
-
-    .meta div {
-      padding: 3mm 4mm;
-      border-right: 1px solid #cbd5e1;
-    }
-
-    .meta div:last-child {
-      border-right: 0;
-    }
-
-    .meta span {
-      display: block;
-      color: ${dark};
-      font-size: 8.5pt;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .recipient {
-      display: grid;
-      grid-template-columns: 1fr 86mm;
-      gap: 5mm;
-      padding: 4mm 5mm;
-      border-bottom: 1.4px solid #111827;
-      font-size: 10pt;
-      line-height: 1.35;
-    }
-
-    .recipient-name {
-      font-size: 11pt;
-      font-weight: 950;
-      text-transform: uppercase;
-    }
-
-    .recipient strong {
-      font-weight: 950;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-    }
-
-    thead th {
-      padding: 1.5mm 2mm;
-      border-bottom: 1.4px solid #111827;
-      border-right: 1px solid #111827;
-      font-size: 10.5pt;
-      text-align: center;
-    }
-
-    thead th:last-child {
-      border-right: 0;
-    }
-
-    tbody td {
-      padding: 2.4mm 3mm;
-      border-right: 1px solid #e5e7eb;
-      vertical-align: top;
-      font-size: 10pt;
-    }
-
-    tbody td:last-child {
-      border-right: 0;
-    }
-
-    tbody tr:last-child td {
-      padding-bottom: 36mm;
-    }
-
-    .qty {
-      width: 23mm;
-      text-align: center;
-    }
-
-    .desc {
-      text-transform: uppercase;
-      font-family: "Courier New", monospace;
-    }
-
-    .money {
-      width: 38mm;
-      text-align: right;
-      white-space: nowrap;
-      font-family: "Courier New", monospace;
-    }
-
-    .footer {
-      border-top: 1.4px solid #111827;
-      padding: 3mm 5mm 5mm;
-      font-size: 10pt;
-    }
-
-    .total-grid {
-      display: grid;
-      grid-template-columns: 1fr 80mm;
-      gap: 8mm;
-      align-items: start;
-    }
-
-    .recipient-total {
-      font-weight: 950;
-      text-transform: uppercase;
-    }
-
-    .total-row {
-      display: grid;
-      grid-template-columns: 1fr 34mm;
-      gap: 5mm;
-      font-size: 11pt;
-      font-weight: 950;
-    }
-
-    .total-row span:last-child {
-      text-align: right;
-    }
-
-    .competence {
-      display: grid;
-      grid-template-columns: 1fr 80mm;
-      gap: 8mm;
-      margin-top: 2mm;
-    }
-
-    .reference {
-      margin-top: 2mm;
-      text-transform: uppercase;
-    }
-
-    .payment {
-      margin-top: 2mm;
-      color: #374151;
-      font-size: 9.2pt;
-    }
-
-    .status {
-      display: inline-block;
-      margin-left: 3mm;
-      border-radius: 999px;
-      padding: 1mm 2.5mm;
-      background: rgba(47, 107, 47, 0.1);
-      color: ${primary};
-      font-size: 8pt;
-      font-weight: 950;
-      letter-spacing: 0.08em;
-    }
-
-    @media print {
-      body {
-        background: white;
-      }
-
-      .actions {
-        display: none;
-      }
-
-      .sheet {
-        margin: 0;
-        width: auto;
-        min-height: auto;
-        box-shadow: none;
-      }
-    }
-  </style>
+<meta charset="utf-8" />
+<title>Demonstrativo ${escapeHtml(demonstrative.number)}</title>
+<style>
+  @page { size: A4; margin: 14mm; }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    margin: 0;
+    background: #f3f4f6;
+    color: #111827;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.25;
+  }
+  .sheet {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 16px auto;
+    background: #fff;
+    padding: 14mm;
+    box-shadow: 0 20px 60px rgba(0,0,0,.12);
+  }
+  .box {
+    border: 1.5px solid #111827;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .header {
+    display: grid;
+    grid-template-columns: 34mm 1fr;
+    gap: 8mm;
+    padding: 8mm;
+    border-bottom: 1.5px solid #111827;
+  }
+  .logo {
+    width: 24mm;
+    height: 24mm;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #173b8f;
+    color: #fff;
+    font-weight: 900;
+  }
+  h1 {
+    margin: 0;
+    font-size: 15pt;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+  .muted { color: #4b5563; }
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    border-bottom: 1.5px solid #111827;
+  }
+  .meta div {
+    padding: 3mm;
+    border-right: 1px solid #111827;
+    font-size: 9pt;
+    font-weight: 700;
+  }
+  .meta div:last-child { border-right: 0; }
+  .person {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 1.5px solid #111827;
+  }
+  .person div {
+    padding: 4mm;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th, td {
+    border-right: 1px solid #111827;
+    border-bottom: 1px solid #111827;
+    padding: 3mm;
+    text-align: left;
+  }
+  th:last-child, td:last-child { border-right: 0; }
+  th {
+    background: #f3f4f6;
+    font-weight: 900;
+  }
+  .total {
+    padding: 5mm;
+    text-align: right;
+    font-size: 13pt;
+    font-weight: 900;
+  }
+  .footer {
+    padding: 5mm;
+    border-top: 1.5px solid #111827;
+    font-size: 9.5pt;
+  }
+  @media print {
+    body { background: #fff; }
+    .sheet { margin: 0; box-shadow: none; }
+  }
+</style>
 </head>
 <body>
-  <div class="actions">
-    <button onclick="window.print()">Salvar como PDF</button>
-  </div>
-
-  <main class="sheet">
-    <header class="header">
-      <div class="logo">${logo}</div>
-      <div class="issuer">
-        <h1>${safe(demo.issuerName)}</h1>
-        <p>${safe(demo.issuerAddress)}</p>
-        <p>${safe(demo.issuerContactLine)}</p>
-        <p>${safe(demo.issuerDocumentLine)}</p>
-        <p class="doc-title">Demonstrativo administrativo <span class="status">${safe(demo.status)}</span></p>
-      </div>
-    </header>
-
-    <section class="meta">
-      <div><span>Demonstrativo Nº</span>${safe(demo.number)}</div>
-      <div><span>Nº Doc.</span>${safe(demo.docNumber)}</div>
-      <div><span>Nº NF.</span>${safe(demo.nfNumber || "-")}</div>
-      <div><span>Emissão</span>${safe(formatDateBr(demo.issueDate))}</div>
-      <div><span>Vencimento</span>${safe(formatDateBr(demo.dueDate))}</div>
-    </section>
-
-    <section class="recipient">
-      <div>
-        <div class="recipient-name">${safe(demo.recipientName || demo.recipientType)}</div>
-        <div>${safe(demo.recipientAddress || "Endereço não informado")}</div>
-      </div>
-      <div>
-        <div><strong>CPF/CNPJ:</strong> ${safe(demo.recipientDocument || "não informado")}</div>
-        <div><strong>Fone:</strong> ${safe(demo.recipientPhone || "não informado")}</div>
-        <div><strong>Cód. Assoc.:</strong> ${safe(demo.associateCode || "-")}</div>
-      </div>
-    </section>
-
-    <table>
-      <thead>
-        <tr>
-          <th class="qty">Quant.</th>
-          <th>Discriminação</th>
-          <th class="money">Valor Unitário</th>
-          <th class="money">Valor Total</th>
-        </tr>
-      </thead>
-      <tbody>${rows}</tbody>
-    </table>
-
-    <footer class="footer">
-      <div class="total-grid">
-        <div class="recipient-total">
-          ${safe(demo.recipientName || demo.recipientType)}${demo.associateCode ? ` (${safe(demo.associateCode)})` : ""}
-        </div>
-        <div class="total-row">
-          <span>TOTAL:</span>
-          <span>${safe(formatCurrency(totalValue))}</span>
+  <section class="sheet">
+    <div class="box">
+      <div class="header">
+        <div class="logo">VIVA</div>
+        <div>
+          <h1>${escapeHtml(demonstrative.payerName)}</h1>
+          <p class="muted">Demonstrativo administrativo de pagamento</p>
+          <p>${escapeHtml(demonstrative.payerAddress)}</p>
+          <p>${escapeHtml(demonstrative.payerContact)}</p>
+          <p>${escapeHtml(demonstrative.payerDocument)}</p>
         </div>
       </div>
 
-      <div class="competence">
-        <div><strong>Ref. competência:</strong> ${safe(formatCompetence(demo.competence))}</div>
-        <div class="total-row">
-          <span>VALOR PARCELAS:</span>
-          <span>${safe(formatCurrency(totalValue))}</span>
+      <div class="meta">
+        <div>Nº ${escapeHtml(demonstrative.number)}</div>
+        <div>Doc. ${escapeHtml(demonstrative.docNumber)}</div>
+        <div>NF ${escapeHtml(demonstrative.nfNumber || "-")}</div>
+        <div>${formatDate(demonstrative.issueDate)}</div>
+        <div>${formatDate(demonstrative.dueDate)}</div>
+      </div>
+
+      <div class="person">
+        <div>
+          <strong>${escapeHtml(demonstrative.person.name)}</strong><br />
+          ${escapeHtml(demonstrative.person.role)}<br />
+          ${escapeHtml(demonstrative.person.address)}
+        </div>
+        <div>
+          <strong>CPF/CNPJ:</strong> ${escapeHtml(demonstrative.person.document || "-")}<br />
+          <strong>Fone:</strong> ${escapeHtml(demonstrative.person.phone || "-")}<br />
+          <strong>Status:</strong> ${escapeHtml(demonstrative.status)}
         </div>
       </div>
 
-      <div class="reference"><strong>Referência:</strong> ${safe(demo.reference)}</div>
-      <div class="payment">${safe(demo.paymentNote)}</div>
-    </footer>
-  </main>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 18mm;">Quant.</th>
+            <th>Discriminação</th>
+            <th style="width: 32mm;">Unit.</th>
+            <th style="width: 32mm;">Total</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+      <div class="total">TOTAL: ${currency(total)}</div>
+
+      <div class="footer">
+        <p><strong>Ref. competência:</strong> ${escapeHtml(demonstrative.competence)}</p>
+        <p><strong>Referência:</strong> ${escapeHtml(demonstrative.reference)}</p>
+      </div>
+    </div>
+  </section>
 </body>
 </html>`;
-
-  const originalOpen = window.__vivaOriginalOpen?.bind(window) ?? window.open.bind(window);
-  const win = originalOpen("", "_blank", "noopener,noreferrer,width=1200,height=850");
-
-  if (!win) {
-    window.alert("Não foi possível preparar o demonstrativo.");
-    return;
-  }
-
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
-  win.focus();
 }
 
-
-function printDemonstrativeWithoutPopup(html: string) {
+function printDemonstrative(html: string) {
   if (typeof window === "undefined") return;
 
-  const frameId = "viva-demonstrative-print-frame";
+  const frameId = "viva-demonstrative-frame";
   const oldFrame = window.document.getElementById(frameId);
   oldFrame?.remove();
 
@@ -617,595 +342,362 @@ function printDemonstrativeWithoutPopup(html: string) {
     }
 
     window.setTimeout(() => iframe.remove(), 1500);
-  }, 450);
+  }, 300);
 }
-
-
-
-function createDemonstrativePrintTarget() {
-  let html = "";
-  let printed = false;
-
-  function printHtml() {
-    if (printed || !html.trim() || typeof window === "undefined") return;
-    printed = true;
-
-    const frameId = "viva-demonstrative-print-frame";
-    const oldFrame = window.document.getElementById(frameId);
-    oldFrame?.remove();
-
-    const iframe = window.document.createElement("iframe");
-    iframe.id = frameId;
-    iframe.title = "Demonstrativo";
-    iframe.style.position = "fixed";
-    iframe.style.right = "0";
-    iframe.style.bottom = "0";
-    iframe.style.width = "0";
-    iframe.style.height = "0";
-    iframe.style.border = "0";
-    iframe.style.opacity = "0";
-    iframe.style.pointerEvents = "none";
-
-    window.document.body.appendChild(iframe);
-
-    const frameWindow = iframe.contentWindow;
-    const frameDocument = frameWindow?.document;
-
-    if (!frameWindow || !frameDocument) {
-      window.alert("Não foi possível preparar o demonstrativo.");
-      iframe.remove();
-      return;
-    }
-
-    frameDocument.open();
-    frameDocument.write(html);
-    frameDocument.close();
-
-    window.setTimeout(() => {
-      try {
-        frameWindow.focus();
-        frameWindow.print();
-      } catch {
-        window.alert("Não foi possível abrir a impressão do demonstrativo.");
-      }
-
-      window.setTimeout(() => iframe.remove(), 1500);
-    }, 450);
-  }
-
-  return {
-    document: {
-      open() {
-        html = "";
-      },
-      write(value: string) {
-        html += String(value ?? "");
-      },
-      close() {
-        printHtml();
-      },
-    },
-    focus() {},
-    print() {
-      printHtml();
-    },
-  } as unknown as Window;
-}
-
-
-
-function createPrintIframeTarget(title = "Demonstrativo") {
-  let html = "";
-  let printed = false;
-
-  function printHtml() {
-    if (printed || !html.trim() || typeof window === "undefined") return;
-    printed = true;
-
-    const frameId = "viva-no-popup-print-frame";
-    const oldFrame = window.document.getElementById(frameId);
-    oldFrame?.remove();
-
-    const iframe = window.document.createElement("iframe");
-    iframe.id = frameId;
-    iframe.title = title;
-    iframe.style.position = "fixed";
-    iframe.style.right = "0";
-    iframe.style.bottom = "0";
-    iframe.style.width = "0";
-    iframe.style.height = "0";
-    iframe.style.border = "0";
-    iframe.style.opacity = "0";
-    iframe.style.pointerEvents = "none";
-
-    window.document.body.appendChild(iframe);
-
-    const frameWindow = iframe.contentWindow;
-    const frameDocument = frameWindow?.document;
-
-    if (!frameWindow || !frameDocument) {
-      window.alert("Não foi possível preparar o PDF.");
-      iframe.remove();
-      return;
-    }
-
-    frameDocument.open();
-    frameDocument.write(html);
-    frameDocument.close();
-
-    window.setTimeout(() => {
-      try {
-        frameWindow.focus();
-        frameWindow.print();
-      } catch {
-        window.alert("Não foi possível abrir a impressão do PDF.");
-      }
-
-      window.setTimeout(() => iframe.remove(), 1500);
-    }, 450);
-  }
-
-  return {
-    document: {
-      open() {
-        html = "";
-      },
-      write(value: string) {
-        html += String(value ?? "");
-      },
-      close() {
-        printHtml();
-      },
-    },
-    focus() {},
-    print() {
-      printHtml();
-    },
-  } as unknown as Window;
-}
-
-
-
-function createNoPopupPrintWindow(title = "PDF") {
-  let html = "";
-  let alreadyPrinted = false;
-
-  function printHtml() {
-    if (alreadyPrinted || !html.trim() || typeof window === "undefined") return;
-    alreadyPrinted = true;
-
-    const frameId = "viva-no-popup-print-frame";
-    const oldFrame = window.document.getElementById(frameId);
-    oldFrame?.remove();
-
-    const iframe = window.document.createElement("iframe");
-    iframe.id = frameId;
-    iframe.title = title;
-    iframe.style.position = "fixed";
-    iframe.style.right = "0";
-    iframe.style.bottom = "0";
-    iframe.style.width = "0";
-    iframe.style.height = "0";
-    iframe.style.border = "0";
-    iframe.style.opacity = "0";
-    iframe.style.pointerEvents = "none";
-
-    window.document.body.appendChild(iframe);
-
-    const frameWindow = iframe.contentWindow;
-    const frameDocument = frameWindow?.document;
-
-    if (!frameWindow || !frameDocument) {
-      window.alert("Não foi possível preparar o PDF.");
-      iframe.remove();
-      return;
-    }
-
-    frameDocument.open();
-    frameDocument.write(html);
-    frameDocument.close();
-
-    window.setTimeout(() => {
-      try {
-        frameWindow.focus();
-        frameWindow.print();
-      } catch {
-        window.alert("Não foi possível abrir a impressão do PDF.");
-      }
-
-      window.setTimeout(() => iframe.remove(), 1500);
-    }, 450);
-  }
-
-  return {
-    document: {
-      open() {
-        html = "";
-      },
-      write(value: string) {
-        html += String(value ?? "");
-      },
-      close() {
-        printHtml();
-      },
-    },
-    focus() {},
-    print() {
-      printHtml();
-    },
-  } as unknown as Window;
-}
-
 
 export function AdministrativeDemonstratives() {
-  const [items, setItems] = useState<Demonstrative[]>([newDemo(1)]);
-  const [selectedId, setSelectedId] = useState("");
-  const [team, setTeam] = useState<TeamPerson[]>([]);
+  const [demonstratives, setDemonstratives] = useState<Demonstrative[]>([initialDemonstrative]);
+  const [activeId, setActiveId] = useState(initialDemonstrative.id);
 
-  useEffect(() => {
-    const handle = window.setTimeout(() => {
-      const savedV4 = readJson<Array<Partial<Demonstrative>>>(projectScopedKey(storageKeyBase), []);
-      const savedV3 = readJson<Array<Partial<Demonstrative>>>(
-        projectScopedKey("viva:central-cultural:demonstratives:v3"),
-        [],
-      );
+  const active = demonstratives.find((item) => item.id === activeId) ?? demonstratives[0];
 
-      const saved = savedV4.length ? savedV4 : savedV3;
-      const next = saved.length ? saved.map(normalizeDemo) : [newDemo(1)];
-
-      setItems(next);
-      setSelectedId(next[0]?.id ?? "");
-      setTeam(readTeamPeople());
-      window.localStorage.setItem(projectScopedKey(storageKeyBase), JSON.stringify(next));
+  const total = useMemo(() => {
+    return active.items.reduce((sum, item) => {
+      return sum + numberValue(item.quantity) * numberValue(item.unitValue);
     }, 0);
+  }, [active]);
 
-    return () => window.clearTimeout(handle);
-  }, []);
-
-  function commit(next: Demonstrative[]) {
-    setItems(next);
-    window.localStorage.setItem(projectScopedKey(storageKeyBase), JSON.stringify(next));
+  function updateActive(patch: Partial<Demonstrative>) {
+    setDemonstratives((current) =>
+      current.map((item) =>
+        item.id === active.id ? { ...item, ...patch } : item,
+      ),
+    );
   }
 
-  const selected = items.find((item) => item.id === selectedId) ?? items[0];
-
-  function update(patch: Partial<Demonstrative>) {
-    if (!selected) return;
-    commit(items.map((item) => (item.id === selected.id ? { ...item, ...patch } : item)));
-  }
-
-  function updateItem(itemId: string, patch: Partial<Item>) {
-    if (!selected) return;
-
-    update({
-      items: selected.items.map((item) => (item.id === itemId ? { ...item, ...patch } : item)),
+  function updatePerson(patch: Partial<DemonstrativePerson>) {
+    updateActive({
+      person: {
+        ...active.person,
+        ...patch,
+      },
     });
   }
 
-  function addDemo(type: "Equipe" | "Fornecedor") {
-    const next = {
-      ...newDemo(items.length + 1),
-      recipientType: type,
-    };
-
-    commit([next, ...items]);
-    setSelectedId(next.id);
+  function updateItem(itemId: string, patch: Partial<DemonstrativeItem>) {
+    updateActive({
+      items: active.items.map((item) =>
+        item.id === itemId ? { ...item, ...patch } : item,
+      ),
+    });
   }
 
-  if (!selected) {
-    return null;
+  function addItem() {
+    updateActive({
+      items: [
+        ...active.items,
+        {
+          id: makeId("item"),
+          quantity: "1",
+          description: "PRESTAÇÃO DE SERVIÇO CULTURAL",
+          unitValue: "0",
+        },
+      ],
+    });
+  }
+
+  function removeItem(itemId: string) {
+    updateActive({
+      items: active.items.filter((item) => item.id !== itemId),
+    });
+  }
+
+  function addDemonstrative(type: DemonstrativePerson["type"]) {
+    const next: Demonstrative = {
+      ...initialDemonstrative,
+      id: makeId("demo"),
+      number: String(demonstratives.length + 1).padStart(4, "0"),
+      person: {
+        ...initialDemonstrative.person,
+        id: makeId("person"),
+        type,
+        name: type === "Equipe" ? "Nova pessoa da equipe" : "Novo fornecedor",
+      },
+    };
+
+    setDemonstratives((current) => [next, ...current]);
+    setActiveId(next.id);
+  }
+
+  function removeActive() {
+    if (demonstratives.length <= 1) return;
+    const next = demonstratives.filter((item) => item.id !== active.id);
+    setDemonstratives(next);
+    setActiveId(next[0].id);
+  }
+
+  function generatePdf() {
+    printDemonstrative(buildPdfHtml(active));
   }
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)_430px]">
-      <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+    <div className="grid gap-5 xl:grid-cols-[300px_minmax(0,1fr)_360px]">
+      <section className="rounded-3xl border border-slate-200 bg-white p-4">
         <h3 className="text-lg font-black text-slate-950">Demonstrativos</h3>
-        <p className="mt-1 text-sm text-slate-500">Equipe e fornecedores.</p>
+        <p className="text-sm text-slate-500">Equipe e fornecedores.</p>
 
         <div className="mt-4 grid gap-2">
-          <Button type="button" onClick={() => addDemo("Equipe")}>
-            <UsersRound className="size-4" />
+          <button type="button" className="btn-primary justify-center" onClick={() => addDemonstrative("Equipe")}>
+            <UserRound className="size-4" />
             Novo para equipe
-          </Button>
-          <Button type="button" variant="outline" onClick={() => addDemo("Fornecedor")}>
+          </button>
+
+          <button type="button" className="btn-secondary justify-center" onClick={() => addDemonstrative("Fornecedor")}>
             <Plus className="size-4" />
             Novo fornecedor
-          </Button>
+          </button>
         </div>
 
-        <div className="mt-5 space-y-2">
-          {items.map((demo) => (
+        <div className="mt-4 space-y-2">
+          {demonstratives.map((demo) => (
             <button
               key={demo.id}
               type="button"
-              onClick={() => setSelectedId(demo.id)}
               className={
-                demo.id === selected.id
-                  ? "w-full rounded-2xl border border-primary bg-primary/10 p-3 text-left"
-                  : "w-full rounded-2xl border border-slate-200 bg-slate-50 p-3 text-left"
+                demo.id === active.id
+                  ? "w-full rounded-2xl border border-primary bg-primary/10 p-4 text-left"
+                  : "w-full rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left"
               }
+              onClick={() => setActiveId(demo.id)}
             >
-              <p className="text-sm font-black text-slate-950">Nº {demo.number}</p>
-              <p className="text-xs text-slate-500">{demo.recipientName || demo.recipientType}</p>
-              <p className="mt-1 text-xs font-bold text-primary">{formatCurrency(total(demo))}</p>
+              <p className="font-black text-slate-950">Nº {demo.number}</p>
+              <p className="mt-1 text-sm text-slate-500">{demo.person.name}</p>
+              <p className="mt-1 text-sm font-black text-primary">{currency(total)}</p>
             </button>
           ))}
         </div>
-      </div>
+      </section>
 
-      <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <section className="rounded-3xl border border-slate-200 bg-white p-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
           <div>
             <h3 className="text-lg font-black text-slate-950">Editar demonstrativo</h3>
-            <p className="text-sm text-slate-500">
-              Modelo inspirado no demonstrativo administrativo enviado.
-            </p>
+            <p className="text-sm text-slate-500">Documento administrativo para controle de pagamento.</p>
           </div>
-          <Button type="button" onClick={() => printPdf(selected)}>
+
+          <button type="button" className="btn-primary" onClick={generatePdf}>
             <Download className="size-4" />
             Gerar PDF
-          </Button>
+          </button>
         </div>
 
-        <div className="mt-5 rounded-3xl border border-emerald-100 bg-emerald-50/60 p-4">
-          <div className="flex items-center gap-2">
-            <ReceiptText className="size-4 text-primary" />
-            <h4 className="font-black text-slate-950">Cabeçalho do demonstrativo</h4>
-          </div>
+        <div className="mt-4 rounded-3xl border border-emerald-200 bg-emerald-50 p-4">
+          <p className="mb-3 text-sm font-black text-emerald-900">
+            Cabeçalho do demonstrativo
+          </p>
 
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3 md:grid-cols-2">
             <Field label="Instituição / emitente">
-              <input className="form-input" value={selected.issuerName} onChange={(event) => update({ issuerName: event.target.value })} />
+              <input className="form-input" value={active.payerName} onChange={(event) => updateActive({ payerName: event.target.value })} />
             </Field>
 
             <Field label="CNPJ/CPF do emitente">
-              <input className="form-input" value={selected.issuerDocumentLine} onChange={(event) => update({ issuerDocumentLine: event.target.value })} />
+              <input className="form-input" value={active.payerDocument} onChange={(event) => updateActive({ payerDocument: event.target.value })} />
             </Field>
 
             <Field label="Endereço do emitente">
-              <input className="form-input" value={selected.issuerAddress} onChange={(event) => update({ issuerAddress: event.target.value })} />
+              <input className="form-input" value={active.payerAddress} onChange={(event) => updateActive({ payerAddress: event.target.value })} />
             </Field>
 
             <Field label="Contato do emitente">
-              <input className="form-input" value={selected.issuerContactLine} onChange={(event) => update({ issuerContactLine: event.target.value })} />
+              <input className="form-input" value={active.payerContact} onChange={(event) => updateActive({ payerContact: event.target.value })} />
             </Field>
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
           <Field label="Número">
-            <input className="form-input" value={selected.number} onChange={(event) => update({ number: event.target.value })} />
+            <input className="form-input" value={active.number} onChange={(event) => updateActive({ number: event.target.value })} />
           </Field>
 
-          <Field label="Nº Doc.">
-            <input className="form-input" value={selected.docNumber} onChange={(event) => update({ docNumber: event.target.value })} />
+          <Field label="Nº doc.">
+            <input className="form-input" value={active.docNumber} onChange={(event) => updateActive({ docNumber: event.target.value })} />
           </Field>
 
           <Field label="Nº NF.">
-            <input className="form-input" value={selected.nfNumber} onChange={(event) => update({ nfNumber: event.target.value })} />
+            <input className="form-input" value={active.nfNumber} onChange={(event) => updateActive({ nfNumber: event.target.value })} />
           </Field>
 
           <Field label="Emissão">
-            <input className="form-input" type="date" value={selected.issueDate} onChange={(event) => update({ issueDate: event.target.value })} />
+            <input className="form-input" type="date" value={active.issueDate} onChange={(event) => updateActive({ issueDate: event.target.value })} />
           </Field>
 
           <Field label="Vencimento">
-            <input className="form-input" type="date" value={selected.dueDate} onChange={(event) => update({ dueDate: event.target.value })} />
+            <input className="form-input" type="date" value={active.dueDate} onChange={(event) => updateActive({ dueDate: event.target.value })} />
           </Field>
-        </div>
 
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <Field label="Competência">
+            <input className="form-input" value={active.competence} onChange={(event) => updateActive({ competence: event.target.value })} />
+          </Field>
+
           <Field label="Tipo">
-            <select
-              className="form-input"
-              value={selected.recipientType}
-              onChange={(event) => update({ recipientType: event.target.value as Demonstrative["recipientType"] })}
-            >
+            <select className="form-input" value={active.person.type} onChange={(event) => updatePerson({ type: event.target.value as DemonstrativePerson["type"] })}>
               <option>Equipe</option>
               <option>Fornecedor</option>
             </select>
           </Field>
 
           <Field label="Status">
-            <select
-              className="form-input"
-              value={selected.status}
-              onChange={(event) => update({ status: event.target.value as Demonstrative["status"] })}
-            >
+            <select className="form-input" value={active.status} onChange={(event) => updateActive({ status: event.target.value })}>
               <option>Rascunho</option>
-              <option>Emitido</option>
+              <option>Conferido</option>
               <option>Pago</option>
-              <option>Vencido</option>
+              <option>Cancelado</option>
             </select>
-          </Field>
-
-          <Field label="Competência">
-            <input className="form-input" type="month" value={selected.competence} onChange={(event) => update({ competence: event.target.value })} />
           </Field>
         </div>
-
-        {selected.recipientType === "Equipe" ? (
-          <Field label="Selecionar pessoa da equipe">
-            <select
-              className="form-input"
-              value=""
-              onChange={(event) => {
-                const person = team.find((item) => item.name === event.target.value);
-
-                if (!person) return;
-
-                update({
-                  recipientName: person.name,
-                  recipientDocument: person.document ?? "",
-                  recipientPhone: person.phone ?? "",
-                  recipientAddress: person.address ?? "",
-                  reference: `Serviços de ${person.role || "equipe"} prestados ao projeto cultural.`,
-                });
-              }}
-            >
-              <option value="">Escolha uma pessoa...</option>
-              {team.map((person) => (
-                <option key={person.name} value={person.name}>
-                  {person.name} — {person.role || "Equipe"}
-                </option>
-              ))}
-            </select>
-          </Field>
-        ) : null}
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <Field label="Nome/Razão social">
-            <input className="form-input" value={selected.recipientName} onChange={(event) => update({ recipientName: event.target.value })} />
+            <input className="form-input" value={active.person.name} onChange={(event) => updatePerson({ name: event.target.value })} />
           </Field>
 
           <Field label="CPF/CNPJ">
-            <input className="form-input" value={selected.recipientDocument} onChange={(event) => update({ recipientDocument: event.target.value })} />
+            <input className="form-input" value={active.person.document} onChange={(event) => updatePerson({ document: event.target.value })} />
+          </Field>
+
+          <Field label="Função/serviço">
+            <input className="form-input" value={active.person.role} onChange={(event) => updatePerson({ role: event.target.value })} />
           </Field>
 
           <Field label="Telefone">
-            <input className="form-input" value={selected.recipientPhone} onChange={(event) => update({ recipientPhone: event.target.value })} />
+            <input className="form-input" value={active.person.phone} onChange={(event) => updatePerson({ phone: event.target.value })} />
           </Field>
 
-          <Field label="Cód. associado / código interno">
-            <input className="form-input" value={selected.associateCode} onChange={(event) => update({ associateCode: event.target.value })} />
-          </Field>
-        </div>
-
-        <div className="mt-4 grid gap-3">
           <Field label="Endereço do favorecido">
-            <input className="form-input" value={selected.recipientAddress} onChange={(event) => update({ recipientAddress: event.target.value })} />
-          </Field>
-
-          <Field label="Projeto">
-            <input className="form-input" value={selected.project} onChange={(event) => update({ project: event.target.value })} />
-          </Field>
-
-          <Field label="Referência / locação / descrição geral">
-            <input className="form-input" value={selected.reference} onChange={(event) => update({ reference: event.target.value })} />
+            <input className="form-input" value={active.person.address} onChange={(event) => updatePerson({ address: event.target.value })} />
           </Field>
         </div>
 
         <div className="mt-5 rounded-3xl border border-slate-200 bg-slate-50 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <h4 className="font-black text-slate-950">Itens do demonstrativo</h4>
-            <Button
-              type="button"
-              size="sm"
-              onClick={() =>
-                update({
-                  items: [
-                    ...selected.items,
-                    { id: makeId("item"), quantity: 1, description: "Novo item", unitValue: 0 },
-                  ],
-                })
-              }
-            >
+          <div className="mb-3 flex items-center justify-between">
+            <h4 className="font-black text-slate-950">Itens</h4>
+            <button type="button" className="btn-primary" onClick={addItem}>
               <Plus className="size-4" />
               Item
-            </Button>
+            </button>
           </div>
 
-          <div className="mt-3 space-y-3">
-            {selected.items.map((item) => (
-              <div key={item.id} className="grid gap-3 md:grid-cols-[90px_minmax(0,1fr)_150px_44px]">
-                <input className="form-input" type="number" value={item.quantity} onChange={(event) => updateItem(item.id, { quantity: Number(event.target.value) })} />
+          <div className="space-y-3">
+            {active.items.map((item) => (
+              <div key={item.id} className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 md:grid-cols-[80px_1fr_140px_44px]">
+                <input className="form-input" value={item.quantity} onChange={(event) => updateItem(item.id, { quantity: event.target.value })} />
                 <input className="form-input" value={item.description} onChange={(event) => updateItem(item.id, { description: event.target.value })} />
-                <input className="form-input" type="number" value={item.unitValue} onChange={(event) => updateItem(item.id, { unitValue: Number(event.target.value) })} />
-                <Button type="button" variant="destructive" onClick={() => update({ items: selected.items.filter((entry) => entry.id !== item.id) })}>
-                  <Trash2 className="size-4" />
-                </Button>
+                <input className="form-input" value={item.unitValue} onChange={(event) => updateItem(item.id, { unitValue: event.target.value })} />
+                <button type="button" className="rounded-xl text-red-600 hover:bg-red-50" onClick={() => removeItem(item.id)}>
+                  <Trash2 className="mx-auto size-4" />
+                </button>
               </div>
             ))}
           </div>
+
+          <div className="mt-4 text-right text-xl font-black text-slate-950">
+            Total: {currency(total)}
+          </div>
         </div>
 
-        <Field label="Texto de quitação no rodapé">
-          <textarea className="form-input min-h-20" value={selected.paymentNote} onChange={(event) => update({ paymentNote: event.target.value })} />
-        </Field>
-      </div>
+        <div className="mt-4">
+          <Field label="Referência">
+            <textarea className="form-input min-h-24" value={active.reference} onChange={(event) => updateActive({ reference: event.target.value })} />
+          </Field>
+        </div>
 
-      <aside className="sticky top-4 h-fit rounded-3xl border border-white bg-white p-5 shadow-sm">
-        <div className="flex items-center justify-between gap-3">
+        {demonstratives.length > 1 ? (
+          <button type="button" className="btn-danger mt-4" onClick={removeActive}>
+            <Trash2 className="size-4" />
+            Excluir demonstrativo
+          </button>
+        ) : null}
+      </section>
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-4">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-primary">Prévia</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-primary">Prévia</p>
             <h3 className="text-lg font-black text-slate-950">Demonstrativo</h3>
           </div>
-          <Button type="button" onClick={() => printPdf(selected)}>
+
+          <button type="button" className="btn-primary" onClick={generatePdf}>
             <Download className="size-4" />
             PDF
-          </Button>
+          </button>
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-2xl border border-slate-900 bg-white text-[11px]">
-          <div className="flex gap-3 border-b border-slate-900 p-3">
-            <div className="grid size-14 shrink-0 place-items-center rounded-full bg-primary text-center text-[10px] font-black text-white">
+        <div className="mt-4 rounded-2xl border border-slate-900 bg-white p-4 text-xs">
+          <div className="flex gap-3 border-b border-slate-900 pb-3">
+            <div className="grid size-12 place-items-center rounded-full bg-blue-900 text-xs font-black text-white">
               VIVA
             </div>
             <div>
-              <p className="text-sm font-black uppercase text-slate-950">{selected.issuerName}</p>
-              <p>{selected.issuerAddress}</p>
-              <p>{selected.issuerContactLine}</p>
-              <p>{selected.issuerDocumentLine}</p>
+              <p className="font-black">{active.payerName.toUpperCase()}</p>
+              <p>{active.payerAddress}</p>
+              <p>{active.payerContact}</p>
+              <p>{active.payerDocument}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-5 border-b border-slate-900 text-[10px] font-bold">
-            <p className="border-r p-2">Nº {selected.number}</p>
-            <p className="border-r p-2">Doc. {selected.docNumber}</p>
-            <p className="border-r p-2">NF {selected.nfNumber || "-"}</p>
-            <p className="border-r p-2">{formatDateBr(selected.issueDate)}</p>
-            <p className="p-2">{formatDateBr(selected.dueDate)}</p>
+            <div className="p-2">Nº {active.number}</div>
+            <div className="p-2">Doc. {active.docNumber}</div>
+            <div className="p-2">NF {active.nfNumber || "-"}</div>
+            <div className="p-2">{formatDate(active.issueDate)}</div>
+            <div className="p-2">{formatDate(active.dueDate)}</div>
           </div>
 
-          <div className="grid grid-cols-[1fr_140px] border-b border-slate-900 p-3">
-            <div>
-              <p className="font-black uppercase">{selected.recipientName || selected.recipientType}</p>
-              <p>{selected.recipientAddress || "Endereço não informado"}</p>
+          <div className="grid grid-cols-2 border-b border-slate-900">
+            <div className="p-3">
+              <p className="font-black">{active.person.name.toUpperCase()}</p>
+              <p>{active.person.address}</p>
             </div>
-            <div>
-              <p><strong>CPF/CNPJ:</strong> {selected.recipientDocument || "-"}</p>
-              <p><strong>Fone:</strong> {selected.recipientPhone || "-"}</p>
-              <p><strong>Cód.:</strong> {selected.associateCode || "-"}</p>
+            <div className="p-3">
+              <p><strong>CPF/CNPJ:</strong> {active.person.document || "-"}</p>
+              <p><strong>Fone:</strong> {active.person.phone || "-"}</p>
             </div>
           </div>
 
-          <table className="w-full border-collapse">
+          <table className="w-full border-collapse text-xs">
             <thead>
               <tr>
-                <th className="border-b border-r p-1">Quant.</th>
-                <th className="border-b border-r p-1">Discriminação</th>
-                <th className="border-b border-r p-1">Unit.</th>
-                <th className="border-b p-1">Total</th>
+                <th className="border-b border-slate-900 p-2 text-left">Quant.</th>
+                <th className="border-b border-slate-900 p-2 text-left">Discriminação</th>
+                <th className="border-b border-slate-900 p-2 text-left">Unit.</th>
+                <th className="border-b border-slate-900 p-2 text-left">Total</th>
               </tr>
             </thead>
             <tbody>
-              {selected.items.map((item) => (
-                <tr key={item.id}>
-                  <td className="border-r p-1 text-center">{item.quantity}</td>
-                  <td className="border-r p-1 uppercase">{item.description}</td>
-                  <td className="border-r p-1 text-right">{formatCurrency(item.unitValue)}</td>
-                  <td className="p-1 text-right">{formatCurrency(item.quantity * item.unitValue)}</td>
-                </tr>
-              ))}
+              {active.items.map((item) => {
+                const subtotal = numberValue(item.quantity) * numberValue(item.unitValue);
+
+                return (
+                  <tr key={item.id}>
+                    <td className="border-b border-slate-200 p-2">{item.quantity}</td>
+                    <td className="border-b border-slate-200 p-2">{item.description}</td>
+                    <td className="border-b border-slate-200 p-2">{currency(numberValue(item.unitValue))}</td>
+                    <td className="border-b border-slate-200 p-2">{currency(subtotal)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
-          <div className="border-t border-slate-900 p-3">
-            <p className="text-right text-base font-black">TOTAL: {formatCurrency(total(selected))}</p>
-            <p className="mt-1"><strong>Ref. competência:</strong> {formatCompetence(selected.competence)}</p>
-            <p className="mt-1"><strong>Referência:</strong> {selected.reference}</p>
-            <p className="mt-1 text-slate-600">{selected.paymentNote}</p>
+          <p className="mt-3 text-right text-base font-black">TOTAL: {currency(total)}</p>
+
+          <div className="mt-4 text-[10px]">
+            <p><strong>Ref. competência:</strong> {active.competence}</p>
+            <p><strong>Referência:</strong> {active.reference}</p>
           </div>
         </div>
-      </aside>
+      </section>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="mt-4 block">
-      <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">{label}</span>
+    <label className="block">
+      <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+        {label}
+      </span>
       <div className="mt-1">{children}</div>
     </label>
   );
