@@ -53,6 +53,179 @@ const defaultTemplate: ResumeTemplate = {
   editalName: "Modelo por edital",
 };
 
+
+const refensFallbackPeople: ResumePerson[] = [
+  {
+    id: "fallback-marcel-eduardo",
+    name: "Marcel Eduardo Cabeça Domingues",
+    area: "Formador, diretor, ator e produtor",
+    formation: "",
+    courses: "",
+    actingTime: "",
+    experience: "",
+    works: "",
+    additionalInfo: "",
+    cityState: "Jaraguá do Sul/SC",
+    files: [],
+    source: "project",
+  },
+  {
+    id: "fallback-kaique-varela",
+    name: "Kaique Varela Zalusk",
+    area: "Produção executiva",
+    formation: "",
+    courses: "",
+    actingTime: "",
+    experience: "",
+    works: "",
+    additionalInfo: "",
+    cityState: "Jaraguá do Sul/SC",
+    files: [],
+    source: "project",
+  },
+  {
+    id: "fallback-suzi-daiane",
+    name: "Suzi Daiane",
+    area: "Professora de inclusão, LIBRAS e acessibilidade",
+    formation: "",
+    courses: "",
+    actingTime: "",
+    experience: "",
+    works: "",
+    additionalInfo: "",
+    cityState: "Jaraguá do Sul/SC",
+    files: [],
+    source: "project",
+  },
+  {
+    id: "fallback-jones-andre",
+    name: "Jones André",
+    area: "Técnico de som",
+    formation: "",
+    courses: "",
+    actingTime: "",
+    experience: "",
+    works: "",
+    additionalInfo: "",
+    cityState: "Jaraguá do Sul/SC",
+    files: [],
+    source: "project",
+  },
+  {
+    id: "fallback-cassius-venera",
+    name: "Cassius Venera",
+    area: "Técnico de iluminação",
+    formation: "",
+    courses: "",
+    actingTime: "",
+    experience: "",
+    works: "",
+    additionalInfo: "",
+    cityState: "Jaraguá do Sul/SC",
+    files: [],
+    source: "project",
+  },
+  {
+    id: "fallback-andre-brito",
+    name: "André Brito",
+    area: "Registro audiovisual / fotográfico",
+    formation: "",
+    courses: "",
+    actingTime: "",
+    experience: "",
+    works: "",
+    additionalInfo: "",
+    cityState: "Jaraguá do Sul/SC",
+    files: [],
+    source: "project",
+  },
+  {
+    id: "fallback-renaldo-boddemberg",
+    name: "Renaldo Boddemberg",
+    area: "Ator experiente",
+    formation: "",
+    courses: "",
+    actingTime: "",
+    experience: "",
+    works: "",
+    additionalInfo: "",
+    cityState: "Jaraguá do Sul/SC",
+    files: [],
+    source: "project",
+  },
+  {
+    id: "fallback-bruna-lazzarotto",
+    name: "Bruna Lazzarotto",
+    area: "Atriz experiente",
+    formation: "",
+    courses: "",
+    actingTime: "",
+    experience: "",
+    works: "",
+    additionalInfo: "",
+    cityState: "Jaraguá do Sul/SC",
+    files: [],
+    source: "project",
+  },
+  {
+    id: "fallback-wemerson-goncalves",
+    name: "Wemerson Gonçalves",
+    area: "Ator experiente",
+    formation: "",
+    courses: "",
+    actingTime: "",
+    experience: "",
+    works: "",
+    additionalInfo: "",
+    cityState: "Jaraguá do Sul/SC",
+    files: [],
+    source: "project",
+  },
+  {
+    id: "fallback-julia-titz",
+    name: "Julia Titz",
+    area: "Atriz experiente",
+    formation: "",
+    courses: "",
+    actingTime: "",
+    experience: "",
+    works: "",
+    additionalInfo: "",
+    cityState: "Jaraguá do Sul/SC",
+    files: [],
+    source: "project",
+  },
+  {
+    id: "fallback-karim-kamada",
+    name: "Karim Kamada",
+    area: "Artista / Atriz experiente",
+    formation: "",
+    courses: "",
+    actingTime: "",
+    experience: "",
+    works: "",
+    additionalInfo: "",
+    cityState: "Jaraguá do Sul/SC",
+    files: [],
+    source: "project",
+  },
+  {
+    id: "fallback-katiana-coelho",
+    name: "Katiana de Souza Coelho",
+    area: "Professora de técnica vocal / Tecladista / Música",
+    formation: "",
+    courses: "",
+    actingTime: "",
+    experience: "",
+    works: "",
+    additionalInfo: "",
+    cityState: "Jaraguá do Sul/SC",
+    files: [],
+    source: "project",
+  },
+];
+
+
 function makeId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -623,7 +796,18 @@ export function ResumeBankWorkspace({
   const allPeople = useMemo(() => {
     const map = new Map<string, ResumePerson>();
 
-    for (const person of [...projectPeople, ...manualPeople]) {
+    const projectName = project.name.toLowerCase();
+    const shouldUseRefensFallback =
+      projectName.includes("reféns") ||
+      projectName.includes("refens") ||
+      projectName.includes("r efens");
+
+    const sourcePeople =
+      shouldUseRefensFallback && projectPeople.length < refensFallbackPeople.length
+        ? [...projectPeople, ...refensFallbackPeople]
+        : projectPeople;
+
+    for (const person of [...sourcePeople, ...manualPeople]) {
       const key = `${person.name.toLowerCase()}|${person.area.toLowerCase()}`;
       map.set(key, {
         ...map.get(key),
@@ -632,7 +816,7 @@ export function ResumeBankWorkspace({
     }
 
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-  }, [projectPeople, manualPeople]);
+  }, [project.name, projectPeople, manualPeople]);
 
   const filteredPeople = useMemo(() => {
     const value = search.trim().toLowerCase();
@@ -791,7 +975,7 @@ export function ResumeBankWorkspace({
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1180px] space-y-6 px-4 pb-10">
+    <div className="w-full max-w-none space-y-6 px-4 pb-10">
       <section className="rounded-[1.5rem] border border-white bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
@@ -824,7 +1008,7 @@ export function ResumeBankWorkspace({
         <InfoCard title="Saída" value="PDF / Word" helper="uma pessoa por folha" />
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+      <div className="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
         <section className="rounded-[1.5rem] border border-white bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>

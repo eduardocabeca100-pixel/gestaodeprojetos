@@ -3,6 +3,9 @@ import { ResumeBankWorkspace } from "@/components/resumes/resume-bank-workspace"
 import { getActiveProject, type PageSearchParams } from "@/lib/utils/search-params";
 import { listFinanceTeamMembers } from "@/modules/team/finance-queries";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function ResumeBankPage({
   searchParams,
 }: {
