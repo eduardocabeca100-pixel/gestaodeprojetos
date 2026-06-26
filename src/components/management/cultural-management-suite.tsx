@@ -941,7 +941,7 @@ Saldo estimado: ${formatCurrency(totals.remaining)}
         </div>
       ) : null}
 
-      {activeTab === "documents" ? <ProjectDocumentsVault /> : null}
+      {activeTab === "documents" ? <ProjectDocumentsVault project={{ id: project.id, name: project.name }} /> : null}
 
       {activeTab === "reports" ? <CulturalReportWorkspace /> : null}
 

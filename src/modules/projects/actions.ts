@@ -163,3 +163,77 @@ export async function archiveProject(projectId: string) {
     message: `Projeto ${projectId} arquivado.`,
   };
 }
+
+
+
+export async function deleteProject(projectId: string) {
+  if (!projectId) {
+    return { ok: false, message: "Projeto não identificado." };
+  }
+
+  if (!hasSupabaseServerEnv()) {
+    return { ok: false, message: "Supabase não configurado." };
+  }
+
+  const profile = await getCurrentProfile();
+
+  if (!profile || !can(profile.role, "archive_project")) {
+    return { ok: false, message: "Você não tem permissão para excluir projetos." };
+  }
+
+  const supabase = await createClient();
+
+  if (!supabase) {
+    return { ok: false, message: "Cliente Supabase não inicializado." };
+  }
+
+  const tablesToClean = [
+    "expenses",
+    "attendance",
+    "classes",
+    "activities",
+    "documents",
+    "media",
+    "participants",
+    "team_members",
+    "budget_items",
+    "reports",
+    "official_documents",
+    "project_stages",
+    "project_memberships",
+  ];
+
+  for (const table of tablesToClean) {
+    const result = await (supabase as any).from(table).delete().eq("project_id", projectId);
+
+    if (
+      result.error &&
+      result.error.code !== "PGRST205" &&
+      !String(result.error.message ?? "").includes("Could not find")
+    ) {
+      console.error(`deleteProject ${table} failed`, result.error);
+      return {
+        ok: false,
+        message: `Não consegui limpar os dados de ${table}. A exclusão foi interrompida.`,
+      };
+    }
+  }
+
+  const result = await supabase.from("projects").delete().eq("id", projectId);
+
+  if (result.error) {
+    return {
+      ok: false,
+      message: result.error.message,
+    };
+  }
+
+  revalidatePath("/dashboard", "page");
+  revalidatePath("/projetos", "page");
+  revalidatePath("/projetos/selecionar", "page");
+
+  return {
+    ok: true,
+    message: "Projeto excluído definitivamente.",
+  };
+}

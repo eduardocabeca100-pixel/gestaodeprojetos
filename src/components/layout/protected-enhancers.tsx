@@ -10,19 +10,6 @@ const FinancialLocalStorageSynchronizer = dynamic(
   { ssr: false },
 );
 
-const UniversalPdfTemplateInterceptor = dynamic(
-  () =>
-    import("@/components/pdf/universal-pdf-template-interceptor").then(
-      (mod) => mod.UniversalPdfTemplateInterceptor,
-    ),
-  { ssr: false },
-);
-
 export function ProtectedEnhancers() {
-  return (
-    <>
-      <FinancialLocalStorageSynchronizer />
-      <UniversalPdfTemplateInterceptor />
-    </>
-  );
+  return <FinancialLocalStorageSynchronizer />;
 }

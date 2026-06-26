@@ -1,77 +1,82 @@
-import { getFeaturedProject, getProjectById } from "@/modules/projects/queries";
-import type { Project } from "@/modules/projects/types";
+import "server-only";
 
-import type { ProjectDocument } from "./types";
+import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 
-async function getScopedProject(projectId?: string) {
-  return projectId
-    ? (await getProjectById(projectId)) ?? (await getFeaturedProject())
-    : getFeaturedProject();
+import {
+  documentCategories,
+  documentStatuses,
+  type DocumentCategory,
+  type DocumentStatus,
+  type ProjectDocument,
+} from "./types";
+
+type DocumentRow = {
+  id: string;
+  project_id: string;
+  file_name: string;
+  category: string;
+  uploaded_by: string | null;
+  uploaded_at: string;
+  expires_at: string | null;
+  notes: string | null;
+  status: string;
+  archived: boolean;
+};
+
+function normalizeCategory(value: string | null): DocumentCategory {
+  return documentCategories.includes(value as DocumentCategory)
+    ? (value as DocumentCategory)
+    : "Outros";
 }
 
-function buildDocuments(project: Project): ProjectDocument[] {
-  const slug = project.slug;
+function normalizeStatus(value: string | null): DocumentStatus {
+  return documentStatuses.includes(value as DocumentStatus)
+    ? (value as DocumentStatus)
+    : "Pendente";
+}
 
-  return [
-    {
-      id: `${project.id}-doc-edital`,
-      fileName: `edital-principal-${slug}.pdf`,
-      category: "Edital e anexos",
-      projectId: project.id,
-      linkedTo: "Edital principal",
-      uploadedAt: "2026-06-19",
-      uploadedBy: "Marcel Eduardo Cabeça Domingues",
-      expiresAt: null,
-      notes: `Cópia do edital e anexos do projeto ${project.name}.`,
-      status: "Válido",
-    },
-    {
-      id: `${project.id}-doc-certidao`,
-      fileName: `certidao-negativa-${slug}.pdf`,
-      category: "Certidões",
-      projectId: project.id,
-      linkedTo: "Habilitação documental",
-      uploadedAt: "2026-06-12",
-      uploadedBy: "Marcel Eduardo Cabeça Domingues",
-      expiresAt: "2026-08-25",
-      notes: `Monitorar vencimento antes da assinatura do termo de ${project.name}.`,
-      status: "Válido",
-    },
-    {
-      id: `${project.id}-doc-proposta`,
-      fileName: `proposta-${slug}.pdf`,
-      category: "Proposta e anexos",
-      projectId: project.id,
-      linkedTo: "Projeto",
-      uploadedAt: "2026-06-10",
-      uploadedBy: "Kaique",
-      expiresAt: null,
-      notes: `Versão enviada na inscrição ${project.registrationNumber}.`,
-      status: "Válido",
-    },
-    {
-      id: `${project.id}-doc-presenca`,
-      fileName: `modelo-lista-presenca-${slug}.docx`,
-      category: "Lista de presença",
-      projectId: project.id,
-      linkedTo: "Aulas e atividades",
-      uploadedAt: "2026-06-16",
-      uploadedBy: "Kaique",
-      expiresAt: null,
-      notes: "Modelo editável para aulas, ensaios e apresentações.",
-      status: "Válido",
-    },
-  ];
+function mapDocument(row: DocumentRow): ProjectDocument {
+  return {
+    id: row.id,
+    fileName: row.file_name,
+    category: normalizeCategory(row.category),
+    projectId: row.project_id,
+    linkedTo: row.category || "Documento do projeto",
+    uploadedAt: row.uploaded_at?.slice(0, 10) ?? "",
+    uploadedBy: row.uploaded_by ?? "Equipe do projeto",
+    expiresAt: row.expires_at,
+    notes: row.notes ?? "",
+    status: normalizeStatus(row.status),
+  };
 }
 
 export async function listDocuments(projectId?: string) {
-  const project = await getScopedProject(projectId);
+  if (!projectId || !hasSupabaseServerEnv()) {
+    return [] satisfies ProjectDocument[];
+  }
 
-  return buildDocuments(project);
+  const supabase = await createClient();
+
+  if (!supabase) {
+    return [] satisfies ProjectDocument[];
+  }
+
+  const { data, error } = await supabase
+    .from("documents")
+    .select("id, project_id, file_name, category, uploaded_by, uploaded_at, expires_at, notes, status, archived")
+    .eq("project_id", projectId)
+    .eq("archived", false)
+    .order("uploaded_at", { ascending: false });
+
+  if (error || !data) {
+    console.error("listDocuments failed", error);
+    return [] satisfies ProjectDocument[];
+  }
+
+  return (data as DocumentRow[]).map(mapDocument);
 }
 
 export async function listExpiringDocuments(projectId?: string) {
   const documents = await listDocuments(projectId);
-
   return documents.filter((document) => document.expiresAt);
 }

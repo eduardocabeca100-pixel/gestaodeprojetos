@@ -1,24 +1,14 @@
-import { DocumentVault } from "@/components/documents/document-vault";
-import { PageContainer } from "@/components/layout/page-container";
-import { ProjectScopeBanner } from "@/components/projects/project-scope-banner";
-import { getActiveProject, type PageSearchParams } from "@/lib/utils/search-params";
+import { redirect } from "next/navigation";
 
-export default async function AttachmentsPage({
+import type { PageSearchParams } from "@/lib/utils/search-params";
+
+export default async function AnexosRedirectPage({
   searchParams,
 }: {
   searchParams: PageSearchParams;
 }) {
-  const project = await getActiveProject(searchParams);
+  const params = await searchParams;
+  const project = Array.isArray(params.project) ? params.project[0] : params.project;
 
-  return (
-    <PageContainer
-      title="Anexos"
-      description="Envie, categorize, consulte e baixe arquivos vinculados ao projeto."
-    >
-      <div className="space-y-6">
-        <ProjectScopeBanner project={project} />
-        <DocumentVault project={{ id: project.id, name: project.name }} />
-      </div>
-    </PageContainer>
-  );
+  redirect(project ? `/documentos?project=${encodeURIComponent(project)}` : "/documentos");
 }

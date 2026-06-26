@@ -8,11 +8,14 @@ export const settingsSections: SettingsSection[] = [
     fields: [
       { label: "Nome do sistema", value: "VIVA Gestão Cultural", type: "text" },
       { label: "Nome da instituição", value: "Cia de Artes Viva", type: "text" },
+      { label: "CNPJ", value: "", type: "text" },
       { label: "Logo principal do sistema", value: "", type: "file" },
       { label: "Logo para fundo escuro", value: "", type: "file" },
       { label: "Logo dos documentos oficiais", value: "", type: "file" },
-      { label: "E-mail institucional", value: "contato@ciaviva.local", type: "text" },
-      { label: "WhatsApp", value: "(48) 99999-0000", type: "text" },
+      { label: "E-mail institucional", value: "eduardo@ciaviva.com", type: "text" },
+      { label: "WhatsApp", value: "(47) 992747545", type: "text" },
+      { label: "Site", value: "www.ciaviva.com", type: "text" },
+      { label: "Endereço", value: "", type: "text" },
       { label: "Cidade", value: "Jaraguá do Sul", type: "text" },
       { label: "Estado", value: "SC", type: "text" },
       {
@@ -153,21 +156,6 @@ export const settingsSections: SettingsSection[] = [
     ],
   },
   {
-    id: "backup",
-    title: "Backup e segurança",
-    description: "Auditoria, lixeira e exportação dos dados.",
-    fields: [
-      { label: "Backup manual", value: "true", type: "toggle", lockedForDirector: true },
-      { label: "Backup automático", value: "false", type: "toggle", lockedForDirector: true },
-      { label: "Exportar projeto completo em ZIP", value: "true", type: "toggle", lockedForDirector: true },
-      { label: "Incluir dados pessoais da equipe no ZIP", value: "true", type: "toggle", lockedForDirector: true },
-      { label: "Incluir fotos e anexos no ZIP", value: "true", type: "toggle", lockedForDirector: true },
-      { label: "Lixeira", value: "true", type: "toggle" },
-      { label: "Confirmação dupla para exclusão", value: "true", type: "toggle", lockedForDirector: true },
-      { label: "Tempo de sessão", value: "480", type: "number", lockedForDirector: true },
-    ],
-  },
-  {
     id: "integracoes",
     title: "Integrações",
     description: "Serviços externos conectáveis ao projeto.",
@@ -182,17 +170,7 @@ export const settingsSections: SettingsSection[] = [
       { label: "Enviar alerta de vencimento por e-mail", value: "false", type: "toggle" },
     ],
   },
-  {
-    id: "campos-personalizados",
-    title: "Campos personalizados",
-    description: "Campos extras por módulo.",
-    fields: [
-      { label: "Projetos", value: "Número do Pronac, Região, Área cultural", type: "textarea" },
-      { label: "Participantes", value: "Ficha social, observação pedagógica", type: "textarea" },
-      { label: "Financeiro", value: "Banco, Agência, Conta", type: "textarea" },
-      { label: "Relatórios", value: "Assinatura, texto de abertura", type: "textarea" },
-    ],
-  },
+
 ];
 
 export async function listSettingsSections() {

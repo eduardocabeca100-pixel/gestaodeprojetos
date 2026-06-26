@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Archive, Copy, Edit, Loader2 } from "lucide-react";
+import { Archive, Copy, Edit, Loader2, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { archiveProject } from "@/modules/projects/actions";
+import { archiveProject, deleteProject } from "@/modules/projects/actions";
 
 export function ProjectActionsMenu({
   projectId,
@@ -16,6 +17,7 @@ export function ProjectActionsMenu({
   canDuplicate: boolean;
   canArchive: boolean;
 }) {
+  const router = useRouter();
   const [message, setMessage] = useState("");
   const [pending, startTransition] = useTransition();
 
@@ -29,6 +31,34 @@ export function ProjectActionsMenu({
     startTransition(async () => {
       const result = await archiveProject(projectId);
       setMessage(result.message);
+      router.refresh();
+    });
+  }
+
+  function handleDelete() {
+    const first = window.confirm(
+      "Excluir este projeto definitivamente? Isso apaga documentos, financeiro, equipe, cronograma e relatórios vinculados a ele.",
+    );
+
+    if (!first) return;
+
+    const typed = window.prompt('Para confirmar, digite exatamente: EXCLUIR');
+
+    if (typed !== "EXCLUIR") {
+      setMessage("Exclusão cancelada. A confirmação não foi digitada.");
+      return;
+    }
+
+    setMessage("");
+
+    startTransition(async () => {
+      const result = await deleteProject(projectId);
+      setMessage(result.message);
+
+      if (result.ok) {
+        router.push("/projetos");
+        router.refresh();
+      }
     });
   }
 
@@ -53,9 +83,16 @@ export function ProjectActionsMenu({
       ) : null}
 
       {canArchive ? (
-        <Button type="button" variant="destructive" onClick={handleArchive} disabled={pending}>
+        <Button type="button" variant="outline" onClick={handleArchive} disabled={pending}>
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Archive className="size-4" />}
-          {pending ? "Arquivando..." : "Arquivar"}
+          {pending ? "Processando..." : "Arquivar"}
+        </Button>
+      ) : null}
+
+      {canArchive ? (
+        <Button type="button" variant="destructive" onClick={handleDelete} disabled={pending}>
+          {pending ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+          Excluir projeto
         </Button>
       ) : null}
     </div>

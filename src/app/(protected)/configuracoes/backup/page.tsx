@@ -1,5 +1,5 @@
-import { SettingsPage } from "@/components/settings/settings-page";
+import { redirect } from "next/navigation";
 
-export default function BackupSettingsPage() {
-  return <SettingsPage sectionId="backup" />;
+export default function HiddenSettingsPage() {
+  redirect("/configuracoes/usuarios");
 }

@@ -1,7 +1,27 @@
+import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 import { getFeaturedProject, getProjectById } from "@/modules/projects/queries";
-import type { Project } from "@/modules/projects/types";
 
-import type { MediaItem } from "./types";
+import {
+  mediaCategories,
+  mediaTypes,
+  type MediaCategory,
+  type MediaItem,
+  type MediaType,
+} from "./types";
+
+type MediaRow = {
+  id: string;
+  project_id: string;
+  activity_id: string | null;
+  title: string;
+  type: string | null;
+  registered_at: string | null;
+  location: string | null;
+  description: string | null;
+  url: string | null;
+  category: string | null;
+  selected_for_dossier: boolean | null;
+};
 
 async function getScopedProject(projectId?: string) {
   return projectId
@@ -9,52 +29,54 @@ async function getScopedProject(projectId?: string) {
     : getFeaturedProject();
 }
 
-function buildMediaItems(project: Project): MediaItem[] {
-  return [
-    {
-      id: `${project.id}-media-1`,
-      title: `Registro inicial - ${project.name}`,
-      type: "Foto",
-      projectId: project.id,
-      activityId: `${project.id}-atividade-1`,
-      registeredAt: "2026-08-05",
-      location: "Cia de Artes Viva",
-      description: "Registro inicial das atividades do projeto Reféns.",
-      url: "/globe.svg",
-      category: "Aulas",
-      selectedForDossier: true,
-    },
-    {
-      id: `${project.id}-media-2`,
-      title: `Pasta externa - ${project.name}`,
-      type: "Link de pasta externa",
-      projectId: project.id,
-      activityId: null,
-      registeredAt: "2026-08-07",
-      location: "Google Drive",
-      description: "Pasta com vídeos não listados e registros completos.",
-      url: "https://drive.google.com/",
-      category: "Registro fotográfico",
-      selectedForDossier: true,
-    },
-    {
-      id: `${project.id}-media-3`,
-      title: `Vídeo não listado - ${project.name}`,
-      type: "Link de vídeo",
-      projectId: project.id,
-      activityId: `${project.id}-atividade-2`,
-      registeredAt: "2026-08-11",
-      location: "YouTube",
-      description: "Link externo cadastrado sem upload direto de vídeo.",
-      url: "https://youtube.com/",
-      category: "Aulas",
-      selectedForDossier: false,
-    },
-  ];
+function normalizeType(value: string | null): MediaType {
+  return mediaTypes.includes(value as MediaType) ? (value as MediaType) : "Foto";
+}
+
+function normalizeCategory(value: string | null): MediaCategory {
+  return mediaCategories.includes(value as MediaCategory)
+    ? (value as MediaCategory)
+    : "Outros";
+}
+
+function mapMedia(row: MediaRow): MediaItem {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    activityId: row.activity_id,
+    title: row.title,
+    type: normalizeType(row.type),
+    registeredAt: row.registered_at ?? "",
+    location: row.location ?? "",
+    description: row.description ?? "",
+    url: row.url ?? "",
+    category: normalizeCategory(row.category),
+    selectedForDossier: Boolean(row.selected_for_dossier),
+  };
 }
 
 export async function listMediaItems(projectId?: string) {
   const project = await getScopedProject(projectId);
 
-  return project.id === "refens" ? buildMediaItems(project) : [];
+  if (!hasSupabaseServerEnv()) {
+    return [] satisfies MediaItem[];
+  }
+
+  const supabase = await createClient();
+
+  if (!supabase) {
+    return [] satisfies MediaItem[];
+  }
+
+  const { data, error } = await (supabase as any)
+    .from("media")
+    .select("id, project_id, activity_id, title, type, registered_at, location, description, url, category, selected_for_dossier")
+    .eq("project_id", project.id)
+    .order("registered_at", { ascending: false });
+
+  if (error || !data) {
+    return [] satisfies MediaItem[];
+  }
+
+  return (data as MediaRow[]).map(mapMedia);
 }

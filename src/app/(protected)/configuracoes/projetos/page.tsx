@@ -1,5 +1,5 @@
-import { SettingsPage } from "@/components/settings/settings-page";
+import { redirect } from "next/navigation";
 
-export default function ProjectSettingsPage() {
-  return <SettingsPage sectionId="projetos" />;
+export default function HiddenSettingsPage() {
+  redirect("/configuracoes/usuarios");
 }

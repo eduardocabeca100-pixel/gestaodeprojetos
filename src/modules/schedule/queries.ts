@@ -1,35 +1,31 @@
+import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 import { getFeaturedProject, getProjectById } from "@/modules/projects/queries";
-import type { Project } from "@/modules/projects/types";
 
-import type { Activity } from "./types";
+import {
+  activityStatuses,
+  activityTypes,
+  type Activity,
+  type ActivityStatus,
+  type ActivityType,
+} from "./types";
 
-const refensLessons = [
-  "Acolhimento e integração",
-  "História do teatro e linguagens cênicas",
-  "Leitura do roteiro Reféns",
-  "Corpo, expressão e presença",
-  "Voz, respiração e projeção",
-  "Improvisação e jogo teatral",
-  "Montagem das primeiras cenas",
-  "Cenas centrais e ritmo",
-  "Final, coro e cenas coletivas",
-  "Ensaio corrido e ajustes de direção",
-  "Ensaio geral pedagógico e fechamento",
-];
-
-const refensDates = [
-  "2026-08-05",
-  "2026-08-08",
-  "2026-08-11",
-  "2026-08-14",
-  "2026-08-17",
-  "2026-08-20",
-  "2026-08-23",
-  "2026-08-26",
-  "2026-08-29",
-  "2026-09-01",
-  "2026-09-04",
-];
+type ActivityRow = {
+  id: string;
+  project_id: string;
+  title: string;
+  type: string | null;
+  date: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  location: string | null;
+  responsible: string | null;
+  description: string | null;
+  status: string | null;
+  attendance_count: number | null;
+  photo_count: number | null;
+  document_count: number | null;
+  notes: string | null;
+};
 
 async function getScopedProject(projectId?: string) {
   return projectId
@@ -37,60 +33,66 @@ async function getScopedProject(projectId?: string) {
     : getFeaturedProject();
 }
 
-function isRefensProject(project: Project) {
-  const name = project.name.toLowerCase();
-  const slug = project.slug.toLowerCase();
-
-  return project.id === "refens" || slug.includes("refens") || name.includes("reféns") || name.includes("refens");
+function normalizeType(value: string | null): ActivityType {
+  return activityTypes.includes(value as ActivityType) ? (value as ActivityType) : "Aula";
 }
 
-function buildActivities(project: Project): Activity[] {
-  if (!isRefensProject(project)) {
-    return [];
-  }
+function normalizeStatus(value: string | null): ActivityStatus {
+  return activityStatuses.includes(value as ActivityStatus)
+    ? (value as ActivityStatus)
+    : "Pendente";
+}
 
-  return refensLessons.map((title, index) => ({
-    id: `${project.id}-atividade-${index + 1}`,
-    projectId: project.id,
-    title,
-    type:
-      title.includes("Apresentação") || title.includes("Ensaio")
-        ? title.includes("Apresentação")
-          ? "Apresentação"
-          : "Ensaio"
-        : "Aula",
-    date: refensDates[index] ?? project.startDate,
-    startTime: "19:00",
-    endTime: "22:00",
-    location: "Cia de Artes Viva",
-    responsible: project.proponent || "Responsável do projeto",
-    description: `Atividade ${index + 1} vinculada ao projeto ${project.name}.`,
-    status: "Agendada",
-    attendanceCount: 0,
-    photoCount: 0,
-    documentCount: 0,
-    notes: "",
-    lesson: {
-      number: index + 1,
-      theme: title,
-      objective: "Desenvolver repertório técnico e criativo vinculado ao projeto.",
-      content: "Conteúdo programático a ser ajustado pela direção executiva.",
-      practice: "Prática artística, ensaio, mediação ou registro conforme a atividade.",
-      expectedResult: "Registro completo para relatório e prestação de contas.",
-      teacher: "Professor / formador",
-      pedagogicalNotes: "",
-    },
-  }));
+function mapActivity(row: ActivityRow): Activity {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    title: row.title,
+    type: normalizeType(row.type),
+    date: row.date ?? "",
+    startTime: row.start_time ?? "",
+    endTime: row.end_time ?? "",
+    location: row.location ?? "",
+    responsible: row.responsible ?? "",
+    description: row.description ?? "",
+    status: normalizeStatus(row.status),
+    attendanceCount: Number(row.attendance_count ?? 0),
+    photoCount: Number(row.photo_count ?? 0),
+    documentCount: Number(row.document_count ?? 0),
+    notes: row.notes ?? "",
+  };
 }
 
 export async function listActivities(projectId?: string) {
   const project = await getScopedProject(projectId);
 
-  return buildActivities(project);
+  if (!hasSupabaseServerEnv()) {
+    return [] satisfies Activity[];
+  }
+
+  const supabase = await createClient();
+
+  if (!supabase) {
+    return [] satisfies Activity[];
+  }
+
+  const { data, error } = await (supabase as any)
+    .from("activities")
+    .select("id, project_id, title, type, date, start_time, end_time, location, responsible, description, status, attendance_count, photo_count, document_count, notes")
+    .eq("project_id", project.id)
+    .order("date", { ascending: true });
+
+  if (error || !data) {
+    return [] satisfies Activity[];
+  }
+
+  return (data as ActivityRow[]).map(mapActivity);
 }
 
 export async function listUpcomingActivities(projectId?: string) {
   const activities = await listActivities(projectId);
 
-  return activities.filter((activity) => activity.status === "Agendada").slice(0, 4);
+  return activities
+    .filter((activity) => activity.status === "Agendada" || activity.status === "Pendente")
+    .slice(0, 4);
 }

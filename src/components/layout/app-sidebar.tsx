@@ -3,11 +3,8 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
-  BarChart3,
-  Bell,
   CalendarDays,
   ClipboardList,
-  FileSignature,
   FileText,
   Folder,
   Home,
@@ -15,43 +12,36 @@ import {
   LogOut,
   Menu,
   Plus,
-  Paperclip,
   Settings,
   Users,
   Wallet,
   X,
-  Database,
-  FileArchive,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import type { CurrentProfile } from "@/lib/auth/require-role";
 import { can } from "@/lib/auth/permissions";
+import type { CurrentProfile } from "@/lib/auth/require-role";
+import {
+  ACTIVE_PROJECT_EVENT,
+  getActiveProjectScope,
+  type ActiveProjectScope,
+} from "@/lib/project-scope";
+import { cn } from "@/lib/utils";
 import { logout } from "@/modules/users/actions";
 
 const navigation = [
   { label: "Dashboard", href: "/dashboard", icon: Home, projectScoped: true },
-  { label: "Central Cultural", href: "/central-cultural", icon: ClipboardList },
+  { label: "Central Cultural", href: "/central-cultural", icon: ClipboardList, projectScoped: true },
   { label: "Projetos", href: "/projetos", icon: Folder },
-  { label: "Documentos", href: "/documentos", icon: FileText, projectScoped: true }, { label: "Anexos", href: "/anexos", icon: FileArchive, projectScoped: true }, 
-  {
-    label: "Docs Oficiais",
-    href: "/documentos-oficiais",
-    icon: FileSignature,
-    projectScoped: true,
-  },
+  { label: "Documentos do projeto", href: "/documentos", icon: FileText, projectScoped: true },
   { label: "Cronograma", href: "/cronograma", icon: CalendarDays, projectScoped: true },
   { label: "Diário de classe", href: "/diario-de-classe", icon: ClipboardList, projectScoped: true },
-  { label: "Edital e anexos", href: "/edital", icon: Paperclip, projectScoped: true },
   { label: "Financeiro", href: "/financeiro", icon: Wallet, projectScoped: true },
   { label: "Equipe", href: "/equipe", icon: Users, projectScoped: true },
   { label: "Participantes", href: "/participantes", icon: Users, projectScoped: true },
   { label: "Mídia", href: "/midia", icon: ImageIcon, projectScoped: true },
-  { label: "Gestão", href: "/gestao", icon: ClipboardList, projectScoped: true }, { label: "Relatórios", href: "/relatorios", icon: BarChart3, projectScoped: true },
-  { label: "Notificações", href: "/notificacoes", icon: Bell, badge: "3" },
-  { label: "Modelo de PDF", href: "/configuracoes/pdf", icon: FileText }, { label: "Exportar ZIP", href: "/configuracoes/exportar-projeto", icon: Database },  { label: "Configurações", href: "/configuracoes/geral", icon: Settings },
+  { label: "Configurações", href: "/configuracoes/usuarios", icon: Settings },
 ];
 
 function getProjectIdFromPathname(pathname: string) {
@@ -71,11 +61,30 @@ function getProjectIdFromPathname(pathname: string) {
 function SidebarContent({ profile }: { profile: CurrentProfile }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [storedProject, setStoredProject] = useState<ActiveProjectScope | null>(null);
+
+  useEffect(() => {
+    const syncProject = () => {
+      const scope = getActiveProjectScope();
+      setStoredProject(scope.id === "sem-projeto" ? null : scope);
+    };
+
+    syncProject();
+    window.addEventListener(ACTIVE_PROJECT_EVENT, syncProject as EventListener);
+    window.addEventListener("storage", syncProject);
+
+    return () => {
+      window.removeEventListener(ACTIVE_PROJECT_EVENT, syncProject as EventListener);
+      window.removeEventListener("storage", syncProject);
+    };
+  }, [pathname]);
+
   const activeProjectId =
-    searchParams.get("project") ?? getProjectIdFromPathname(pathname);
+    searchParams.get("project") ?? getProjectIdFromPathname(pathname) ?? storedProject?.id ?? null;
+
   const visibleNavigation = navigation.filter(
     (item) =>
-      item.href !== "/configuracoes/geral" || can(profile.role, "change_settings"),
+      item.href !== "/configuracoes/usuarios" || can(profile.role, "change_settings"),
   );
 
   return (
@@ -84,6 +93,7 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
       style={{ fontFamily: "var(--font-viva-heading)" }}
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(96,165,250,0.24),transparent_28%),radial-gradient(circle_at_82%_22%,rgba(168,85,247,0.24),transparent_24%),radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.14),transparent_28%)]" />
+
       <div className="flex shrink-0 items-center border-b border-sidebar-border px-4 py-3">
         <div className="min-w-0">
           <p className="truncate text-[1.9rem] font-black leading-none tracking-normal">
@@ -110,20 +120,20 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
         )}
       </div>
 
-      <div className="relative flex-1 min-h-0 overflow-y-auto px-2.5 pb-3 [scrollbar-width:thin]">
+      <div className="relative min-h-0 flex-1 overflow-y-auto px-2.5 pb-3 [scrollbar-width:thin]">
         <nav className="space-y-1">
           {visibleNavigation.map((item) => {
             const Icon = item.icon;
             const href =
-              "projectScoped" in item && item.projectScoped && activeProjectId
+              item.projectScoped && activeProjectId
                 ? `${item.href}?project=${activeProjectId}`
                 : item.href;
+
             const active =
               pathname === item.href ||
               pathname.startsWith(`${item.href}/`) ||
               (item.href === "/projetos" && pathname.startsWith("/projetos/")) ||
-              (item.href === "/configuracoes/geral" &&
-                pathname.startsWith("/configuracoes"));
+              (item.href === "/configuracoes/usuarios" && pathname.startsWith("/configuracoes"));
 
             return (
               <Link
@@ -131,16 +141,12 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
                 href={href}
                 className={cn(
                   "flex h-10 items-center gap-2.5 rounded-2xl px-3 text-[0.86rem] font-semibold text-sidebar-foreground/80 transition hover:bg-white/8 hover:text-sidebar-accent-foreground",
-                  active && "bg-[linear-gradient(90deg,rgba(99,102,241,0.45),rgba(37,99,235,0.18))] text-sidebar-accent-foreground shadow-[0_16px_28px_-24px_rgba(96,165,250,0.85)] ring-1 ring-white/10",
+                  active &&
+                    "bg-[linear-gradient(90deg,rgba(99,102,241,0.45),rgba(37,99,235,0.18))] text-sidebar-accent-foreground shadow-[0_16px_28px_-24px_rgba(96,165,250,0.85)] ring-1 ring-white/10",
                 )}
               >
-              <Icon className="viva-sidebar-icon size-[15px] shrink-0" />
-              <span className="viva-sidebar-label">{item.label}</span>
-                {"badge" in item ? (
-                  <span className="ml-auto rounded-full bg-[linear-gradient(135deg,#22c55e,#06b6d4)] px-2 py-0.5 text-[10px] text-white shadow-sm">
-                    {item.badge}
-                  </span>
-                ) : null}
+                <Icon className="viva-sidebar-icon size-[15px] shrink-0" />
+                <span className="viva-sidebar-label">{item.label}</span>
               </Link>
             );
           })}
@@ -165,6 +171,7 @@ function SidebarContent({ profile }: { profile: CurrentProfile }) {
                 </p>
               </div>
             </div>
+
             <form action={logout}>
               <Button
                 className="h-11 w-full justify-start rounded-2xl border-white/10 bg-transparent text-[0.86rem] text-sidebar-foreground hover:bg-white/8"

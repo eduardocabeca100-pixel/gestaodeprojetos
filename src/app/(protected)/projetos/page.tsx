@@ -39,7 +39,7 @@ export default async function ProjectsPage() {
       }
     >
       <SectionCard title="Projetos cadastrados" description="Busque por nome, edital ou status.">
-        <ProjectDataTable projects={projects} />
+        <ProjectDataTable projects={projects} canDelete={can(profile.role, "archive_project")} />
       </SectionCard>
     </PageContainer>
   );

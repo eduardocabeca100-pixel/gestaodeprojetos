@@ -16,6 +16,7 @@ import { SectionCard } from "@/components/layout/section-card";
 import { Button } from "@/components/ui/button";
 import type { Role } from "@/lib/auth/permissions";
 import { useClientReady } from "@/lib/use-client-ready";
+import { getPdfSettings, savePdfSettings } from "@/lib/pdf/pdf-template";
 import type { SettingsSection } from "@/modules/settings/types";
 
 const settingsStorageKey = "viva:settings:sections:v2";
@@ -70,6 +71,36 @@ function downloadSettingsBackup(settings: StoredSettings) {
   link.click();
 
   URL.revokeObjectURL(url);
+}
+
+
+function syncGeneralSettingsToPdf(draft: Record<string, string>) {
+  const city = draft["cidade"] ?? "";
+  const state = draft["estado"] ?? "";
+  const cityUf = [city, state].filter(Boolean).join(" | ");
+  const currentPdfSettings = getPdfSettings();
+  const logoDataUrl =
+    draft["logo-dos-documentos-oficiais"] ||
+    draft["logo-principal-do-sistema"] ||
+    currentPdfSettings.logoDataUrl;
+  const companyName = draft["nome-da-instituicao"] || currentPdfSettings.companyName;
+  const site = draft["site"] || currentPdfSettings.site;
+
+  savePdfSettings({
+    ...currentPdfSettings,
+    logoDataUrl,
+    systemTitle: draft["nome-do-sistema"] || currentPdfSettings.systemTitle,
+    companyName,
+    cnpj: draft["cnpj"] || currentPdfSettings.cnpj,
+    cityUf: cityUf || currentPdfSettings.cityUf,
+    email: draft["e-mail-institucional"] || currentPdfSettings.email,
+    phone: draft["whatsapp"] || currentPdfSettings.phone,
+    site,
+    footerText:
+      draft["rodape-padrao-dos-relatorios"] ||
+      `${companyName} - Gestão Cultural`,
+    footerSite: site ? site.toUpperCase() : currentPdfSettings.footerSite,
+  });
 }
 
 function buildDraft(section: SettingsSection, saved: StoredSettings) {
@@ -150,6 +181,13 @@ function SettingsPanelContent({
 
     setAllSettings(next);
     writeSettings(next);
+
+    if (section.id === "geral") {
+      syncGeneralSettingsToPdf(draft);
+      setFeedback("Configurações gerais salvas e aplicadas automaticamente ao modelo de PDF.");
+      return;
+    }
+
     setFeedback(`Configurações de ${section.title} salvas e atualizadas.`);
   }
 

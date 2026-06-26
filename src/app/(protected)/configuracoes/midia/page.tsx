@@ -1,5 +1,5 @@
-import { SettingsPage } from "@/components/settings/settings-page";
+import { redirect } from "next/navigation";
 
-export default function MediaSettingsPage() {
-  return <SettingsPage sectionId="midia" />;
+export default function HiddenSettingsPage() {
+  redirect("/configuracoes/usuarios");
 }

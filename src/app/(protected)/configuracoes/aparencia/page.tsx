@@ -1,5 +1,5 @@
-import { SettingsPage } from "@/components/settings/settings-page";
+import { redirect } from "next/navigation";
 
-export default function AppearanceSettingsPage() {
-  return <SettingsPage sectionId="aparencia" />;
+export default function HiddenSettingsPage() {
+  redirect("/configuracoes/usuarios");
 }

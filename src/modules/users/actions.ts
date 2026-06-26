@@ -246,13 +246,13 @@ export async function login(
   }
 
   if (!hasSupabaseServerEnv()) {
-    redirect("/dashboard");
+    redirect("/projetos/selecionar");
   }
 
   const supabase = await createClient();
 
   if (!supabase) {
-    redirect("/dashboard");
+    redirect("/projetos/selecionar");
   }
 
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
@@ -277,7 +277,7 @@ export async function login(
     }
   }
 
-  redirect("/dashboard");
+  redirect("/projetos/selecionar");
 }
 
 export async function updatePassword(
@@ -296,13 +296,13 @@ export async function updatePassword(
   }
 
   if (!hasSupabaseServerEnv()) {
-    redirect("/dashboard");
+    redirect("/projetos/selecionar");
   }
 
   const supabase = await createClient();
 
   if (!supabase) {
-    redirect("/dashboard");
+    redirect("/projetos/selecionar");
   }
 
   const {
@@ -344,7 +344,7 @@ export async function updatePassword(
     };
   }
 
-  redirect("/dashboard");
+  redirect("/projetos/selecionar");
 }
 
 export async function createUser(

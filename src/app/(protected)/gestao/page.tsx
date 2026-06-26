@@ -1,24 +1,14 @@
-import { AdvancedManagementPanel } from "@/components/advanced-management/advanced-management-panel";
-import { PageContainer } from "@/components/layout/page-container";
-import { ProjectScopeBanner } from "@/components/projects/project-scope-banner";
-import { getActiveProject, type PageSearchParams } from "@/lib/utils/search-params";
+import { redirect } from "next/navigation";
 
-export default async function AdvancedManagementPage({
+import type { PageSearchParams } from "@/lib/utils/search-params";
+
+export default async function ManagementRedirectPage({
   searchParams,
 }: {
   searchParams: PageSearchParams;
 }) {
-  const project = await getActiveProject(searchParams);
+  const params = await searchParams;
+  const project = Array.isArray(params.project) ? params.project[0] : params.project;
 
-  return (
-    <PageContainer
-      title="Gestão"
-      description="Central de pendências, tarefas, rubricas e relatório automático do projeto."
-    >
-      <div className="space-y-6">
-        <ProjectScopeBanner project={project} />
-        <AdvancedManagementPanel project={{ id: project.id, name: project.name }} />
-      </div>
-    </PageContainer>
-  );
+  redirect(project ? `/central-cultural?project=${encodeURIComponent(project)}` : "/central-cultural");
 }

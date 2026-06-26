@@ -1,24 +1,14 @@
-import { EditalWorkspace } from "@/components/edital/edital-workspace";
-import { PageContainer } from "@/components/layout/page-container";
-import { ProjectScopeBanner } from "@/components/projects/project-scope-banner";
-import { getActiveProject, type PageSearchParams } from "@/lib/utils/search-params";
-import { listEditalAttachments } from "@/modules/edital/queries";
+import { redirect } from "next/navigation";
 
-export default async function EditalPage({
+import type { PageSearchParams } from "@/lib/utils/search-params";
+
+export default async function EditalRedirectPage({
   searchParams,
 }: {
   searchParams: PageSearchParams;
 }) {
-  const project = await getActiveProject(searchParams);
-  const attachments = await listEditalAttachments(project.id);
+  const params = await searchParams;
+  const project = Array.isArray(params.project) ? params.project[0] : params.project;
 
-  return (
-    <PageContainer
-      title="Edital e anexos"
-      description="Repositório próprio para o edital principal, anexos, retificações, ofícios, respostas e documentos de apoio do projeto."
-    >
-      <ProjectScopeBanner projectId={project.id} />
-      <EditalWorkspace project={project} attachments={attachments} />
-    </PageContainer>
-  );
+  redirect(project ? `/documentos?project=${encodeURIComponent(project)}` : "/documentos");
 }

@@ -1,5 +1,5 @@
-import { SettingsPage } from "@/components/settings/settings-page";
+import { redirect } from "next/navigation";
 
-export default function CustomFieldsSettingsPage() {
-  return <SettingsPage sectionId="campos-personalizados" />;
+export default function HiddenSettingsPage() {
+  redirect("/configuracoes/usuarios");
 }

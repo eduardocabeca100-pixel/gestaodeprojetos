@@ -3,7 +3,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  AlertTriangle,
   Download,
   Eye,
   FileCheck2,
@@ -12,25 +11,21 @@ import {
   ImageIcon,
   Paperclip,
   Search,
-  ShieldAlert,
   Trash2,
   UploadCloud,
   X,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { useClientReady } from "@/lib/use-client-ready";
 import { getActiveProjectScope, projectScopedKey } from "@/lib/project-scope";
+import { useClientReady } from "@/lib/use-client-ready";
+import type { ProjectDocument } from "@/modules/documents/types";
 
-type DocumentStatus =
-  | "Pendente"
-  | "Enviado"
-  | "Aprovado"
-  | "Precisa corrigir"
-  | "Vencido";
+type DocumentStatus = "Pendente" | "Enviado" | "Aprovado" | "Precisa corrigir" | "Vencido";
 
 type ProjectDocumentFile = {
   id: string;
+  sourceId?: string;
   projectName: string;
   name: string;
   category: string;
@@ -42,6 +37,11 @@ type ProjectDocumentFile = {
   fileSize?: number;
   fileDataUrl?: string;
   uploadedAt?: string;
+};
+
+type ProjectDocumentsVaultProps = {
+  project?: { id: string; name: string };
+  documents?: ProjectDocument[];
 };
 
 const storageKeyBase = "viva:central-cultural:documents:v1";
@@ -63,73 +63,113 @@ const documentTemplates = [
   "Autorização de Uso de Imagem",
   "Comprovante Financeiro",
   "Material de Divulgação",
+  "Edital principal",
+  "Anexos do edital",
+  "Habilitação",
+  "Proposta",
+  "Orçamento",
 ];
 
-function getDefaultDocuments(projectName: string): ProjectDocumentFile[] {
-  return [
-    {
-      id: "doc-cartao-cnpj",
-      projectName,
-      name: "Cartão CNPJ",
-      category: "Proponente",
-      status: "Pendente",
-      validUntil: "",
-      notes: "",
-    },
-    {
-      id: "doc-certidao-federal",
-      projectName,
-      name: "Certidão Federal",
-      category: "Certidões",
-      status: "Pendente",
-      validUntil: "",
-      notes: "",
-    },
-    {
-      id: "doc-certidao-estadual",
-      projectName,
-      name: "Certidão Estadual",
-      category: "Certidões",
-      status: "Pendente",
-      validUntil: "",
-      notes: "",
-    },
-    {
-      id: "doc-certidao-municipal",
-      projectName,
-      name: "Certidão Municipal",
-      category: "Certidões",
-      status: "Pendente",
-      validUntil: "",
-      notes: "",
-    },
-  ];
-}
+const legacyPlaceholderIds = new Set([
+  "doc-cartao-cnpj",
+  "doc-certidao-federal",
+  "doc-certidao-estadual",
+  "doc-certidao-municipal",
+]);
 
 function makeId() {
   return `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function readDocuments(projectId: string, projectName: string) {
-  if (typeof window === "undefined") return getDefaultDocuments(projectName);
+function isLegacyPlaceholderDocument(document: ProjectDocumentFile) {
+  return (
+    legacyPlaceholderIds.has(document.id) &&
+    !document.fileDataUrl &&
+    !document.fileName &&
+    !document.notes &&
+    document.status === "Pendente"
+  );
+}
+
+function normalizeStatus(status: ProjectDocument["status"] | string): DocumentStatus {
+  if (status === "Válido") return "Aprovado";
+  if (status === "Vencido") return "Vencido";
+  if (status === "Arquivado") return "Pendente";
+  if (status === "Substituído") return "Enviado";
+  if (status === "Pendente") return "Pendente";
+  return ["Pendente", "Enviado", "Aprovado", "Precisa corrigir", "Vencido"].includes(status)
+    ? (status as DocumentStatus)
+    : "Pendente";
+}
+
+function mapServerDocument(document: ProjectDocument, projectName: string): ProjectDocumentFile {
+  return {
+    id: `server-${document.id}`,
+    sourceId: document.id,
+    projectName,
+    name: document.fileName,
+    category: document.category,
+    status: normalizeStatus(document.status),
+    validUntil: document.expiresAt ?? "",
+    notes: document.notes,
+    fileName: document.fileName,
+    uploadedAt: document.uploadedAt,
+  };
+}
+
+function mergeDocuments(primary: ProjectDocumentFile[], fallback: ProjectDocumentFile[]) {
+  const seen = new Set<string>();
+
+  const addKeys = (document: ProjectDocumentFile) => {
+    seen.add(document.id);
+    if (document.sourceId) seen.add(`source:${document.sourceId}`);
+    if (document.fileName) seen.add(`file:${document.fileName.toLowerCase()}`);
+  };
+
+  primary.forEach(addKeys);
+
+  return [
+    ...primary,
+    ...fallback.filter((document) => {
+      const keys = [
+        document.id,
+        document.sourceId ? `source:${document.sourceId}` : "",
+        document.fileName ? `file:${document.fileName.toLowerCase()}` : "",
+      ].filter(Boolean);
+
+      return !keys.some((key) => seen.has(key));
+    }),
+  ];
+}
+
+function readDocuments(
+  projectId: string,
+  projectName: string,
+  fallbackDocuments: ProjectDocument[] = [],
+) {
+  const fallback = fallbackDocuments.map((document) => mapServerDocument(document, projectName));
+
+  if (typeof window === "undefined") {
+    return fallback;
+  }
 
   try {
     const storageKey = projectScopedKey(storageKeyBase, projectId);
-    const initializedKey = projectScopedKey(initializedKeyBase, projectId);
     const saved = window.localStorage.getItem(storageKey);
 
     if (saved) {
       const parsed = JSON.parse(saved) as ProjectDocumentFile[];
-      return Array.isArray(parsed) ? parsed : getDefaultDocuments(projectName);
+      const clean = Array.isArray(parsed)
+        ? parsed.filter((document) => !isLegacyPlaceholderDocument(document))
+        : [];
+
+      return mergeDocuments(clean, fallback);
     }
 
-    if (window.localStorage.getItem(initializedKey) === "1") {
-      return [];
-    }
-
-    return getDefaultDocuments(projectName);
+    window.localStorage.setItem(projectScopedKey(initializedKeyBase, projectId), "1");
+    return fallback;
   } catch {
-    return getDefaultDocuments(projectName);
+    return fallback;
   }
 }
 
@@ -214,7 +254,7 @@ function downloadDocument(document: ProjectDocumentFile) {
   link.click();
 }
 
-export function ProjectDocumentsVault() {
+export function ProjectDocumentsVault({ project, documents = [] }: ProjectDocumentsVaultProps = {}) {
   const isClient = useClientReady();
 
   if (!isClient) {
@@ -225,18 +265,26 @@ export function ProjectDocumentsVault() {
     );
   }
 
-  return <ProjectDocumentsVaultContent />;
+  return <ProjectDocumentsVaultContent project={project} documents={documents} />;
 }
 
-function ProjectDocumentsVaultContent() {
-  const project = useMemo(() => getActiveProjectScope(), []);
+function ProjectDocumentsVaultContent({
+  project: providedProject,
+  documents: serverDocuments,
+}: ProjectDocumentsVaultProps) {
+  const project = useMemo(() => providedProject ?? getActiveProjectScope(), [providedProject]);
   const [documents, setDocuments] = useState<ProjectDocumentFile[]>(() =>
-    readDocuments(project.id, project.name),
+    readDocuments(project.id, project.name, serverDocuments ?? []),
   );
-  const [projectFilter, setProjectFilter] = useState(project.name);
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("Documentos carregados.");
   const [preview, setPreview] = useState<ProjectDocumentFile | null>(null);
+
+  useEffect(() => {
+    const next = readDocuments(project.id, project.name, serverDocuments ?? []);
+    setDocuments(next);
+    setMessage(`Documentos carregados para ${project.name}.`);
+  }, [project.id, project.name, serverDocuments]);
 
   function commit(nextDocuments: ProjectDocumentFile[], nextMessage = "Documento salvo automaticamente.") {
     setDocuments(nextDocuments);
@@ -264,24 +312,28 @@ function ProjectDocumentsVaultContent() {
   function addDocument(templateName = "Novo documento") {
     const nextDocument: ProjectDocumentFile = {
       id: makeId(),
-      projectName: projectFilter || project.name,
+      projectName: project.name,
       name: templateName,
-      category: templateName.includes("Certidão") ? "Certidões" : "Geral",
+      category: templateName.includes("Certidão")
+        ? "Certidões"
+        : templateName.includes("Edital") || templateName.includes("Anexos")
+          ? "Edital e anexos"
+          : "Geral",
       status: "Pendente",
       validUntil: "",
       notes: "",
     };
 
-    commit([nextDocument, ...documents], "Novo documento criado.");
+    commit([nextDocument, ...documents], "Novo card de documento criado.");
   }
 
   async function uploadDocument(documentId: string, file: File | null) {
     if (!file) return;
 
-    const maxSize = 4 * 1024 * 1024;
+    const maxSize = 8 * 1024 * 1024;
 
     if (file.size > maxSize) {
-      setMessage("Arquivo muito grande para teste local. Use até 4 MB por enquanto. No Supabase poderemos subir arquivos maiores.");
+      setMessage("Arquivo muito grande para armazenamento local. Use até 8 MB por enquanto.");
       return;
     }
 
@@ -309,11 +361,11 @@ function ProjectDocumentsVaultContent() {
       status: "Pendente",
     });
 
-    setMessage("Arquivo removido do documento.");
+    setMessage("Arquivo removido do card.");
   }
 
   function removeDocument(documentId: string) {
-    if (!window.confirm("Apagar este documento da lista?")) return;
+    if (!window.confirm("Apagar este card de documento?")) return;
 
     commit(
       documents.filter((document) => document.id !== documentId),
@@ -323,22 +375,18 @@ function ProjectDocumentsVaultContent() {
 
   const filteredDocuments = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
-    const normalizedProject = projectFilter.trim().toLowerCase();
 
     return documents.filter((document) => {
-      const matchesProject =
-        !normalizedProject ||
-        document.projectName.toLowerCase().includes(normalizedProject);
+      if (!normalizedSearch) return true;
 
-      const matchesSearch =
-        !normalizedSearch ||
+      return (
         document.name.toLowerCase().includes(normalizedSearch) ||
         document.category.toLowerCase().includes(normalizedSearch) ||
-        document.status.toLowerCase().includes(normalizedSearch);
-
-      return matchesProject && matchesSearch;
+        document.status.toLowerCase().includes(normalizedSearch) ||
+        (document.fileName ?? "").toLowerCase().includes(normalizedSearch)
+      );
     });
-  }, [documents, projectFilter, search]);
+  }, [documents, search]);
 
   const totals = useMemo(() => {
     const expired = documents.filter((document) => {
@@ -353,7 +401,7 @@ function ProjectDocumentsVaultContent() {
 
     return {
       total: documents.length,
-      withFile: documents.filter((document) => document.fileDataUrl).length,
+      withFile: documents.filter((document) => document.fileDataUrl || document.fileName).length,
       pending: documents.filter((document) => document.status !== "Aprovado").length,
       expired,
       closeToExpire,
@@ -366,22 +414,20 @@ function ProjectDocumentsVaultContent() {
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
-              Documentos por projeto
+              Documentos do projeto
             </p>
             <h3 className="mt-1 text-2xl font-black text-slate-950">
-              Cofre de documentos e certidões
+              Cofre único de documentos
             </h3>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
-              Suba, visualize, baixe e apague documentos. Cada item pode ter validade, status e observações.
+              Aqui ficam documentos, anexos, edital, certidões, comprovantes, proposta e arquivos de apoio do projeto {project.name}.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" onClick={() => addDocument()}>
-              <FolderPlus className="size-4" />
-              Novo documento
-            </Button>
-          </div>
+          <Button type="button" onClick={() => addDocument()}>
+            <FolderPlus className="size-4" />
+            Novo card
+          </Button>
         </div>
 
         <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
@@ -390,66 +436,28 @@ function ProjectDocumentsVaultContent() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Total</p>
-          <p className="mt-2 text-3xl font-black text-slate-950">{totals.total}</p>
-          <p className="mt-1 text-sm text-slate-500">documentos cadastrados</p>
-        </div>
-
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Com arquivo</p>
-          <p className="mt-2 text-3xl font-black text-emerald-700">{totals.withFile}</p>
-          <p className="mt-1 text-sm text-slate-500">anexos enviados</p>
-        </div>
-
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Pendentes</p>
-          <p className="mt-2 text-3xl font-black text-amber-700">{totals.pending}</p>
-          <p className="mt-1 text-sm text-slate-500">não aprovados</p>
-        </div>
-
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">A vencer</p>
-          <p className="mt-2 text-3xl font-black text-amber-700">{totals.closeToExpire}</p>
-          <p className="mt-1 text-sm text-slate-500">em até 15 dias</p>
-        </div>
-
-        <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
-          <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Vencidos</p>
-          <p className="mt-2 text-3xl font-black text-red-700">{totals.expired}</p>
-          <p className="mt-1 text-sm text-slate-500">precisam atenção</p>
-        </div>
+        <Info title="Total" value={String(totals.total)} helper="cards cadastrados" />
+        <Info title="Com arquivo" value={String(totals.withFile)} helper="arquivos vinculados" />
+        <Info title="Pendentes" value={String(totals.pending)} helper="não aprovados" />
+        <Info title="A vencer" value={String(totals.closeToExpire)} helper="até 15 dias" />
+        <Info title="Vencidos" value={String(totals.expired)} helper="precisam atenção" />
       </div>
 
       <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
-        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <label className="block">
-            <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
-              Projeto
-            </span>
+        <label className="block">
+          <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+            Buscar documento
+          </span>
+          <div className="relative mt-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
             <input
-              className="form-input mt-1"
-              value={projectFilter}
-              onChange={(event) => setProjectFilter(event.target.value)}
-              placeholder="Ex.: Reféns, O Poço, Oficina..."
+              className="form-input pl-10"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar por nome, categoria, arquivo ou status..."
             />
-          </label>
-
-          <label className="block">
-            <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
-              Buscar documento
-            </span>
-            <div className="relative mt-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-              <input
-                className="form-input pl-10"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar por nome, categoria ou status..."
-              />
-            </div>
-          </label>
-        </div>
+          </div>
+        </label>
 
         <div className="mt-5 flex flex-wrap gap-2">
           {documentTemplates.map((template) => (
@@ -468,7 +476,7 @@ function ProjectDocumentsVaultContent() {
       <div className="grid gap-4">
         {filteredDocuments.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
-            Nenhum documento encontrado para esse filtro.
+            Nenhum documento real cadastrado neste projeto ainda. Crie um card ou suba um arquivo.
           </div>
         ) : null}
 
@@ -486,7 +494,7 @@ function ProjectDocumentsVaultContent() {
                   <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        {document.fileDataUrl ? (
+                        {document.fileName ? (
                           isImage ? (
                             <ImageIcon className="size-5 text-primary" />
                           ) : (
@@ -502,7 +510,7 @@ function ProjectDocumentsVaultContent() {
                       </div>
 
                       <p className="mt-1 text-sm text-slate-500">
-                        {document.category} · {document.projectName}
+                        {document.category} · {project.name}
                       </p>
                     </div>
 
@@ -512,19 +520,6 @@ function ProjectDocumentsVaultContent() {
                   </div>
 
                   <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    <label className="block">
-                      <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
-                        Projeto
-                      </span>
-                      <input
-                        className="form-input mt-1"
-                        value={document.projectName}
-                        onChange={(event) =>
-                          updateDocument(document.id, { projectName: event.target.value })
-                        }
-                      />
-                    </label>
-
                     <label className="block">
                       <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
                         Documento
@@ -571,9 +566,7 @@ function ProjectDocumentsVaultContent() {
                         <option>Vencido</option>
                       </select>
                     </label>
-                  </div>
 
-                  <div className="grid gap-3 md:grid-cols-[220px_minmax(0,1fr)]">
                     <label className="block">
                       <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
                         Validade
@@ -587,21 +580,21 @@ function ProjectDocumentsVaultContent() {
                         }
                       />
                     </label>
-
-                    <label className="block">
-                      <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
-                        Observações
-                      </span>
-                      <input
-                        className="form-input mt-1"
-                        value={document.notes}
-                        onChange={(event) =>
-                          updateDocument(document.id, { notes: event.target.value })
-                        }
-                        placeholder="Ex.: certidão precisa ser renovada antes da assinatura..."
-                      />
-                    </label>
                   </div>
+
+                  <label className="block">
+                    <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+                      Observações
+                    </span>
+                    <input
+                      className="form-input mt-1"
+                      value={document.notes}
+                      onChange={(event) =>
+                        updateDocument(document.id, { notes: event.target.value })
+                      }
+                      placeholder="Ex.: certidão precisa ser renovada antes da assinatura..."
+                    />
+                  </label>
                 </div>
 
                 <div className="rounded-3xl border border-white/70 bg-white/80 p-4 text-slate-700">
@@ -610,8 +603,8 @@ function ProjectDocumentsVaultContent() {
                       <Paperclip className="size-5" />
                     </span>
 
-                    <div>
-                      <p className="text-sm font-black text-slate-950">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-black text-slate-950">
                         {document.fileName || "Nenhum arquivo"}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
@@ -626,7 +619,7 @@ function ProjectDocumentsVaultContent() {
                   <div className="mt-4 grid gap-2">
                     <label className="inline-flex cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-primary/40 hover:bg-primary/5 hover:text-primary">
                       <UploadCloud className="mr-2 size-4" />
-                      Subir arquivo
+                      Subir/substituir
                       <input
                         type="file"
                         className="hidden"
@@ -665,7 +658,7 @@ function ProjectDocumentsVaultContent() {
                     <Button
                       type="button"
                       variant="outline"
-                      disabled={!document.fileDataUrl}
+                      disabled={!document.fileName}
                       onClick={() => removeFile(document.id)}
                     >
                       <X className="size-4" />
@@ -678,13 +671,13 @@ function ProjectDocumentsVaultContent() {
                       onClick={() => removeDocument(document.id)}
                     >
                       <Trash2 className="size-4" />
-                      Apagar documento
+                      Excluir card
                     </Button>
                   </div>
 
-                  {!isPdf && !isImage && document.fileDataUrl ? (
+                  {!document.fileDataUrl && document.fileName ? (
                     <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-800">
-                      Este tipo de arquivo pode não abrir na prévia, mas pode ser baixado normalmente.
+                      Este arquivo veio do banco/lista do projeto. Para visualizar aqui, suba ou substitua o arquivo neste card.
                     </div>
                   ) : null}
                 </div>
@@ -730,28 +723,23 @@ function ProjectDocumentsVaultContent() {
                 />
               ) : (
                 <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
-                  <div className="flex gap-3">
-                    <ShieldAlert className="size-5 shrink-0" />
-                    <p>
-                      Prévia indisponível para este tipo de arquivo. Use o botão baixar para abrir no seu computador.
-                    </p>
-                  </div>
+                  Prévia indisponível para este tipo de arquivo. Use o botão baixar.
                 </div>
               )}
             </div>
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
 
-      <div className="rounded-3xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800">
-        <div className="flex gap-3">
-          <AlertTriangle className="mt-0.5 size-5 shrink-0" />
-          <p>
-            Este bloco está funcional para teste no navegador. Como arquivos em localStorage têm limite de tamanho,
-            use documentos de até 4 MB por enquanto. No próximo ajuste podemos ligar estes uploads ao Supabase Storage.
-          </p>
-        </div>
-      </div>
+function Info({ title, value, helper }: { title: string; value: string; helper: string }) {
+  return (
+    <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{title}</p>
+      <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
+      <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
   );
 }

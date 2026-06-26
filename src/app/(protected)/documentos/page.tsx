@@ -1,4 +1,4 @@
-import { DocumentsWorkspace } from "@/components/documents/documents-workspace";
+import { ProjectDocumentsVault } from "@/components/management/project-documents-vault";
 import { PageContainer } from "@/components/layout/page-container";
 import { ProjectScopeBanner } from "@/components/projects/project-scope-banner";
 import { getActiveProject, type PageSearchParams } from "@/lib/utils/search-params";
@@ -14,11 +14,14 @@ export default async function DocumentsPage({
 
   return (
     <PageContainer
-      title="Documentos"
-      description="Upload, visualização, validade, substituição e arquivamento de documentos vinculados a projetos."
+      title="Documentos do projeto"
+      description="Cofre único para documentos, anexos, edital, certidões, comprovantes, proposta e arquivos de apoio."
     >
-      <ProjectScopeBanner projectId={project.id} />
-      <DocumentsWorkspace project={project} documents={documents} />
+      <ProjectScopeBanner project={project} />
+      <ProjectDocumentsVault
+        project={{ id: project.id, name: project.name }}
+        documents={documents}
+      />
     </PageContainer>
   );
 }

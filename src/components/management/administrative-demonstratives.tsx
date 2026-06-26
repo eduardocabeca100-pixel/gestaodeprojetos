@@ -40,6 +40,12 @@ type Demonstrative = {
   items: Item[];
 };
 
+declare global {
+  interface Window {
+    __vivaOriginalOpen?: typeof window.open;
+  }
+}
+
 type TeamPerson = {
   name: string;
   role?: string;
@@ -221,7 +227,7 @@ function printPdf(demo: Demonstrative) {
 
     body {
       margin: 0;
-      background: #e9ece7;
+      background: #f3f4f6;
       color: #111827;
       font-family: Arial, Helvetica, sans-serif;
       font-size: 10.5pt;
@@ -553,17 +559,18 @@ function printPdf(demo: Demonstrative) {
 </body>
 </html>`;
 
-  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const win = window.open(url, "_blank", "noopener,noreferrer,width=1200,height=850");
+  const originalOpen = window.__vivaOriginalOpen?.bind(window) ?? window.open.bind(window);
+  const win = originalOpen("", "_blank", "noopener,noreferrer,width=1200,height=850");
 
   if (!win) {
-    URL.revokeObjectURL(url);
     window.alert("O navegador bloqueou a janela do demonstrativo. Libere pop-ups para este site.");
     return;
   }
 
-  window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+  win.focus();
 }
 
 export function AdministrativeDemonstratives() {
