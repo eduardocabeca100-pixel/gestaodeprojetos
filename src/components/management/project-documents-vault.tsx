@@ -3,6 +3,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  ChevronDown,
+  ChevronUp,
   Download,
   Eye,
   FileCheck2,
@@ -97,6 +99,7 @@ function normalizeStatus(status: ProjectDocument["status"] | string): DocumentSt
   if (status === "Arquivado") return "Pendente";
   if (status === "Substituído") return "Enviado";
   if (status === "Pendente") return "Pendente";
+
   return ["Pendente", "Enviado", "Aprovado", "Precisa corrigir", "Vencido"].includes(status)
     ? (status as DocumentStatus)
     : "Pendente";
@@ -220,22 +223,22 @@ function getDocumentTone(document: ProjectDocumentFile) {
   const days = daysUntil(document.validUntil);
 
   if (document.status === "Aprovado" && (days === null || days > 15)) {
-    return "border-emerald-200 bg-emerald-50 text-emerald-700";
+    return "border-emerald-200 bg-emerald-50";
   }
 
   if (document.status === "Precisa corrigir" || document.status === "Vencido" || (days !== null && days < 0)) {
-    return "border-red-200 bg-red-50 text-red-700";
+    return "border-red-200 bg-red-50";
   }
 
   if (days !== null && days <= 15) {
-    return "border-amber-200 bg-amber-50 text-amber-800";
+    return "border-amber-200 bg-amber-50";
   }
 
   if (document.status === "Enviado") {
-    return "border-sky-200 bg-sky-50 text-sky-700";
+    return "border-sky-200 bg-sky-50";
   }
 
-  return "border-slate-200 bg-white text-slate-700";
+  return "border-slate-200 bg-white";
 }
 
 function statusTone(status: DocumentStatus) {
@@ -277,12 +280,14 @@ function ProjectDocumentsVaultContent({
     readDocuments(project.id, project.name, serverDocuments ?? []),
   );
   const [search, setSearch] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [message, setMessage] = useState("Documentos carregados.");
   const [preview, setPreview] = useState<ProjectDocumentFile | null>(null);
 
   useEffect(() => {
     const next = readDocuments(project.id, project.name, serverDocuments ?? []);
     setDocuments(next);
+    setExpandedId(null);
     setMessage(`Documentos carregados para ${project.name}.`);
   }, [project.id, project.name, serverDocuments]);
 
@@ -325,6 +330,7 @@ function ProjectDocumentsVaultContent({
     };
 
     commit([nextDocument, ...documents], "Novo card de documento criado.");
+    setExpandedId(nextDocument.id);
   }
 
   async function uploadDocument(documentId: string, file: File | null) {
@@ -371,6 +377,10 @@ function ProjectDocumentsVaultContent({
       documents.filter((document) => document.id !== documentId),
       "Documento apagado.",
     );
+
+    if (expandedId === documentId) {
+      setExpandedId(null);
+    }
   }
 
   const filteredDocuments = useMemo(() => {
@@ -420,7 +430,7 @@ function ProjectDocumentsVaultContent({
               Cofre único de documentos
             </h3>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
-              Aqui ficam documentos, anexos, edital, certidões, comprovantes, proposta e arquivos de apoio do projeto {project.name}.
+              Os documentos ficam em cards compactos. Clique em um card para abrir, editar, visualizar, baixar ou substituir o arquivo.
             </p>
           </div>
 
@@ -473,215 +483,229 @@ function ProjectDocumentsVaultContent({
         </div>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
         {filteredDocuments.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
+          <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500 md:col-span-2 2xl:col-span-3">
             Nenhum documento real cadastrado neste projeto ainda. Crie um card ou suba um arquivo.
           </div>
         ) : null}
 
         {filteredDocuments.map((document) => {
-          const isPdf = document.fileType?.includes("pdf");
+          const expanded = expandedId === document.id;
           const isImage = document.fileType?.startsWith("image/");
 
           return (
             <article
               key={document.id}
-              className={`rounded-3xl border p-5 shadow-sm ${getDocumentTone(document)}`}
+              className={`rounded-3xl border p-4 shadow-sm transition ${getDocumentTone(document)} ${
+                expanded ? "md:col-span-2 2xl:col-span-3" : ""
+              }`}
             >
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
-                <div className="space-y-4">
-                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        {document.fileName ? (
-                          isImage ? (
-                            <ImageIcon className="size-5 text-primary" />
-                          ) : (
-                            <FileCheck2 className="size-5 text-primary" />
-                          )
-                        ) : (
-                          <FileText className="size-5 text-slate-400" />
-                        )}
+              <button
+                type="button"
+                className="flex w-full items-start gap-3 text-left"
+                onClick={() => setExpandedId(expanded ? null : document.id)}
+              >
+                <span className="mt-1 rounded-2xl bg-white p-3 text-primary shadow-sm">
+                  {document.fileName ? (
+                    isImage ? (
+                      <ImageIcon className="size-5" />
+                    ) : (
+                      <FileCheck2 className="size-5" />
+                    )
+                  ) : (
+                    <FileText className="size-5 text-slate-400" />
+                  )}
+                </span>
 
-                        <h4 className="text-lg font-black text-slate-950">
-                          {document.name}
-                        </h4>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-base font-black text-slate-950">
+                    {document.name}
+                  </span>
+                  <span className="mt-1 block truncate text-sm text-slate-500">
+                    {document.category} · {document.fileName || "sem arquivo"}
+                  </span>
+                  <span className="mt-2 flex flex-wrap gap-2">
+                    <span className={`rounded-full border px-2.5 py-1 text-xs font-black ${statusTone(document.status)}`}>
+                      {document.status}
+                    </span>
+                    <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-600">
+                      {getValidityLabel(document)}
+                    </span>
+                  </span>
+                </span>
+
+                <span className="rounded-full bg-white p-2 text-slate-500 shadow-sm">
+                  {expanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                </span>
+              </button>
+
+              {expanded ? (
+                <div className="mt-5 rounded-3xl border border-white/80 bg-white/90 p-4 text-slate-700 shadow-sm">
+                  <div className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_260px]">
+                    <div className="space-y-4">
+                      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                        <label className="block">
+                          <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+                            Documento
+                          </span>
+                          <input
+                            className="form-input mt-1"
+                            value={document.name}
+                            onChange={(event) =>
+                              updateDocument(document.id, { name: event.target.value })
+                            }
+                          />
+                        </label>
+
+                        <label className="block">
+                          <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+                            Categoria
+                          </span>
+                          <input
+                            className="form-input mt-1"
+                            value={document.category}
+                            onChange={(event) =>
+                              updateDocument(document.id, { category: event.target.value })
+                            }
+                          />
+                        </label>
+
+                        <label className="block">
+                          <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+                            Status
+                          </span>
+                          <select
+                            className="form-input mt-1"
+                            value={document.status}
+                            onChange={(event) =>
+                              updateDocument(document.id, {
+                                status: event.target.value as DocumentStatus,
+                              })
+                            }
+                          >
+                            <option>Pendente</option>
+                            <option>Enviado</option>
+                            <option>Aprovado</option>
+                            <option>Precisa corrigir</option>
+                            <option>Vencido</option>
+                          </select>
+                        </label>
+
+                        <label className="block">
+                          <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+                            Validade
+                          </span>
+                          <input
+                            className="form-input mt-1"
+                            type="date"
+                            value={document.validUntil}
+                            onChange={(event) =>
+                              updateDocument(document.id, { validUntil: event.target.value })
+                            }
+                          />
+                        </label>
                       </div>
 
-                      <p className="mt-1 text-sm text-slate-500">
-                        {document.category} · {project.name}
-                      </p>
+                      <label className="block">
+                        <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+                          Observações
+                        </span>
+                        <input
+                          className="form-input mt-1"
+                          value={document.notes}
+                          onChange={(event) =>
+                            updateDocument(document.id, { notes: event.target.value })
+                          }
+                          placeholder="Ex.: certidão precisa ser renovada antes da assinatura..."
+                        />
+                      </label>
                     </div>
 
-                    <div className={`rounded-2xl border px-3 py-2 text-xs font-black ${statusTone(document.status)}`}>
-                      {document.status}
+                    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-slate-700">
+                      <div className="flex items-start gap-3">
+                        <span className="rounded-2xl bg-primary/10 p-3 text-primary">
+                          <Paperclip className="size-5" />
+                        </span>
+
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-black text-slate-950">
+                            {document.fileName || "Nenhum arquivo"}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {formatFileSize(document.fileSize)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 grid gap-2">
+                        <label className="inline-flex cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-primary/40 hover:bg-primary/5 hover:text-primary">
+                          <UploadCloud className="mr-2 size-4" />
+                          Subir/substituir
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept=".pdf,image/png,image/jpeg,image/webp,.doc,.docx,.xls,.xlsx"
+                            onChange={(event) => {
+                              void uploadDocument(document.id, event.target.files?.[0] ?? null);
+                              event.currentTarget.value = "";
+                            }}
+                          />
+                        </label>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={!document.fileDataUrl}
+                          onClick={() => {
+                            if (document.fileDataUrl) {
+                              setPreview(document);
+                            }
+                          }}
+                        >
+                          <Eye className="size-4" />
+                          Visualizar
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={!document.fileDataUrl}
+                          onClick={() => downloadDocument(document)}
+                        >
+                          <Download className="size-4" />
+                          Baixar
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={!document.fileName}
+                          onClick={() => removeFile(document.id)}
+                        >
+                          <X className="size-4" />
+                          Apagar arquivo
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          onClick={() => removeDocument(document.id)}
+                        >
+                          <Trash2 className="size-4" />
+                          Excluir card
+                        </Button>
+                      </div>
+
+                      {!document.fileDataUrl && document.fileName ? (
+                        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-800">
+                          Este arquivo veio do banco/lista do projeto. Para visualizar aqui, suba ou substitua o arquivo neste card.
+                        </div>
+                      ) : null}
                     </div>
                   </div>
-
-                  <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                    <label className="block">
-                      <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
-                        Documento
-                      </span>
-                      <input
-                        className="form-input mt-1"
-                        value={document.name}
-                        onChange={(event) =>
-                          updateDocument(document.id, { name: event.target.value })
-                        }
-                      />
-                    </label>
-
-                    <label className="block">
-                      <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
-                        Categoria
-                      </span>
-                      <input
-                        className="form-input mt-1"
-                        value={document.category}
-                        onChange={(event) =>
-                          updateDocument(document.id, { category: event.target.value })
-                        }
-                      />
-                    </label>
-
-                    <label className="block">
-                      <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
-                        Status
-                      </span>
-                      <select
-                        className="form-input mt-1"
-                        value={document.status}
-                        onChange={(event) =>
-                          updateDocument(document.id, {
-                            status: event.target.value as DocumentStatus,
-                          })
-                        }
-                      >
-                        <option>Pendente</option>
-                        <option>Enviado</option>
-                        <option>Aprovado</option>
-                        <option>Precisa corrigir</option>
-                        <option>Vencido</option>
-                      </select>
-                    </label>
-
-                    <label className="block">
-                      <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
-                        Validade
-                      </span>
-                      <input
-                        className="form-input mt-1"
-                        type="date"
-                        value={document.validUntil}
-                        onChange={(event) =>
-                          updateDocument(document.id, { validUntil: event.target.value })
-                        }
-                      />
-                    </label>
-                  </div>
-
-                  <label className="block">
-                    <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
-                      Observações
-                    </span>
-                    <input
-                      className="form-input mt-1"
-                      value={document.notes}
-                      onChange={(event) =>
-                        updateDocument(document.id, { notes: event.target.value })
-                      }
-                      placeholder="Ex.: certidão precisa ser renovada antes da assinatura..."
-                    />
-                  </label>
                 </div>
-
-                <div className="rounded-3xl border border-white/70 bg-white/80 p-4 text-slate-700">
-                  <div className="flex items-start gap-3">
-                    <span className="rounded-2xl bg-primary/10 p-3 text-primary">
-                      <Paperclip className="size-5" />
-                    </span>
-
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-black text-slate-950">
-                        {document.fileName || "Nenhum arquivo"}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {formatFileSize(document.fileSize)}
-                      </p>
-                      <p className="mt-1 text-xs font-bold text-slate-600">
-                        {getValidityLabel(document)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid gap-2">
-                    <label className="inline-flex cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 transition hover:border-primary/40 hover:bg-primary/5 hover:text-primary">
-                      <UploadCloud className="mr-2 size-4" />
-                      Subir/substituir
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept=".pdf,image/png,image/jpeg,image/webp,.doc,.docx,.xls,.xlsx"
-                        onChange={(event) => {
-                          void uploadDocument(document.id, event.target.files?.[0] ?? null);
-                          event.currentTarget.value = "";
-                        }}
-                      />
-                    </label>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={!document.fileDataUrl}
-                      onClick={() => {
-                        if (document.fileDataUrl) {
-                          setPreview(document);
-                        }
-                      }}
-                    >
-                      <Eye className="size-4" />
-                      Visualizar
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={!document.fileDataUrl}
-                      onClick={() => downloadDocument(document)}
-                    >
-                      <Download className="size-4" />
-                      Baixar
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={!document.fileName}
-                      onClick={() => removeFile(document.id)}
-                    >
-                      <X className="size-4" />
-                      Apagar arquivo
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      onClick={() => removeDocument(document.id)}
-                    >
-                      <Trash2 className="size-4" />
-                      Excluir card
-                    </Button>
-                  </div>
-
-                  {!document.fileDataUrl && document.fileName ? (
-                    <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-800">
-                      Este arquivo veio do banco/lista do projeto. Para visualizar aqui, suba ou substitua o arquivo neste card.
-                    </div>
-                  ) : null}
-                </div>
-              </div>
+              ) : null}
             </article>
           );
         })}

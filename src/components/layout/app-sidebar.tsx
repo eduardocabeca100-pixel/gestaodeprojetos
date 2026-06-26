@@ -35,6 +35,7 @@ const navigation = [
   { label: "Central Cultural", href: "/central-cultural", icon: ClipboardList, projectScoped: true },
   { label: "Projetos", href: "/projetos", icon: Folder },
   { label: "Documentos do projeto", href: "/documentos", icon: FileText, projectScoped: true },
+  { label: "Docs Oficiais", href: "/documentos-oficiais", icon: FileText, projectScoped: true },
   { label: "Cronograma", href: "/cronograma", icon: CalendarDays, projectScoped: true },
   { label: "Diário de classe", href: "/diario-de-classe", icon: ClipboardList, projectScoped: true },
   { label: "Financeiro", href: "/financeiro", icon: Wallet, projectScoped: true },
