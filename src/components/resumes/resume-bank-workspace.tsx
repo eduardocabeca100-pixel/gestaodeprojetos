@@ -61,6 +61,111 @@ function safeText(value: unknown) {
   return String(value ?? "").trim();
 }
 
+
+type ApiTeamRow = Record<string, unknown>;
+
+function flattenApiRows(payload: unknown): ApiTeamRow[] {
+  const rows: ApiTeamRow[] = [];
+
+  function walk(value: unknown) {
+    if (!value) return;
+
+    if (Array.isArray(value)) {
+      for (const item of value) walk(item);
+      return;
+    }
+
+    if (typeof value === "object") {
+      const objectValue = value as ApiTeamRow;
+
+      const possibleName =
+        objectValue.name ||
+        objectValue.full_name ||
+        objectValue.fullName ||
+        objectValue.member_name ||
+        objectValue.person_name ||
+        objectValue.nome;
+
+      if (possibleName) {
+        rows.push(objectValue);
+      }
+
+      for (const nested of Object.values(objectValue)) {
+        if (Array.isArray(nested)) walk(nested);
+      }
+    }
+  }
+
+  walk(payload);
+
+  const map = new Map<string, ApiTeamRow>();
+
+  for (const row of rows) {
+    const name = safeText(
+      row.name ||
+        row.full_name ||
+        row.fullName ||
+        row.member_name ||
+        row.person_name ||
+        row.nome,
+    );
+
+    if (!name) continue;
+
+    const role = safeText(
+      row.role ||
+        row.function ||
+        row.position ||
+        row.funcao ||
+        row.area ||
+        row.area_atuacao ||
+        row.rubric,
+    );
+
+    const key = `${name.toLowerCase()}|${role.toLowerCase()}`;
+
+    map.set(key, row);
+  }
+
+  return Array.from(map.values());
+}
+
+function apiRowToResumePerson(row: ApiTeamRow): ResumePerson {
+  const name = safeText(
+    row.name ||
+      row.full_name ||
+      row.fullName ||
+      row.member_name ||
+      row.person_name ||
+      row.nome,
+  );
+
+  const area = safeText(
+    row.role ||
+      row.function ||
+      row.position ||
+      row.funcao ||
+      row.area ||
+      row.area_atuacao ||
+      row.rubric,
+  );
+
+  return {
+    id: `api-team-${safeText(row.id || row.member_id || row.person_id || name).replace(/\s+/g, "-").toLowerCase()}`,
+    name: name || "Pessoa sem nome",
+    area: area || "Equipe",
+    formation: safeText(row.formation || row.formacao),
+    courses: safeText(row.courses || row.cursos),
+    actingTime: safeText(row.actingTime || row.acting_time || row.tempo_atuacao),
+    experience: safeText(row.experience || row.experiencia || row.notes || row.description),
+    works: safeText(row.works || row.trabalhos || row.projects || row.projetos),
+    additionalInfo: safeText(row.additionalInfo || row.additional_info || row.observations),
+    cityState: safeText(row.cityState || row.city_state || row.city || row.cidade) || "Jaraguá do Sul/SC",
+    files: [],
+    source: "project",
+  };
+}
+
 function teamToResumePerson(member: TeamMember): ResumePerson {
   return {
     id: `team-${member.id}`,
@@ -358,6 +463,7 @@ export function ResumeBankWorkspace({
   initialTeamMembers: TeamMember[];
 }) {
   const [manualPeople, setManualPeople] = useState<ResumePerson[]>([]);
+  const [apiTeamPeople, setApiTeamPeople] = useState<ResumePerson[]>([]);
   const [template, setTemplate] = useState<ResumeTemplate>(defaultTemplate);
   const [selectedPersonId, setSelectedPersonId] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -372,10 +478,62 @@ export function ResumeBankWorkspace({
     setTemplate(savedTemplate);
   }, []);
 
-  const projectPeople = useMemo(
-    () => initialTeamMembers.map((member) => teamToResumePerson(member)),
-    [initialTeamMembers],
-  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadTeamFromApi() {
+      const params = new URLSearchParams({
+        project: project.id,
+        projectId: project.id,
+      });
+
+      const urls = [
+        `/api/team-roster?${params.toString()}`,
+        `/api/team-roster/assignments?${params.toString()}`,
+      ];
+
+      const collected: ResumePerson[] = [];
+
+      for (const url of urls) {
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+
+          if (!response.ok) continue;
+
+          const payload = await response.json();
+          const rows = flattenApiRows(payload);
+
+          collected.push(...rows.map((row) => apiRowToResumePerson(row)));
+        } catch {
+          // mantém a tela funcionando mesmo se alguma API não responder
+        }
+      }
+
+      const deduped = new Map<string, ResumePerson>();
+
+      for (const person of collected) {
+        const key = `${person.name.toLowerCase()}|${person.area.toLowerCase()}`;
+        deduped.set(key, person);
+      }
+
+      if (!cancelled) {
+        setApiTeamPeople(Array.from(deduped.values()));
+      }
+    }
+
+    void loadTeamFromApi();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [project.id]);
+
+
+  const projectPeople = useMemo(() => {
+    const initialPeople = initialTeamMembers.map((member) => teamToResumePerson(member));
+    return [...initialPeople, ...apiTeamPeople];
+  }, [initialTeamMembers, apiTeamPeople]);
 
   const allPeople = useMemo(() => {
     const map = new Map<string, ResumePerson>();
@@ -548,8 +706,8 @@ export function ResumeBankWorkspace({
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] space-y-6 px-2 pb-10">
-      <section className="rounded-[2rem] border border-white bg-white p-6 shadow-sm">
+    <div className="mx-auto w-full max-w-[1180px] space-y-6 px-4 pb-10">
+      <section className="rounded-[1.5rem] border border-white bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
@@ -581,8 +739,8 @@ export function ResumeBankWorkspace({
         <InfoCard title="Saída" value="PDF / Word" helper="uma pessoa por folha" />
       </section>
 
-      <div className="grid gap-6 2xl:grid-cols-[420px_minmax(0,1fr)]">
-        <section className="rounded-[2rem] border border-white bg-white p-6 shadow-sm">
+      <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+        <section className="rounded-[1.5rem] border border-white bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h3 className="text-lg font-black text-slate-950">Profissionais</h3>
@@ -664,7 +822,7 @@ export function ResumeBankWorkspace({
         </section>
 
         <section className="space-y-6">
-          <section className="rounded-[2rem] border border-white bg-white p-6 shadow-sm">
+          <section className="rounded-[1.5rem] border border-white bg-white p-5 shadow-sm">
             <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
@@ -728,7 +886,7 @@ export function ResumeBankWorkspace({
           </section>
 
           {selectedPerson ? (
-            <section className="rounded-[2rem] border border-white bg-white p-6 shadow-sm">
+            <section className="rounded-[1.5rem] border border-white bg-white p-5 shadow-sm">
               <h3 className="text-lg font-black text-slate-950">Arquivos do profissional</h3>
               <p className="mt-1 text-sm text-slate-500">
                 Guarde currículo original, certificados, diplomas, portfólio e documentos.
@@ -770,7 +928,7 @@ export function ResumeBankWorkspace({
             </section>
           ) : null}
 
-          <section className="rounded-[2rem] border border-white bg-white p-6 shadow-sm">
+          <section className="rounded-[1.5rem] border border-white bg-white p-5 shadow-sm">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
@@ -811,7 +969,7 @@ export function ResumeBankWorkspace({
             )}
           </section>
 
-          <section className="rounded-[2rem] border border-white bg-white p-6 shadow-sm">
+          <section className="rounded-[1.5rem] border border-white bg-white p-5 shadow-sm">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">

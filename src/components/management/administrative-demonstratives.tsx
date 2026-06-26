@@ -232,7 +232,7 @@ function buildPdfHtml(demo: Demonstrative) {
     background: #f3f4f6;
     color: #111;
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 9.2pt;
+    font-size: 8.8pt;
     line-height: 1.18;
   }
 
@@ -245,9 +245,9 @@ function buildPdfHtml(demo: Demonstrative) {
   }
 
   .doc-block {
-    height: 137mm;
+    min-height: 118mm;
     border: 1.5px solid #111;
-    margin-bottom: 5mm;
+    margin-bottom: 4mm;
     overflow: hidden;
   }
 
@@ -259,7 +259,7 @@ function buildPdfHtml(demo: Demonstrative) {
     display: grid;
     grid-template-columns: 28mm 1fr;
     gap: 5mm;
-    padding: 4mm 5mm 3mm;
+    padding: 3mm 5mm 2mm;
   }
 
   .logo {
@@ -275,7 +275,7 @@ function buildPdfHtml(demo: Demonstrative) {
   }
 
   .header-text {
-    font-size: 9pt;
+    font-size: 8.6pt;
   }
 
   .doc-meta {
@@ -288,7 +288,7 @@ function buildPdfHtml(demo: Demonstrative) {
   .doc-meta div {
     padding: 2mm;
     border-right: 1px solid #111;
-    font-size: 8.5pt;
+    font-size: 8.2pt;
     font-weight: 700;
   }
 
@@ -299,7 +299,7 @@ function buildPdfHtml(demo: Demonstrative) {
   .beneficiary {
     display: grid;
     grid-template-columns: 1.4fr 1fr;
-    padding: 3mm 4mm;
+    padding: 2.4mm 4mm;
     border-bottom: 1.5px solid #111;
     font-weight: 700;
   }
@@ -313,7 +313,7 @@ function buildPdfHtml(demo: Demonstrative) {
   th, td {
     border-right: 1px solid #111;
     border-bottom: 1px solid #111;
-    padding: 1.8mm;
+    padding: 1.35mm;
   }
 
   th:last-child, td:last-child {
@@ -342,21 +342,18 @@ function buildPdfHtml(demo: Demonstrative) {
     white-space: nowrap;
   }
 
-  tbody {
-    height: 32mm;
-  }
 
   .summary {
     display: grid;
     grid-template-columns: 1fr 48mm;
     gap: 8mm;
-    padding: 3mm 4mm 2mm;
-    min-height: 20mm;
+    padding: 2.2mm 4mm 1.5mm;
+    min-height: 13mm;
   }
 
   .summary-values {
     text-align: right;
-    font-size: 10pt;
+    font-size: 9.4pt;
     line-height: 1.5;
   }
 
@@ -364,7 +361,7 @@ function buildPdfHtml(demo: Demonstrative) {
     display: grid;
     grid-template-columns: 1fr 70mm;
     gap: 8mm;
-    padding: 0 4mm 3mm;
+    padding: 0 4mm 2mm;
     align-items: end;
   }
 
