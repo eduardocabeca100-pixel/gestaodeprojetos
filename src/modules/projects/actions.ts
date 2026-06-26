@@ -166,6 +166,91 @@ export async function archiveProject(projectId: string) {
 
 
 
+
+function shouldIgnoreDeleteError(error: unknown) {
+  const message = String((error as { message?: string })?.message ?? "");
+  const code = String((error as { code?: string })?.code ?? "");
+
+  return (
+    code === "PGRST205" ||
+    code === "PGRST116" ||
+    message.includes("Could not find") ||
+    message.includes("does not exist") ||
+    message.includes("schema cache") ||
+    message.includes("column") ||
+    message.includes("relationship")
+  );
+}
+
+async function safeDeleteByProjectId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  table: string,
+  projectId: string,
+) {
+  if (!supabase) {
+    return { ok: false, message: "Cliente Supabase não inicializado." };
+  }
+
+  const result = await (supabase as any).from(table).delete().eq("project_id", projectId);
+
+  if (result.error && !shouldIgnoreDeleteError(result.error)) {
+    console.error(`deleteProject ${table} failed`, result.error);
+
+    return {
+      ok: false,
+      message: `Não consegui limpar os dados de ${table}. A exclusão foi interrompida.`,
+    };
+  }
+
+  return { ok: true, message: "" };
+}
+
+async function safeDeleteByIds(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  table: string,
+  column: string,
+  ids: string[],
+) {
+  if (!supabase || ids.length === 0) {
+    return { ok: true, message: "" };
+  }
+
+  const result = await (supabase as any).from(table).delete().in(column, ids);
+
+  if (result.error && !shouldIgnoreDeleteError(result.error)) {
+    console.error(`deleteProject ${table}.${column} failed`, result.error);
+
+    return {
+      ok: false,
+      message: `Não consegui limpar os dados de ${table}. A exclusão foi interrompida.`,
+    };
+  }
+
+  return { ok: true, message: "" };
+}
+
+async function safeSelectIdsByProject(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  table: string,
+  projectId: string,
+) {
+  if (!supabase) {
+    return [] as string[];
+  }
+
+  const result = await (supabase as any).from(table).select("id").eq("project_id", projectId);
+
+  if (result.error) {
+    if (!shouldIgnoreDeleteError(result.error)) {
+      console.error(`deleteProject select ${table} failed`, result.error);
+    }
+
+    return [] as string[];
+  }
+
+  return ((result.data ?? []) as Array<{ id: string }>).map((row) => row.id);
+}
+
 export async function deleteProject(projectId: string) {
   if (!projectId) {
     return { ok: false, message: "Projeto não identificado." };
@@ -187,11 +272,24 @@ export async function deleteProject(projectId: string) {
     return { ok: false, message: "Cliente Supabase não inicializado." };
   }
 
+  const activityIds = await safeSelectIdsByProject(supabase, "activities", projectId);
+  const classIds = await safeSelectIdsByProject(supabase, "classes", projectId);
+
+  const dependentDeletes = [
+    await safeDeleteByIds(supabase, "attendance", "activity_id", activityIds),
+    await safeDeleteByIds(supabase, "attendance", "class_id", classIds),
+    await safeDeleteByIds(supabase, "class_attendance", "class_id", classIds),
+    await safeDeleteByIds(supabase, "activity_attendance", "activity_id", activityIds),
+  ];
+
+  for (const result of dependentDeletes) {
+    if (!result.ok) {
+      return result;
+    }
+  }
+
   const tablesToClean = [
     "expenses",
-    "attendance",
-    "classes",
-    "activities",
     "documents",
     "media",
     "participants",
@@ -201,30 +299,26 @@ export async function deleteProject(projectId: string) {
     "official_documents",
     "project_stages",
     "project_memberships",
+    "classes",
+    "activities",
   ];
 
   for (const table of tablesToClean) {
-    const result = await (supabase as any).from(table).delete().eq("project_id", projectId);
+    const result = await safeDeleteByProjectId(supabase, table, projectId);
 
-    if (
-      result.error &&
-      result.error.code !== "PGRST205" &&
-      !String(result.error.message ?? "").includes("Could not find")
-    ) {
-      console.error(`deleteProject ${table} failed`, result.error);
-      return {
-        ok: false,
-        message: `Não consegui limpar os dados de ${table}. A exclusão foi interrompida.`,
-      };
+    if (!result.ok) {
+      return result;
     }
   }
 
-  const result = await supabase.from("projects").delete().eq("id", projectId);
+  const deleteProjectResult = await supabase.from("projects").delete().eq("id", projectId);
 
-  if (result.error) {
+  if (deleteProjectResult.error) {
+    console.error("deleteProject projects failed", deleteProjectResult.error);
+
     return {
       ok: false,
-      message: result.error.message,
+      message: deleteProjectResult.error.message,
     };
   }
 
