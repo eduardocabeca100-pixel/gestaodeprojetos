@@ -1,29 +1,5 @@
 "use client";
 
-import {
-  usePathname,
-  useSearchParams } from "next/navigation";
-
-import Link from "next/link";
-import {
-  Bell,
-  CalendarDays,
-  ClipboardList,
-  FileArchive,
-  FileCheck2,
-  FileText,
-  Folder,
-  Home,
-  ImageIcon,
-  LayoutDashboard,
-  LogOut,
-  Newspaper,
-  Receipt,
-  Settings,
-  Users,
-  UsersRound,
-  Wallet,
-} from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
