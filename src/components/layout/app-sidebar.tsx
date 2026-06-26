@@ -85,8 +85,8 @@ export function AppSidebar({ profile }: { profile?: CurrentProfile | null }) {
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[280px] border-r border-white/10 bg-[#070b24] text-white shadow-2xl lg:flex lg:flex-col">
-      <div className="flex h-full flex-col px-4 py-5">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-white/10 bg-[#070b24] text-white shadow-2xl lg:flex lg:flex-col">
+      <div className="flex h-full flex-col px-3 py-5">
         <Link href="/dashboard" className="mb-6 block">
           <div className="text-3xl font-black tracking-tight">VIVA</div>
           <div className="mt-1 text-xs font-black uppercase tracking-[0.32em] text-white/55">

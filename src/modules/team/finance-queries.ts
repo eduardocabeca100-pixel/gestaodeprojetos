@@ -10,44 +10,56 @@ function text(value: unknown) {
   return String(value ?? "").trim();
 }
 
-function number(value: unknown) {
+function money(value: unknown) {
   const parsed = Number(value ?? 0);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function makeId(row: AnyRow, index: number) {
-  return text(row.id) || text(row.user_id) || `finance-team-${index}`;
+function normalizeStatus(value: unknown) {
+  return text(value) || "Pendente";
 }
 
-function mapRow(row: AnyRow, projectId: string, index: number): TeamMember {
+function idFrom(row: AnyRow, table: string, index: number) {
+  return (
+    text(row.id) ||
+    text(row.member_id) ||
+    text(row.person_id) ||
+    text(row.user_id) ||
+    `${table}-${index}`
+  );
+}
+
+function mapRow(row: AnyRow, projectId: string, table: string, index: number): TeamMember {
   const name =
     text(row.name) ||
     text(row.full_name) ||
     text(row.fullName) ||
     text(row.member_name) ||
     text(row.person_name) ||
+    text(row.display_name) ||
+    text(row.nome) ||
     "Pessoa sem nome";
 
-  const expected =
-    number(row.expectedAmount) ||
-    number(row.expected_amount) ||
-    number(row.amount) ||
-    number(row.value) ||
-    number(row.payment_amount) ||
-    number(row.budget_amount) ||
-    number(row.planned_amount);
+  const role =
+    text(row.role) ||
+    text(row.function) ||
+    text(row.position) ||
+    text(row.rubric) ||
+    text(row.category) ||
+    text(row.area) ||
+    text(row.area_atuacao) ||
+    text(row.funcao) ||
+    "Equipe";
 
   return {
-    id: makeId(row, index),
-    projectId: text(row.project_id) || projectId,
+    id: idFrom(row, table, index),
+    projectId:
+      text(row.project_id) ||
+      text(row.projectId) ||
+      text(row.project) ||
+      projectId,
     name,
-    role:
-      text(row.role) ||
-      text(row.function) ||
-      text(row.position) ||
-      text(row.rubric) ||
-      text(row.category) ||
-      "Equipe",
+    role,
     document:
       text(row.document) ||
       text(row.cpf) ||
@@ -55,22 +67,33 @@ function mapRow(row: AnyRow, projectId: string, index: number): TeamMember {
       text(row.cpf_cnpj) ||
       text(row.document_number),
     email: text(row.email),
-    phone: text(row.phone) || text(row.telefone) || text(row.whatsapp) || text(row.mobile),
-    expectedAmount: expected,
-    paidAmount: number(row.paidAmount) || number(row.paid_amount),
-    paymentStatus: text(row.paymentStatus) || text(row.payment_status) || "Pendente",
+    phone:
+      text(row.phone) ||
+      text(row.telefone) ||
+      text(row.whatsapp) ||
+      text(row.mobile),
+    expectedAmount:
+      money(row.expectedAmount) ||
+      money(row.expected_amount) ||
+      money(row.amount) ||
+      money(row.value) ||
+      money(row.payment_amount) ||
+      money(row.budget_amount) ||
+      money(row.planned_amount),
+    paidAmount:
+      money(row.paidAmount) ||
+      money(row.paid_amount),
+    paymentStatus:
+      normalizeStatus(row.paymentStatus) ||
+      normalizeStatus(row.payment_status),
     documents: Array.isArray(row.documents) ? row.documents : [],
     status: text(row.status) || "Ativo",
-    notes: text(row.notes),
+    notes:
+      text(row.notes) ||
+      text(row.bio) ||
+      text(row.description) ||
+      text(row.observations),
   } as TeamMember;
-}
-
-function key(member: TeamMember) {
-  return (
-    text(member.document).toLowerCase() ||
-    text(member.email).toLowerCase() ||
-    `${text(member.name).toLowerCase()}|${text(member.role).toLowerCase()}`
-  );
 }
 
 function dedupe(members: TeamMember[]) {
@@ -79,10 +102,14 @@ function dedupe(members: TeamMember[]) {
   for (const member of members) {
     if (!member.name || member.name === "Pessoa sem nome") continue;
 
-    const memberKey = key(member);
-    const previous = map.get(memberKey);
+    const key =
+      text(member.document).toLowerCase() ||
+      text(member.email).toLowerCase() ||
+      `${text(member.name).toLowerCase()}|${text(member.role).toLowerCase()}`;
 
-    map.set(memberKey, {
+    const previous = map.get(key);
+
+    map.set(key, {
       ...(previous ?? member),
       ...member,
       document: member.document || previous?.document || "",
@@ -99,45 +126,58 @@ function dedupe(members: TeamMember[]) {
   return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 }
 
-async function trySelect(table: string, mode: "project" | "global" | "all", projectId: string) {
+async function selectRows(table: string, projectId: string) {
   if (!hasSupabaseServerEnv()) return [] as AnyRow[];
 
   const supabase = await createClient();
-
   if (!supabase) return [] as AnyRow[];
 
-  try {
-    let query = (supabase as any).from(table).select("*");
+  const attempts = [
+    () => (supabase as any).from(table).select("*").eq("project_id", projectId),
+    () => (supabase as any).from(table).select("*").eq("projectId", projectId),
+    () => (supabase as any).from(table).select("*").eq("project", projectId),
+    () => (supabase as any).from(table).select("*").or(`project_id.eq.${projectId},project_id.is.null`),
+    () => (supabase as any).from(table).select("*"),
+  ];
 
-    if (mode === "project") {
-      query = query.eq("project_id", projectId);
+  for (const attempt of attempts) {
+    try {
+      const { data, error } = await attempt();
+      if (!error && Array.isArray(data)) return data as AnyRow[];
+    } catch {
+      // tenta próximo formato/tabela
     }
-
-    if (mode === "global") {
-      query = query.or("project_id.is.null,project_id.eq.global,is_global.eq.true,scope.eq.global");
-    }
-
-    const { data, error } = await query;
-
-    if (error || !data) return [];
-
-    return data as AnyRow[];
-  } catch {
-    return [] as AnyRow[];
   }
+
+  return [];
 }
 
 export async function listFinanceTeamMembers(projectId: string) {
-  const projectMembers = await listTeamMembers(projectId);
+  const baseMembers = await listTeamMembers(projectId);
 
-  const rows = [
-    ...(await trySelect("team_members", "project", projectId)),
-    ...(await trySelect("team_members", "global", projectId)),
-    ...(await trySelect("team_roster", "all", projectId)),
-    ...(await trySelect("people", "all", projectId)),
+  const tables = [
+    "team_members",
+    "project_team_members",
+    "project_members",
+    "project_team",
+    "team_roster",
+    "team_assignments",
+    "team_roster_assignments",
+    "people",
+    "professionals",
+    "participants",
   ];
 
-  const extraMembers = rows.map((row, index) => mapRow(row, projectId, index));
+  const rowsByTable = await Promise.all(
+    tables.map(async (table) => ({
+      table,
+      rows: await selectRows(table, projectId),
+    })),
+  );
 
-  return dedupe([...projectMembers, ...extraMembers]);
+  const extraMembers = rowsByTable.flatMap(({ table, rows }) =>
+    rows.map((row, index) => mapRow(row, projectId, table, index)),
+  );
+
+  return dedupe([...baseMembers, ...extraMembers]);
 }
