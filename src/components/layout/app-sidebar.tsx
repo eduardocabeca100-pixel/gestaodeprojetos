@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import {
+  UsersRound, usePathname, useSearchParams } from "next/navigation";
 import {
   CalendarDays,
   ClipboardList,
@@ -40,6 +41,7 @@ const navigation = [
   { label: "Diário de classe", href: "/diario-de-classe", icon: ClipboardList, projectScoped: true },
   { label: "Financeiro", href: "/financeiro", icon: Wallet, projectScoped: true },
   { label: "Equipe", href: "/equipe", icon: Users, projectScoped: true },
+  { label: "Banco de Currículos", href: "/banco-de-curriculos", icon: UsersRound, projectScoped: false },
   { label: "Participantes", href: "/participantes", icon: Users, projectScoped: true },
   { label: "Mídia", href: "/midia", icon: ImageIcon, projectScoped: true },
   { label: "Configurações", href: "/configuracoes/usuarios", icon: Settings },
