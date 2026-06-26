@@ -5,19 +5,27 @@ import {
   Download,
   FileText,
   FolderDown,
+  ImagePlus,
   Plus,
-  Save,
   Search,
   Trash2,
   UploadCloud,
   UsersRound,
 } from "lucide-react";
 
+type ResumeFile = {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  dataUrl: string;
+  category: string;
+};
+
 type ResumePerson = {
   id: string;
   name: string;
   area: string;
-  photoDataUrl?: string;
   miniBio: string;
   academicFormation: string;
   courses: string;
@@ -33,21 +41,16 @@ type ResumePerson = {
   files: ResumeFile[];
 };
 
-type ResumeFile = {
-  id: string;
-  name: string;
-  type: string;
-  size: number;
-  dataUrl: string;
-  category: string;
-};
-
 type ResumeTemplate = {
   id: string;
   name: string;
-  description: string;
+  editalName: string;
   title: string;
+  description: string;
+  headerMode: "text" | "images";
   headerText: string;
+  headerImages: ResumeFile[];
+  referenceFile?: ResumeFile;
   showName: boolean;
   showArea: boolean;
   showFormation: boolean;
@@ -59,19 +62,22 @@ type ResumeTemplate = {
   showAdditionalInfo: boolean;
   showLocalDate: boolean;
   onePersonPerPage: boolean;
-  uploadedModelName?: string;
-  uploadedModelDataUrl?: string;
 };
 
-const peopleStorageKey = "viva:banco-curriculos:pessoas:v1";
-const templatesStorageKey = "viva:banco-curriculos:modelos:v1";
+const peopleStorageKey = "viva:banco-curriculos:pessoas:v2";
+const templatesStorageKey = "viva:banco-curriculos:modelos:v2";
 
 const defaultTemplate: ResumeTemplate = {
-  id: "modelo-anexo-v-fcc",
+  id: "modelo-fcc-anexo-v",
   name: "Modelo FCC - Anexo V",
-  description: "Modelo baseado no Anexo V de currículos da equipe.",
+  editalName: "Circuito Catarinense de Cultura PNAB SC 2026",
   title: "ANEXO V",
-  headerText: "Fundação Catarinense de Cultura • Governo de Santa Catarina • Ministério da Cultura",
+  description:
+    "Modelo com cabeçalho do edital, Nome, Área de atuação e currículo completo da pessoa.",
+  headerMode: "text",
+  headerText:
+    "Fundação Catarinense de Cultura • Governo de Santa Catarina • Sistema Nacional de Cultura • Ministério da Cultura • Governo do Brasil",
+  headerImages: [],
   showName: true,
   showArea: true,
   showFormation: true,
@@ -138,7 +144,9 @@ function toParagraphs(value: string) {
     .map((line) => line.trim())
     .filter(Boolean);
 
-  if (lines.length === 0) return "<p>Não informado.</p>";
+  if (lines.length === 0) {
+    return "<p>Não informado.</p>";
+  }
 
   return lines.map((line) => `<p>${escapeHtml(line)}</p>`).join("");
 }
@@ -149,6 +157,20 @@ function todayLongBr() {
     month: "long",
     year: "numeric",
   }).format(new Date());
+}
+
+function fileSize(size: number) {
+  if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function sanitizeFileName(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "")
+    .toLowerCase();
 }
 
 function fileToDataUrl(file: File) {
@@ -173,34 +195,50 @@ function downloadBlob(content: string, fileName: string, type: string) {
   URL.revokeObjectURL(url);
 }
 
-function sanitizeFileName(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .toLowerCase();
+function buildHeader(template: ResumeTemplate) {
+  if (template.headerMode === "images" && template.headerImages.length > 0) {
+    return `
+      <div class="logo-strip">
+        ${template.headerImages
+          .map(
+            (image) =>
+              `<img src="${image.dataUrl}" alt="${escapeHtml(image.name)}" />`,
+          )
+          .join("")}
+      </div>
+    `;
+  }
+
+  return `<div class="header-text">${escapeHtml(template.headerText)}</div>`;
 }
 
-function buildResumeHtml(person: ResumePerson, template: ResumeTemplate, forWord = false) {
+function buildResumeHtml(person: ResumePerson, template: ResumeTemplate) {
   const location = person.cityState || "Jaraguá do Sul/SC";
+
+  const additionalInfo = [person.notes, person.functions]
+    .filter(Boolean)
+    .join("\n");
 
   return `
     <section class="resume-page">
       <header class="resume-header">
-        <div class="resume-header-text">${escapeHtml(template.headerText || "Banco de Currículos")}</div>
+        ${buildHeader(template)}
         <h1>${escapeHtml(template.title || "CURRÍCULO")}</h1>
       </header>
 
       <main class="resume-box">
-        ${
-          template.showName || template.showArea
-            ? `<section class="identity">
-                ${template.showName ? `<p><strong>Nome:</strong> ${escapeHtml(person.name || "Nome não informado")}</p>` : ""}
-                ${template.showArea ? `<p><strong>Área de atuação:</strong> ${escapeHtml(person.area || "Não informado")}</p>` : ""}
-              </section>`
-            : ""
-        }
+        <section class="identity">
+          ${
+            template.showName
+              ? `<p><strong>Nome:</strong> ${escapeHtml(person.name || "Nome não informado")}</p>`
+              : ""
+          }
+          ${
+            template.showArea
+              ? `<p><strong>Área de atuação:</strong> ${escapeHtml(person.area || "Não informado")}</p>`
+              : ""
+          }
+        </section>
 
         <section class="content">
           ${
@@ -241,7 +279,7 @@ function buildResumeHtml(person: ResumePerson, template: ResumeTemplate, forWord
 
           ${
             template.showAdditionalInfo
-              ? `<h2>Informações adicionais:</h2>${toParagraphs(person.notes || person.functions)}`
+              ? `<h2>Informações adicionais:</h2>${toParagraphs(additionalInfo)}`
               : ""
           }
 
@@ -253,13 +291,11 @@ function buildResumeHtml(person: ResumePerson, template: ResumeTemplate, forWord
         </section>
       </main>
     </section>
-
-    ${template.onePersonPerPage && !forWord ? '<div class="page-break"></div>' : ""}
   `;
 }
 
 function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord = false) {
-  const pages = people.map((person) => buildResumeHtml(person, template, forWord)).join("");
+  const pages = people.map((person) => buildResumeHtml(person, template)).join("");
 
   return `<!doctype html>
 <html lang="pt-BR">
@@ -269,7 +305,7 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
   <style>
     @page {
       size: A4;
-      margin: 14mm;
+      margin: 12mm;
     }
 
     * {
@@ -284,7 +320,7 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
       color: #111827;
       font-family: Arial, Helvetica, sans-serif;
       font-size: 10.5pt;
-      line-height: 1.24;
+      line-height: 1.23;
     }
 
     .print-actions {
@@ -304,7 +340,7 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
       background: #111827;
       font-weight: 900;
       cursor: pointer;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
+      box-shadow: 0 12px 30px rgba(0,0,0,.18);
     }
 
     .resume-page {
@@ -312,7 +348,7 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
       min-height: 297mm;
       margin: ${forWord ? "0" : "18px auto"};
       background: #fff;
-      padding: 12mm;
+      padding: 10mm 12mm;
       ${forWord ? "" : "box-shadow: 0 20px 60px rgba(0,0,0,.14);"}
       page-break-after: always;
     }
@@ -322,14 +358,30 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
       margin-bottom: 7mm;
     }
 
-    .resume-header-text {
-      min-height: 14mm;
+    .logo-strip {
+      min-height: 18mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9mm;
+      margin-bottom: 3mm;
+    }
+
+    .logo-strip img {
+      max-height: 17mm;
+      max-width: 38mm;
+      object-fit: contain;
+    }
+
+    .header-text {
+      min-height: 17mm;
       display: flex;
       align-items: center;
       justify-content: center;
       color: #111827;
-      font-size: 9pt;
+      font-size: 8.6pt;
       font-weight: 900;
+      line-height: 1.3;
       text-transform: uppercase;
     }
 
@@ -353,7 +405,7 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
     }
 
     .identity p {
-      margin: 0 0 1.5mm;
+      margin: 0 0 1.3mm;
     }
 
     .content {
@@ -368,15 +420,11 @@ function buildFullHtml(people: ResumePerson[], template: ResumeTemplate, forWord
     }
 
     p {
-      margin: 0 0 1.2mm;
+      margin: 0 0 1.15mm;
     }
 
     .local-date {
-      margin-top: 2.5mm;
-    }
-
-    .page-break {
-      page-break-after: always;
+      margin-top: 2.8mm;
     }
 
     @media print {
@@ -461,18 +509,6 @@ export function ResumeBankWorkspace() {
     setSelectedPersonId(savedPeople[0]?.id ?? "");
   }, []);
 
-  function commitPeople(nextPeople: ResumePerson[], nextMessage = "Currículo salvo.") {
-    setPeople(nextPeople);
-    writeStorage(peopleStorageKey, nextPeople);
-    setMessage(nextMessage);
-  }
-
-  function commitTemplates(nextTemplates: ResumeTemplate[], nextMessage = "Modelo salvo.") {
-    setTemplates(nextTemplates);
-    writeStorage(templatesStorageKey, nextTemplates);
-    setMessage(nextMessage);
-  }
-
   const selectedPerson = people.find((person) => person.id === selectedPersonId) ?? null;
   const selectedTemplate =
     templates.find((template) => template.id === selectedTemplateId) ?? templates[0] ?? defaultTemplate;
@@ -490,6 +526,18 @@ export function ResumeBankWorkspace() {
     );
   }, [people, search]);
 
+  function commitPeople(nextPeople: ResumePerson[], nextMessage = "Currículo salvo.") {
+    setPeople(nextPeople);
+    writeStorage(peopleStorageKey, nextPeople);
+    setMessage(nextMessage);
+  }
+
+  function commitTemplates(nextTemplates: ResumeTemplate[], nextMessage = "Modelo salvo.") {
+    setTemplates(nextTemplates);
+    writeStorage(templatesStorageKey, nextTemplates);
+    setMessage(nextMessage);
+  }
+
   function addPerson() {
     const newPerson: ResumePerson = {
       ...emptyPerson,
@@ -497,7 +545,7 @@ export function ResumeBankWorkspace() {
       name: "Nova pessoa",
     };
 
-    commitPeople([newPerson, ...people], "Nova pessoa criada no Banco de Currículos.");
+    commitPeople([newPerson, ...people], "Nova pessoa criada.");
     setSelectedPersonId(newPerson.id);
   }
 
@@ -515,7 +563,7 @@ export function ResumeBankWorkspace() {
     if (!window.confirm("Excluir esta pessoa do Banco de Currículos?")) return;
 
     const nextPeople = people.filter((person) => person.id !== personId);
-    commitPeople(nextPeople, "Pessoa removida do Banco de Currículos.");
+    commitPeople(nextPeople, "Pessoa removida.");
     setSelectedPersonId(nextPeople[0]?.id ?? "");
   }
 
@@ -528,7 +576,6 @@ export function ResumeBankWorkspace() {
     }
 
     const dataUrl = await fileToDataUrl(file);
-
     const nextFile: ResumeFile = {
       id: makeId("file"),
       name: file.name,
@@ -538,28 +585,60 @@ export function ResumeBankWorkspace() {
       category,
     };
 
-    updatePerson({
-      files: [nextFile, ...selectedPerson.files],
-    });
-
-    setMessage("Arquivo anexado ao currículo.");
+    updatePerson({ files: [nextFile, ...selectedPerson.files] });
+    setMessage("Arquivo anexado à pessoa.");
   }
 
-  async function uploadTemplateModel(file: File | null) {
+  async function addHeaderImage(file: File | null) {
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setMessage("Use imagem PNG, JPG ou WEBP para logo/cabeçalho.");
+      return;
+    }
+
+    const dataUrl = await fileToDataUrl(file);
+    const nextImage: ResumeFile = {
+      id: makeId("logo"),
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      dataUrl,
+      category: "Logo/cabeçalho",
+    };
+
+    updateTemplate({
+      headerMode: "images",
+      headerImages: [...selectedTemplate.headerImages, nextImage],
+    });
+
+    setMessage("Logo adicionada ao modelo.");
+  }
+
+  async function uploadTemplateReference(file: File | null) {
     if (!file) return;
 
     const dataUrl = await fileToDataUrl(file);
+    const referenceFile: ResumeFile = {
+      id: makeId("reference"),
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      dataUrl,
+      category: "Modelo de referência do edital",
+    };
 
     const nextTemplate: ResumeTemplate = {
       ...defaultTemplate,
       id: makeId("template"),
-      name: `Modelo personalizado - ${file.name.replace(/\.[^.]+$/, "")}`,
-      description: "Modelo criado a partir de anexo enviado pelo usuário. Ajuste os campos antes de gerar.",
-      uploadedModelName: file.name,
-      uploadedModelDataUrl: dataUrl,
+      name: `Modelo do edital - ${file.name.replace(/\.[^.]+$/, "")}`,
+      editalName: file.name.replace(/\.[^.]+$/, ""),
+      description:
+        "Modelo criado a partir de anexo de referência. Ajuste título, cabeçalho e campos conforme o edital.",
+      referenceFile,
     };
 
-    commitTemplates([nextTemplate, ...templates], "Modelo personalizado criado a partir do anexo.");
+    commitTemplates([nextTemplate, ...templates], "Modelo de edital criado a partir do anexo.");
     setSelectedTemplateId(nextTemplate.id);
   }
 
@@ -571,6 +650,12 @@ export function ResumeBankWorkspace() {
     );
   }
 
+  function removeHeaderImage(imageId: string) {
+    updateTemplate({
+      headerImages: selectedTemplate.headerImages.filter((image) => image.id !== imageId),
+    });
+  }
+
   function generatePdf(selectedOnly = true) {
     const peopleToGenerate = selectedOnly
       ? selectedPerson
@@ -579,7 +664,7 @@ export function ResumeBankWorkspace() {
       : filteredPeople;
 
     if (peopleToGenerate.length === 0) {
-      setMessage("Selecione pelo menos uma pessoa para gerar.");
+      setMessage("Selecione pelo menos uma pessoa.");
       return;
     }
 
@@ -594,14 +679,15 @@ export function ResumeBankWorkspace() {
       : filteredPeople;
 
     if (peopleToGenerate.length === 0) {
-      setMessage("Selecione pelo menos uma pessoa para gerar.");
+      setMessage("Selecione pelo menos uma pessoa.");
       return;
     }
 
     const html = buildFullHtml(peopleToGenerate, selectedTemplate, true);
-    const fileBase = selectedOnly && selectedPerson
-      ? `${selectedPerson.name}-${selectedTemplate.name}`
-      : `curriculos-${selectedTemplate.name}`;
+    const fileBase =
+      selectedOnly && selectedPerson
+        ? `${selectedPerson.name}-${selectedTemplate.name}`
+        : `curriculos-${selectedTemplate.name}`;
 
     downloadBlob(
       html,
@@ -627,10 +713,10 @@ export function ResumeBankWorkspace() {
               Banco de Currículos
             </p>
             <h2 className="mt-1 text-2xl font-black text-slate-950">
-              Currículos, modelos de edital e geração em lote
+              Pessoas, modelos por edital e geração em PDF/Word
             </h2>
             <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-500">
-              Cadastre profissionais uma vez, salve modelos por edital e gere currículos em PDF ou Word conforme o anexo exigido.
+              Cadastre os dados uma vez. Para cada edital, suba o modelo de referência, ajuste o cabeçalho/logos e gere currículos no formato exigido.
             </p>
           </div>
 
@@ -650,13 +736,6 @@ export function ResumeBankWorkspace() {
         <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
           {message}
         </div>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-4">
-        <InfoCard title="Pessoas" value={String(people.length)} helper="profissionais cadastrados" />
-        <InfoCard title="Modelos" value={String(templates.length)} helper="formatos salvos" />
-        <InfoCard title="Arquivos" value={String(people.reduce((total, person) => total + person.files.length, 0))} helper="anexos guardados" />
-        <InfoCard title="Saídas" value="PDF / Word" helper="geração individual ou em lote" />
       </section>
 
       <div className="grid gap-6 2xl:grid-cols-[360px_minmax(0,1fr)]">
@@ -706,7 +785,9 @@ export function ResumeBankWorkspace() {
                   onClick={() => setSelectedPersonId(person.id)}
                 >
                   <p className="font-black text-slate-950">{person.name}</p>
-                  <p className="mt-1 text-sm text-slate-500">{person.area || "Área não informada"}</p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {person.area || "Área não informada"}
+                  </p>
                   <p className="mt-2 text-xs font-bold text-slate-400">
                     {person.files.length} arquivo(s)
                   </p>
@@ -834,12 +915,10 @@ export function ResumeBankWorkspace() {
                 {selectedPerson.files.map((file) => (
                   <div key={file.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <p className="font-black text-slate-950">{file.category}</p>
-                    <p className="mt-1 truncate text-sm text-slate-500">{file.name}</p>
-                    <a
-                      className="mt-3 inline-flex text-sm font-bold text-primary"
-                      href={file.dataUrl}
-                      download={file.name}
-                    >
+                    <p className="mt-1 truncate text-sm text-slate-500">
+                      {file.name} • {fileSize(file.size)}
+                    </p>
+                    <a className="mt-3 inline-flex text-sm font-bold text-primary" href={file.dataUrl} download={file.name}>
                       Baixar
                     </a>
                   </div>
@@ -852,25 +931,25 @@ export function ResumeBankWorkspace() {
             <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
-                  Modelos de currículo
+                  Modelos por edital
                 </p>
                 <h3 className="mt-1 text-xl font-black text-slate-950">
-                  Modelos por edital
+                  Modelo ativo: {selectedTemplate.name}
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  Suba um anexo de edital e salve como modelo reutilizável.
+                  Cada edital pode ter seu próprio cabeçalho, logos e campos.
                 </p>
               </div>
 
               <label className="btn-primary cursor-pointer">
                 <UploadCloud className="size-4" />
-                Subir modelo/anexo
+                Subir anexo/modelo
                 <input
                   type="file"
                   className="hidden"
                   accept=".pdf,.doc,.docx"
                   onChange={(event) => {
-                    void uploadTemplateModel(event.target.files?.[0] ?? null);
+                    void uploadTemplateReference(event.target.files?.[0] ?? null);
                     event.currentTarget.value = "";
                   }}
                 />
@@ -878,16 +957,10 @@ export function ResumeBankWorkspace() {
             </div>
 
             <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              <Field label="Modelo ativo">
-                <select
-                  className="form-input"
-                  value={selectedTemplateId}
-                  onChange={(event) => setSelectedTemplateId(event.target.value)}
-                >
+              <Field label="Selecionar modelo">
+                <select className="form-input" value={selectedTemplateId} onChange={(event) => setSelectedTemplateId(event.target.value)}>
                   {templates.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.name}
-                    </option>
+                    <option key={template.id} value={template.id}>{template.name}</option>
                   ))}
                 </select>
               </Field>
@@ -896,18 +969,66 @@ export function ResumeBankWorkspace() {
                 <input className="form-input" value={selectedTemplate.name} onChange={(event) => updateTemplate({ name: event.target.value })} />
               </Field>
 
-              <Field label="Título no documento">
+              <Field label="Nome do edital">
+                <input className="form-input" value={selectedTemplate.editalName} onChange={(event) => updateTemplate({ editalName: event.target.value })} />
+              </Field>
+
+              <Field label="Título do anexo">
                 <input className="form-input" value={selectedTemplate.title} onChange={(event) => updateTemplate({ title: event.target.value })} />
               </Field>
 
-              <Field label="Cabeçalho/logos em texto">
+              <Field label="Cabeçalho em texto">
                 <input className="form-input" value={selectedTemplate.headerText} onChange={(event) => updateTemplate({ headerText: event.target.value })} />
               </Field>
 
-              <Field label="Descrição interna">
-                <input className="form-input" value={selectedTemplate.description} onChange={(event) => updateTemplate({ description: event.target.value })} />
+              <Field label="Tipo de cabeçalho">
+                <select className="form-input" value={selectedTemplate.headerMode} onChange={(event) => updateTemplate({ headerMode: event.target.value as ResumeTemplate["headerMode"] })}>
+                  <option value="text">Texto</option>
+                  <option value="images">Logos/imagens</option>
+                </select>
               </Field>
             </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <label className="btn-secondary cursor-pointer">
+                <ImagePlus className="size-4" />
+                Adicionar logo
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".png,.jpg,.jpeg,.webp"
+                  onChange={(event) => {
+                    void addHeaderImage(event.target.files?.[0] ?? null);
+                    event.currentTarget.value = "";
+                  }}
+                />
+              </label>
+
+              {selectedTemplate.referenceFile ? (
+                <a
+                  className="btn-secondary"
+                  href={selectedTemplate.referenceFile.dataUrl}
+                  download={selectedTemplate.referenceFile.name}
+                >
+                  <FileText className="size-4" />
+                  Baixar modelo referência
+                </a>
+              ) : null}
+            </div>
+
+            {selectedTemplate.headerImages.length > 0 ? (
+              <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                {selectedTemplate.headerImages.map((image) => (
+                  <div key={image.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                    <img src={image.dataUrl} alt={image.name} className="h-16 w-full object-contain" />
+                    <p className="mt-2 truncate text-xs font-bold text-slate-600">{image.name}</p>
+                    <button type="button" className="mt-2 text-xs font-black text-red-600" onClick={() => removeHeaderImage(image.id)}>
+                      Remover
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
 
             <div className="mt-5 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
               <Check label="Nome" checked={selectedTemplate.showName} onChange={(value) => updateTemplate({ showName: value })} />
@@ -919,7 +1040,7 @@ export function ResumeBankWorkspace() {
               <Check label="Projetos culturais" checked={selectedTemplate.showCulturalProjectsExperience} onChange={(value) => updateTemplate({ showCulturalProjectsExperience: value })} />
               <Check label="Trabalhos" checked={selectedTemplate.showWorks} onChange={(value) => updateTemplate({ showWorks: value })} />
               <Check label="Informações adicionais" checked={selectedTemplate.showAdditionalInfo} onChange={(value) => updateTemplate({ showAdditionalInfo: value })} />
-              <Check label="Local e data" checked={selectedTemplate.showLocalDate} onChange={(value) => updateTemplate({ showLocalDate: value })} />
+              <Check label="Local e data atual" checked={selectedTemplate.showLocalDate} onChange={(value) => updateTemplate({ showLocalDate: value })} />
               <Check label="Uma pessoa por página" checked={selectedTemplate.onePersonPerPage} onChange={(value) => updateTemplate({ onePersonPerPage: value })} />
             </div>
           </div>
@@ -928,13 +1049,13 @@ export function ResumeBankWorkspace() {
             <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
-                  Gerar currículo
+                  Gerar currículos
                 </p>
                 <h3 className="mt-1 text-xl font-black text-slate-950">
-                  PDF, Word ou lote
+                  PDF, Word, individual ou lote
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  Use o modelo ativo para gerar currículos individuais ou de toda a lista filtrada.
+                  O sistema usa o mesmo front do modelo e troca os dados da equipe selecionada.
                 </p>
               </div>
 
@@ -989,22 +1110,8 @@ function Check({
 }) {
   return (
     <label className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(event) => onChange(event.target.checked)}
-      />
+      <input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} />
       {label}
     </label>
-  );
-}
-
-function InfoCard({ title, value, helper }: { title: string; value: string; helper: string }) {
-  return (
-    <div className="rounded-3xl border border-white bg-white p-5 shadow-sm">
-      <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{title}</p>
-      <p className="mt-2 text-2xl font-black text-slate-950">{value}</p>
-      <p className="mt-1 text-sm text-slate-500">{helper}</p>
-    </div>
   );
 }
