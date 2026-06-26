@@ -347,7 +347,10 @@ function mergeTeamMembersForFinance(baseMembers: TeamMember[], projectId: string
       document: member.document || previous?.document || "",
       email: member.email || previous?.email || "",
       phone: member.phone || previous?.phone || "",
-      amount: Number(member.amount || previous?.amount || 0),
+      expectedAmount: Number(member.expectedAmount || previous?.expectedAmount || 0),
+      paidAmount: Number(member.paidAmount || previous?.paidAmount || 0),
+      paymentStatus: member.paymentStatus || previous?.paymentStatus || "Pendente",
+      documents: Array.isArray(member.documents) ? member.documents : previous?.documents || [],
       notes: member.notes || previous?.notes || "",
     } as TeamMember);
   }
