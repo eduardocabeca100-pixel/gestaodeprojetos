@@ -82,7 +82,10 @@ export function AppSidebar({ profile }: { profile?: CurrentProfile | null }) {
   }
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 border-r border-white/10 bg-[#070b24] text-white shadow-2xl lg:flex lg:flex-col">
+    <aside
+      className="fixed inset-y-0 left-0 z-40 hidden border-r border-white/10 bg-[#070b24] text-white shadow-2xl lg:flex lg:flex-col"
+      style={{ width: "var(--viva-sidebar-width)" }}
+    >
       <div className="flex h-full flex-col px-3 py-5">
         <Link href="/dashboard" className="mb-6 block px-2">
           <div className="text-3xl font-black tracking-tight">VIVA</div>

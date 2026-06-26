@@ -14,7 +14,7 @@ export async function ProtectedLayout({ children }: { children: ReactNode }) {
 
   return (
     <PasswordResetGate profile={profile}>
-      <div className="min-h-screen lg:pl-64 bg-background">
+      <div className="min-h-screen bg-background">
         <AppearanceSync />
         <ProjectRouteGuard />
         <AppSidebar profile={profile} />

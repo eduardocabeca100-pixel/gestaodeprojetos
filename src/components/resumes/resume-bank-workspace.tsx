@@ -14,6 +14,10 @@ import {
   UsersRound,
 } from "lucide-react";
 
+import { SectionCard } from "@/components/layout/section-card";
+import { Button } from "@/components/ui/button";
+import { useClientReady } from "@/lib/use-client-ready";
+import { cn } from "@/lib/utils";
 import type { TeamMember } from "@/modules/team/types";
 
 type ResumeFile = {
@@ -515,21 +519,43 @@ export function ResumeBankWorkspace({
   project: { id: string; name: string };
   initialTeamMembers: TeamMember[];
 }) {
-  const [manualPeople, setManualPeople] = useState<ResumePerson[]>([]);
+  const isClient = useClientReady();
+
+  if (!isClient) {
+    return (
+      <div className="rounded-[2rem] border border-slate-200 bg-white p-6 text-sm font-semibold text-slate-500 shadow-sm">
+        Carregando banco de currículos...
+      </div>
+    );
+  }
+
+  return (
+    <ResumeBankWorkspaceContent
+      key={project.id}
+      project={project}
+      initialTeamMembers={initialTeamMembers}
+    />
+  );
+}
+
+function ResumeBankWorkspaceContent({
+  project,
+  initialTeamMembers,
+}: {
+  project: { id: string; name: string };
+  initialTeamMembers: TeamMember[];
+}) {
+  const [manualPeople, setManualPeople] = useState<ResumePerson[]>(() =>
+    readStorage<ResumePerson[]>(peopleStorageKey, []),
+  );
   const [apiTeamPeople, setApiTeamPeople] = useState<ResumePerson[]>([]);
-  const [template, setTemplate] = useState<ResumeTemplate>(defaultTemplate);
+  const [template, setTemplate] = useState<ResumeTemplate>(() =>
+    readStorage<ResumeTemplate>(templateStorageKey, defaultTemplate),
+  );
   const [selectedPersonId, setSelectedPersonId] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState("Banco de Currículos carregado.");
-
-  useEffect(() => {
-    const savedPeople = readStorage<ResumePerson[]>(peopleStorageKey, []);
-    const savedTemplate = readStorage<ResumeTemplate>(templateStorageKey, defaultTemplate);
-
-    setManualPeople(savedPeople);
-    setTemplate(savedTemplate);
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -616,14 +642,16 @@ export function ResumeBankWorkspace({
     );
   }, [allPeople, search]);
 
-  const selectedPerson =
-    allPeople.find((person) => person.id === selectedPersonId) ?? filteredPeople[0] ?? null;
+  const activePersonId =
+    filteredPeople.find((person) => person.id === selectedPersonId)?.id ??
+    allPeople.find((person) => person.id === selectedPersonId)?.id ??
+    filteredPeople[0]?.id ??
+    "";
 
-  useEffect(() => {
-    if (!selectedPersonId && filteredPeople[0]) {
-      setSelectedPersonId(filteredPeople[0].id);
-    }
-  }, [filteredPeople, selectedPersonId]);
+  const selectedPerson =
+    allPeople.find((person) => person.id === activePersonId) ??
+    filteredPeople[0] ??
+    null;
 
   function saveManualPeople(nextPeople: ResumePerson[], nextMessage = "Currículo salvo.") {
     setManualPeople(nextPeople);
@@ -761,51 +789,100 @@ export function ResumeBankWorkspace({
     );
   }
 
+  const filledProfilesCount = useMemo(
+    () =>
+      allPeople.filter(
+        (person) => getFilledResumeSections(person) > 0 || person.files.length > 0,
+      ).length,
+    [allPeople],
+  );
+
+  const totalFiles = useMemo(
+    () => allPeople.reduce((sum, person) => sum + person.files.length, 0),
+    [allPeople],
+  );
+
+  const selectedBatchPeople = useMemo(
+    () => allPeople.filter((person) => selectedIds.includes(person.id)),
+    [allPeople, selectedIds],
+  );
+
   return (
     <div className="w-full max-w-none space-y-6 pb-10">
-      <section className="rounded-[2rem] border border-white/80 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
-              Banco de Currículos
-            </p>
-            <h2 className="mt-1 text-2xl font-black text-slate-950">
-              Profissionais do projeto e geração por edital
-            </h2>
-            <p className="mt-2 max-w-5xl text-sm leading-6 text-slate-500">
-              Projeto ativo: <strong>{project.name}</strong>. Selecione os profissionais em cards, complete os dados e gere currículos em PDF ou Word.
-            </p>
-          </div>
-
-          <button type="button" className="btn-primary" onClick={addPerson}>
+      <SectionCard
+        title="Profissionais do projeto e geração por edital"
+        description={`Projeto ativo: ${project.name}. Organize o banco em cards, complemente os dados e gere currículos em PDF ou Word com um layout mais limpo.`}
+        actions={
+          <Button type="button" className="rounded-2xl" onClick={addPerson}>
             <Plus className="size-4" />
             Nova pessoa manual
-          </button>
-        </div>
-
-        <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          </Button>
+        }
+      >
+        <div className="rounded-[1.35rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
           {message}
         </div>
-      </section>
+      </SectionCard>
 
-      <section className="grid gap-4 md:grid-cols-4">
-        <InfoCard title="Profissionais" value={String(allPeople.length)} helper="equipe + manuais" />
-        <InfoCard title="Selecionados" value={String(selectedIds.length)} helper="para gerar lote" />
-        <InfoCard title="Modelo" value={template.referenceFile ? "Anexado" : "Pendente"} helper="modelo do edital" />
-        <InfoCard title="Saída" value="PDF / Word" helper="uma pessoa por folha" />
-      </section>
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <InfoCard
+          title="Profissionais"
+          value={String(allPeople.length)}
+          helper={`${projectPeople.length} da equipe e ${manualPeople.length} manuais`}
+          icon={<UsersRound className="size-4" />}
+          tone="bg-[linear-gradient(135deg,rgba(59,130,246,0.14),rgba(99,102,241,0.18))] text-primary"
+        />
+        <InfoCard
+          title="Selecionados"
+          value={String(selectedIds.length)}
+          helper="prontos para geração em lote"
+          icon={<CheckCircle2 className="size-4" />}
+          tone="bg-[linear-gradient(135deg,rgba(16,185,129,0.14),rgba(52,211,153,0.18))] text-emerald-700"
+        />
+        <InfoCard
+          title="Complementados"
+          value={String(filledProfilesCount)}
+          helper={`${totalFiles} arquivo(s) anexado(s) no banco`}
+          icon={<UserRound className="size-4" />}
+          tone="bg-[linear-gradient(135deg,rgba(14,165,233,0.12),rgba(34,197,94,0.14))] text-sky-700"
+        />
+        <InfoCard
+          title="Modelo"
+          value={template.referenceFile ? "Anexado" : "Pendente"}
+          helper={template.referenceFile?.name ?? "suba o modelo do edital"}
+          icon={<FileText className="size-4" />}
+          tone="bg-[linear-gradient(135deg,rgba(250,204,21,0.15),rgba(251,146,60,0.18))] text-amber-700"
+        />
+      </div>
 
-      <div className="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
-        <section className="rounded-[2rem] border border-white/80 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h3 className="text-lg font-black text-slate-950">Equipe do projeto</h3>
-              <p className="text-sm text-slate-500">Cards selecionáveis para gerar currículos.</p>
-            </div>
-            <UsersRound className="size-5 text-primary" />
-          </div>
-
-          <label className="mt-4 block">
+      <SectionCard
+        title="Profissionais em Cards"
+        description="Clique em um card para abrir a pessoa ativa. Use o botão de seleção para montar o lote que será gerado."
+        actions={
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-2xl"
+              onClick={selectAllFiltered}
+              disabled={filteredPeople.length === 0}
+            >
+              Selecionar filtrados
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-2xl"
+              onClick={clearSelection}
+              disabled={selectedIds.length === 0}
+            >
+              Limpar seleção
+            </Button>
+          </>
+        }
+      >
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
+          <label className="block">
             <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
               Buscar profissional
             </span>
@@ -815,262 +892,403 @@ export function ResumeBankWorkspace({
                 className="form-input pl-10"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Nome, função ou área..."
+                placeholder="Nome, função, cidade ou área..."
               />
             </div>
           </label>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button type="button" className="btn-secondary" onClick={selectAllFiltered}>
-              Selecionar todos
-            </button>
-            <button type="button" className="btn-secondary" onClick={clearSelection}>
-              Limpar
-            </button>
+          <div className="rounded-[1.35rem] border border-slate-200 bg-slate-50/80 p-4">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+              Visão atual
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">
+              {search.trim()
+                ? `${filteredPeople.length} pessoa(s) encontradas para "${search.trim()}".`
+                : `${allPeople.length} pessoa(s) disponíveis no banco deste projeto.`}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              O card ativo abre a área de edição logo abaixo.
+            </p>
           </div>
+        </div>
+      </SectionCard>
 
-          <div className="mt-4 grid max-h-[760px] gap-3 overflow-y-auto pr-1">
-            {filteredPeople.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-500">
-                Nenhum profissional encontrado neste projeto.
-              </div>
-            ) : null}
+      <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
+        {filteredPeople.length === 0 ? (
+          <div className="rounded-[1.75rem] border border-dashed border-slate-300 bg-white/85 p-8 text-center text-sm text-slate-500 md:col-span-2 2xl:col-span-3">
+            Nenhum profissional encontrado com esse filtro. Tente outro termo ou crie uma pessoa manual.
+          </div>
+        ) : null}
 
-            {filteredPeople.map((person) => {
-              const active = person.id === selectedPerson?.id;
-              const selected = selectedIds.includes(person.id);
+        {filteredPeople.map((person) => {
+          const active = person.id === selectedPerson?.id;
+          const selected = selectedIds.includes(person.id);
+          const filledSections = getFilledResumeSections(person);
 
-              return (
-                <button
-                  key={person.id}
-                  type="button"
-                  className={
-                    active
-                      ? "rounded-3xl border border-primary bg-primary/10 p-4 text-left shadow-sm"
-                      : "rounded-3xl border border-slate-200 bg-slate-50 p-4 text-left transition hover:border-primary/40 hover:bg-white"
-                  }
-                  onClick={() => setSelectedPersonId(person.id)}
-                >
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={selected}
-                      onChange={(event) => {
-                        event.stopPropagation();
-                        toggleSelected(person.id);
-                      }}
-                      onClick={(event) => event.stopPropagation()}
-                      className="mt-1"
-                    />
-
-                    <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-primary/10 text-sm font-black text-primary">
+          return (
+            <article
+              key={person.id}
+              className={cn(
+                "rounded-[1.75rem] border p-4 shadow-sm transition-all duration-200",
+                active
+                  ? "border-primary/35 bg-[linear-gradient(135deg,rgba(239,246,255,0.96),rgba(255,255,255,0.98))] shadow-[0_24px_50px_-36px_rgba(37,99,235,0.45)] md:col-span-2 2xl:col-span-2"
+                  : selected
+                    ? "border-emerald-200 bg-[linear-gradient(180deg,rgba(236,253,245,0.9),rgba(255,255,255,0.98))] hover:border-emerald-300"
+                    : "border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(247,249,255,0.95))] hover:-translate-y-0.5 hover:border-primary/20",
+              )}
+            >
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <button
+                    type="button"
+                    className="flex min-w-0 flex-1 items-start gap-3 text-left"
+                    onClick={() => setSelectedPersonId(person.id)}
+                  >
+                    <div className="grid size-12 shrink-0 place-items-center rounded-[1.1rem] bg-primary/10 text-base font-black text-primary">
                       {person.name.slice(0, 1).toUpperCase()}
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="font-black text-slate-950">{person.name}</p>
-                        {selected ? <CheckCircle2 className="size-5 shrink-0 text-emerald-500" /> : null}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate text-base font-black text-slate-950">{person.name}</p>
+                        {active ? (
+                          <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-primary">
+                            Em edição
+                          </span>
+                        ) : null}
                       </div>
 
-                      <p className="mt-1 text-sm text-slate-500">{person.area || "Área não informada"}</p>
-
-                      <span className="mt-3 inline-flex rounded-full bg-slate-900/5 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
-                        {person.source === "project" ? "Projeto" : "Manual"}
-                      </span>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section className="space-y-6">
-          <section className="rounded-[2rem] border border-white/80 bg-white p-6 shadow-sm">
-            <div className="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
-                  Cadastro / complementação
-                </p>
-                <h3 className="mt-1 text-2xl font-black text-slate-950">
-                  {selectedPerson?.name || "Selecione uma pessoa"}
-                </h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  Complete formação, experiências e trabalhos para gerar o currículo no modelo do edital.
-                </p>
-              </div>
-
-              {selectedPerson?.source === "manual" ? (
-                <button type="button" className="btn-danger" onClick={() => removeManualPerson(selectedPerson.id)}>
-                  <Trash2 className="size-4" />
-                  Excluir manual
-                </button>
-              ) : null}
-            </div>
-
-            {selectedPerson ? (
-              <div className="mt-5 grid gap-4 lg:grid-cols-2">
-                <Field label="Nome completo">
-                  <input className="form-input" value={selectedPerson.name} onChange={(event) => updatePerson({ name: event.target.value })} />
-                </Field>
-
-                <Field label="Área de atuação">
-                  <input className="form-input" value={selectedPerson.area} onChange={(event) => updatePerson({ area: event.target.value })} />
-                </Field>
-
-                <Field label="Tempo de atuação">
-                  <input className="form-input" value={selectedPerson.actingTime} onChange={(event) => updatePerson({ actingTime: event.target.value })} />
-                </Field>
-
-                <Field label="Cidade/Estado">
-                  <input className="form-input" value={selectedPerson.cityState} onChange={(event) => updatePerson({ cityState: event.target.value })} />
-                </Field>
-
-                <Field label="Formação">
-                  <textarea className="form-input min-h-28" value={selectedPerson.formation} onChange={(event) => updatePerson({ formation: event.target.value })} />
-                </Field>
-
-                <Field label="Cursos">
-                  <textarea className="form-input min-h-28" value={selectedPerson.courses} onChange={(event) => updatePerson({ courses: event.target.value })} />
-                </Field>
-
-                <Field label="Experiência profissional">
-                  <textarea className="form-input min-h-36" value={selectedPerson.experience} onChange={(event) => updatePerson({ experience: event.target.value })} />
-                </Field>
-
-                <Field label="Trabalhos">
-                  <textarea className="form-input min-h-36" value={selectedPerson.works} onChange={(event) => updatePerson({ works: event.target.value })} />
-                </Field>
-
-                <div className="lg:col-span-2">
-                  <Field label="Informações adicionais">
-                    <textarea className="form-input min-h-28" value={selectedPerson.additionalInfo} onChange={(event) => updatePerson({ additionalInfo: event.target.value })} />
-                  </Field>
-                </div>
-              </div>
-            ) : null}
-          </section>
-
-          <section className="grid gap-6 xl:grid-cols-2">
-            <section className="rounded-[2rem] border border-white/80 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-lg font-black text-slate-950">Arquivos do profissional</h3>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Currículo original, certificados, diplomas, portfólio e documentos.
-                  </p>
-                </div>
-                <UserRound className="size-5 text-primary" />
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {["Currículo PDF", "Currículo Word", "Certificado", "Diploma", "Portfólio", "Foto", "Documento"].map((category) => (
-                  <label key={category} className="btn-secondary cursor-pointer">
-                    <UploadCloud className="size-4" />
-                    {category}
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
-                      onChange={(event) => {
-                        void uploadPersonFile(event.target.files?.[0] ?? null, category);
-                        event.currentTarget.value = "";
-                      }}
-                    />
-                  </label>
-                ))}
-              </div>
-
-              {selectedPerson && selectedPerson.files.length > 0 ? (
-                <div className="mt-4 grid gap-3">
-                  {selectedPerson.files.map((file) => (
-                    <div key={file.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                      <p className="font-black text-slate-950">{file.category}</p>
-                      <p className="mt-1 truncate text-sm text-slate-500">
-                        {file.name} • {fileSize(file.size)}
+                      <p className="mt-1 text-sm text-slate-500">
+                        {person.area || "Área não informada"}
                       </p>
-                      <a className="mt-3 inline-flex text-sm font-bold text-primary" href={file.dataUrl} download={file.name}>
-                        Baixar
-                      </a>
                     </div>
-                  ))}
-                </div>
-              ) : null}
-            </section>
+                  </button>
 
-            <section className="rounded-[2rem] border border-white/80 bg-white p-5 shadow-sm">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
-                    Modelos por edital
-                  </p>
-                  <h3 className="mt-1 text-lg font-black text-slate-950">
-                    Subir anexo/modelo
-                  </h3>
-                  <p className="mt-1 text-sm leading-6 text-slate-500">
-                    Envie o modelo que o edital pede. O sistema gera uma pessoa por folha.
-                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="rounded-2xl"
+                    variant={selected ? "default" : "outline"}
+                    onClick={() => toggleSelected(person.id)}
+                  >
+                    {selected ? <CheckCircle2 className="size-4" /> : null}
+                    {selected ? "No lote" : "Selecionar"}
+                  </Button>
                 </div>
 
-                <label className="btn-primary cursor-pointer">
+                <div className="flex flex-wrap gap-2">
+                  <span
+                    className={cn(
+                      "rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em]",
+                      person.source === "project"
+                        ? "bg-slate-900/6 text-slate-600"
+                        : "bg-primary/10 text-primary",
+                    )}
+                  >
+                    {person.source === "project" ? "Equipe do projeto" : "Cadastro manual"}
+                  </span>
+                  <span className="rounded-full bg-slate-900/6 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-600">
+                    {filledSections}/6 seções preenchidas
+                  </span>
+                  <span className="rounded-full bg-slate-900/6 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-slate-600">
+                    {person.files.length} arquivo(s)
+                  </span>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <MicroStat label="Cidade" value={person.cityState || "Não informada"} />
+                  <MicroStat label="Formação" value={person.formation ? "Preenchida" : "Pendente"} />
+                  <MicroStat label="Experiência" value={person.experience ? "Preenchida" : "Pendente"} />
+                </div>
+
+                {active ? (
+                  <div className="grid gap-3 rounded-[1.35rem] border border-white/80 bg-white/80 p-3 md:grid-cols-3">
+                    <SummaryCard
+                      title="Formação e cursos"
+                      value={summarizeField(
+                        [person.formation, person.courses].filter(Boolean).join(" "),
+                        "Ainda sem formação ou cursos preenchidos.",
+                      )}
+                    />
+                    <SummaryCard
+                      title="Experiência"
+                      value={summarizeField(
+                        person.experience,
+                        "Use a área de edição abaixo para registrar a trajetória profissional.",
+                      )}
+                    />
+                    <SummaryCard
+                      title="Arquivos"
+                      value={
+                        person.files.length > 0
+                          ? `${person.files.length} arquivo(s): ${person.files
+                              .slice(0, 2)
+                              .map((file) => file.category)
+                              .join(", ")}${person.files.length > 2 ? "..." : ""}`
+                          : "Nenhum arquivo anexado ainda."
+                      }
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      <div className="grid gap-6 2xl:grid-cols-[minmax(0,1.45fr)_380px]">
+        <SectionCard
+          title={selectedPerson?.name || "Selecione um card"}
+          description={
+            selectedPerson
+              ? "Ao editar pessoas da equipe, os complementos ficam salvos neste banco sem afetar a listagem original do projeto."
+              : "Escolha um profissional acima para abrir os campos de complementação."
+          }
+          actions={
+            selectedPerson?.source === "manual" ? (
+              <Button
+                type="button"
+                variant="destructive"
+                className="rounded-2xl"
+                onClick={() => removeManualPerson(selectedPerson.id)}
+              >
+                <Trash2 className="size-4" />
+                Excluir manual
+              </Button>
+            ) : null
+          }
+        >
+          {selectedPerson ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Field label="Nome completo">
+                <input
+                  className="form-input"
+                  value={selectedPerson.name}
+                  onChange={(event) => updatePerson({ name: event.target.value })}
+                />
+              </Field>
+
+              <Field label="Área de atuação">
+                <input
+                  className="form-input"
+                  value={selectedPerson.area}
+                  onChange={(event) => updatePerson({ area: event.target.value })}
+                />
+              </Field>
+
+              <Field label="Tempo de atuação">
+                <input
+                  className="form-input"
+                  value={selectedPerson.actingTime}
+                  onChange={(event) => updatePerson({ actingTime: event.target.value })}
+                />
+              </Field>
+
+              <Field label="Cidade/Estado">
+                <input
+                  className="form-input"
+                  value={selectedPerson.cityState}
+                  onChange={(event) => updatePerson({ cityState: event.target.value })}
+                />
+              </Field>
+
+              <Field label="Formação">
+                <textarea
+                  className="form-input min-h-28"
+                  value={selectedPerson.formation}
+                  onChange={(event) => updatePerson({ formation: event.target.value })}
+                />
+              </Field>
+
+              <Field label="Cursos">
+                <textarea
+                  className="form-input min-h-28"
+                  value={selectedPerson.courses}
+                  onChange={(event) => updatePerson({ courses: event.target.value })}
+                />
+              </Field>
+
+              <Field label="Experiência profissional">
+                <textarea
+                  className="form-input min-h-36"
+                  value={selectedPerson.experience}
+                  onChange={(event) => updatePerson({ experience: event.target.value })}
+                />
+              </Field>
+
+              <Field label="Trabalhos">
+                <textarea
+                  className="form-input min-h-36"
+                  value={selectedPerson.works}
+                  onChange={(event) => updatePerson({ works: event.target.value })}
+                />
+              </Field>
+
+              <div className="lg:col-span-2">
+                <Field label="Informações adicionais">
+                  <textarea
+                    className="form-input min-h-28"
+                    value={selectedPerson.additionalInfo}
+                    onChange={(event) => updatePerson({ additionalInfo: event.target.value })}
+                  />
+                </Field>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-[1.35rem] border border-dashed border-slate-300 bg-slate-50/80 p-6 text-sm text-slate-500">
+              Nenhuma pessoa ativa agora. Clique em um card para começar a editar.
+            </div>
+          )}
+        </SectionCard>
+
+        <div className="space-y-6">
+          <SectionCard
+            title="Arquivos do profissional"
+            description="Currículo original, certificados, diplomas, portfólio e documentos de apoio."
+          >
+            <div className="flex flex-wrap gap-2">
+              {[
+                "Currículo PDF",
+                "Currículo Word",
+                "Certificado",
+                "Diploma",
+                "Portfólio",
+                "Foto",
+                "Documento",
+              ].map((category) => (
+                <label
+                  key={category}
+                  className={cn(
+                    "inline-flex cursor-pointer items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-primary/30 hover:bg-primary/5 hover:text-primary",
+                    !selectedPerson && "pointer-events-none opacity-50",
+                  )}
+                >
                   <UploadCloud className="size-4" />
-                  Subir
+                  {category}
                   <input
                     type="file"
                     className="hidden"
-                    accept=".pdf,.doc,.docx"
+                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
                     onChange={(event) => {
-                      void uploadTemplateReference(event.target.files?.[0] ?? null);
+                      void uploadPersonFile(event.target.files?.[0] ?? null, category);
                       event.currentTarget.value = "";
                     }}
                   />
                 </label>
+              ))}
+            </div>
+
+            {selectedPerson && selectedPerson.files.length > 0 ? (
+              <div className="mt-4 grid gap-3">
+                {selectedPerson.files.map((file) => (
+                  <div
+                    key={file.id}
+                    className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 p-4"
+                  >
+                    <p className="font-black text-slate-950">{file.category}</p>
+                    <p className="mt-1 truncate text-sm text-slate-500">
+                      {file.name} • {fileSize(file.size)}
+                    </p>
+                    <Button asChild type="button" size="sm" variant="outline" className="mt-3 rounded-2xl">
+                      <a href={file.dataUrl} download={file.name}>
+                        Baixar
+                      </a>
+                    </Button>
+                  </div>
+                ))}
               </div>
-
-              {template.referenceFile ? (
-                <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                  <p className="font-black text-emerald-800">Modelo anexado</p>
-                  <p className="mt-1 text-sm text-emerald-700">{template.referenceFile.name}</p>
-                </div>
-              ) : (
-                <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
-                  Nenhum modelo anexado ainda.
-                </div>
-              )}
-            </section>
-          </section>
-
-          <section className="rounded-[2rem] border border-white/80 bg-white p-5 shadow-sm">
-            <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.24em] text-primary">
-                  Gerar currículos
-                </p>
-                <h3 className="mt-1 text-xl font-black text-slate-950">
-                  Currículos selecionados
-                </h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  {selectedIds.length > 0
-                    ? `${selectedIds.length} pessoa(s) selecionada(s).`
-                    : "Nenhuma seleção em lote. Será gerada a pessoa ativa."}
-                </p>
+            ) : (
+              <div className="mt-4 rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50/80 p-4 text-sm text-slate-500">
+                {selectedPerson
+                  ? "Nenhum arquivo anexado para esta pessoa ainda."
+                  : "Selecione um card para começar a anexar arquivos."}
               </div>
+            )}
+          </SectionCard>
 
-              <div className="flex flex-wrap gap-2">
-                <button type="button" className="btn-secondary" onClick={generatePdf}>
+          <SectionCard
+            title="Modelo por edital"
+            description="Envie o modelo que o edital pede. O sistema continua gerando uma pessoa por folha."
+            actions={
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-2xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90">
+                <UploadCloud className="size-4" />
+                Subir modelo
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.doc,.docx"
+                  onChange={(event) => {
+                    void uploadTemplateReference(event.target.files?.[0] ?? null);
+                    event.currentTarget.value = "";
+                  }}
+                />
+              </label>
+            }
+          >
+            {template.referenceFile ? (
+              <div className="rounded-[1.25rem] border border-emerald-200 bg-emerald-50 p-4">
+                <p className="font-black text-emerald-800">Modelo anexado</p>
+                <p className="mt-1 text-sm text-emerald-700">{template.referenceFile.name}</p>
+              </div>
+            ) : (
+              <div className="rounded-[1.25rem] border border-dashed border-slate-300 bg-slate-50/80 p-4 text-sm text-slate-500">
+                Nenhum modelo anexado ainda.
+              </div>
+            )}
+          </SectionCard>
+
+          <SectionCard
+            title="Gerar currículos"
+            description="Se houver seleção em lote, ela tem prioridade. Sem lote, o sistema usa o card ativo."
+            actions={
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-2xl"
+                  onClick={generatePdf}
+                  disabled={allPeople.length === 0}
+                >
                   <FileText className="size-4" />
                   Gerar PDF
-                </button>
-
-                <button type="button" className="btn-primary" onClick={generateWord}>
+                </Button>
+                <Button
+                  type="button"
+                  className="rounded-2xl"
+                  onClick={generateWord}
+                  disabled={allPeople.length === 0}
+                >
                   <Download className="size-4" />
                   Gerar Word
-                </button>
-              </div>
+                </Button>
+              </>
+            }
+          >
+            <div className="rounded-[1.25rem] border border-slate-200 bg-slate-50/80 p-4">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">
+                Seleção atual
+              </p>
+              <p className="mt-2 text-sm font-semibold text-slate-900">
+                {selectedBatchPeople.length > 0
+                  ? `${selectedBatchPeople.length} pessoa(s) no lote.`
+                  : selectedPerson
+                    ? `Nenhum lote ativo. Será gerado o card de ${selectedPerson.name}.`
+                    : "Nenhuma pessoa ativa para geração."}
+              </p>
+              {selectedBatchPeople.length > 0 ? (
+                <p className="mt-1 text-sm text-slate-500">
+                  {selectedBatchPeople
+                    .slice(0, 3)
+                    .map((person) => person.name)
+                    .join(", ")}
+                  {selectedBatchPeople.length > 3
+                    ? ` e mais ${selectedBatchPeople.length - 3}.`
+                    : "."}
+                </p>
+              ) : null}
             </div>
-          </section>
-        </section>
+          </SectionCard>
+        </div>
       </div>
     </div>
   );
@@ -1091,16 +1309,61 @@ function InfoCard({
   title,
   value,
   helper,
+  icon,
+  tone,
 }: {
   title: string;
   value: string;
   helper: string;
+  icon: ReactNode;
+  tone: string;
 }) {
   return (
-    <div className="rounded-[1.75rem] border border-white/80 bg-white p-5 shadow-sm">
+    <div className="rounded-[1.75rem] border border-white/80 bg-white/95 p-5 shadow-sm">
+      <div className={cn("mb-3 flex size-10 items-center justify-center rounded-2xl", tone)}>
+        {icon}
+      </div>
       <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">{title}</p>
       <p className="mt-2 text-3xl font-black text-slate-950">{value}</p>
       <p className="mt-1 text-sm text-slate-500">{helper}</p>
     </div>
   );
+}
+
+function MicroStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[1.15rem] border border-white/80 bg-white/80 p-3">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-slate-900">{value}</p>
+    </div>
+  );
+}
+
+function SummaryCard({ title, value }: { title: string; value: string }) {
+  return (
+    <div className="rounded-[1.15rem] border border-slate-200 bg-slate-50/80 p-3">
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{title}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{value}</p>
+    </div>
+  );
+}
+
+function getFilledResumeSections(person: ResumePerson) {
+  return [
+    person.formation,
+    person.courses,
+    person.actingTime,
+    person.experience,
+    person.works,
+    person.additionalInfo,
+  ].filter((value) => safeText(value)).length;
+}
+
+function summarizeField(value: string, fallback: string) {
+  const text = safeText(value);
+
+  if (!text) return fallback;
+  if (text.length <= 120) return text;
+
+  return `${text.slice(0, 117).trim()}...`;
 }
