@@ -17,7 +17,7 @@ export default async function CentralCulturalPage({
     >
       <div className="space-y-6">
         <ProjectScopeBanner project={project} />
-        <CulturalManagementSuite key={project.id} project={project} />
+        <CulturalManagementSuite key={project.id} />
       </div>
     </PageContainer>
   );
