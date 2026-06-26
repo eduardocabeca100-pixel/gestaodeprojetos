@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import {
+  usePathname,
+  useSearchParams } from "next/navigation";
 import type { ComponentType } from "react";
 import {
   Bell,
