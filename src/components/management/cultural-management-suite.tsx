@@ -947,7 +947,7 @@ Saldo estimado: ${formatCurrency(totals.remaining)}
 
       {activeTab === "accountability" ? <AccountabilityEditor /> : null}
 
-      {activeTab === "demonstratives" ? <AdministrativeDemonstratives /> : null}
+      {activeTab === "demonstratives" ? null : null}
 
     </div>
   );
