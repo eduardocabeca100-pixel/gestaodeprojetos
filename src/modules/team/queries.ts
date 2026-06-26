@@ -3,6 +3,7 @@ import type { Database } from "@/lib/supabase/database.types";
 import { getFeaturedProject, getProjectById } from "@/modules/projects/queries";
 import type { Project } from "@/modules/projects/types";
 
+import { listLocalCurriculumProfiles } from "./local-curriculum-profiles";
 import type {
   TeamMember,
   TeamRosterMember,
@@ -30,50 +31,46 @@ function buildTeamMembers(project: Project): TeamMember[] {
   const accessibilityPaid = Math.round(project.executedAmount * 0.12);
   const vocalPaid = Math.round(project.executedAmount * 0.18);
 
-  return [
-    {
-      id: `${project.id}-team-direcao`,
+  return listLocalCurriculumProfiles().map((profile) => {
+    const isDirection = profile.name === "Marcel Eduardo Cabeça Domingues";
+    const isAccessibility = profile.name === "Suzi Daiane";
+    const isVocal = profile.name === "Katiana de Souza Coelho";
+
+    const expectedAmount = isDirection ? 6000 : isAccessibility ? 1200 : isVocal ? 1300 : 0;
+    const paidAmount = isDirection ? directionPaid : isAccessibility ? accessibilityPaid : isVocal ? vocalPaid : 0;
+    const paymentStatus =
+      paidAmount > 0 ? "Parcial" : ("Previsto" as const);
+    const documents = isDirection
+      ? [`contrato-direcao-${project.slug}.pdf`]
+      : isAccessibility
+        ? [`acessibilidade-${project.slug}.pdf`]
+        : isVocal
+          ? [`vocal-${project.slug}.pdf`]
+          : [];
+
+    return {
+      id: `${project.id}-team-${profile.name
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/gi, "-")
+        .replace(/(^-|-$)/g, "")
+        .toLowerCase()}`,
       projectId: project.id,
-      name: "Marcel Eduardo Cabeça Domingues",
-      role: "Diretor geral",
+      name: profile.name,
+      role: profile.role,
       phone: "",
       email: "",
-      document: "59.053.899/0001-53",
-      expectedAmount: 6000,
-      paidAmount: directionPaid,
-      paymentStatus: directionPaid > 0 ? "Parcial" : "Previsto",
-      documents: [`contrato-direcao-${project.slug}.pdf`],
-      notes: `Responsável pelo projeto ${project.name}.`,
-    },
-    {
-      id: `${project.id}-team-libras`,
-      projectId: project.id,
-      name: "Suzi Daiane",
-      role: "Intérprete de Libras",
-      phone: "",
-      email: "",
-      document: "",
-      expectedAmount: 1200,
-      paidAmount: accessibilityPaid,
-      paymentStatus: accessibilityPaid > 0 ? "Parcial" : "Previsto",
-      documents: [`acessibilidade-${project.slug}.pdf`],
-      notes: "Responsável pela acessibilidade comunicacional do projeto.",
-    },
-    {
-      id: `${project.id}-team-vocal`,
-      projectId: project.id,
-      name: "Katiana de Souza Coelho",
-      role: "Preparador vocal",
-      phone: "",
-      email: "",
-      document: "",
-      expectedAmount: 1300,
-      paidAmount: vocalPaid,
-      paymentStatus: vocalPaid > 0 ? "Parcial" : "Previsto",
-      documents: [`vocal-${project.slug}.pdf`],
-      notes: "Preparação vocal e apoio musical do ciclo formativo.",
-    },
-  ];
+      document: profile.document || "",
+      expectedAmount,
+      paidAmount,
+      paymentStatus,
+      documents,
+      notes:
+        profile.rosterNotes ||
+        profile.experience ||
+        `Cadastro inicial do currículo de ${profile.name}.`,
+    } satisfies TeamMember;
+  });
 }
 
 // Legacy function - list team members for a specific project

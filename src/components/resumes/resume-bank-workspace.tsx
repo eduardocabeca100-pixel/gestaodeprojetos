@@ -18,6 +18,7 @@ import { SectionCard } from "@/components/layout/section-card";
 import { Button } from "@/components/ui/button";
 import { useClientReady } from "@/lib/use-client-ready";
 import { cn } from "@/lib/utils";
+import { getLocalCurriculumProfile } from "@/modules/team/local-curriculum-profiles";
 import type { TeamMember } from "@/modules/team/types";
 
 type ResumeFile = {
@@ -294,6 +295,7 @@ function apiRowToResumePerson(row: ApiTeamRow): ResumePerson {
       "nome",
     ]),
   );
+  const profile = getLocalCurriculumProfile(name);
 
   const area = safeText(
     pickApiValue(row, [
@@ -313,19 +315,26 @@ function apiRowToResumePerson(row: ApiTeamRow): ResumePerson {
     id: `api-${sanitizeFileName(
       safeText(pickApiValue(row, ["id", "member_id", "person_id", "team_roster_id"])) || name,
     )}`,
-    name: name || "Pessoa sem nome",
-    area: area || "Equipe",
-    formation: safeText(pickApiValue(row, ["formation", "formacao"])),
-    courses: safeText(pickApiValue(row, ["courses", "cursos"])),
-    actingTime: safeText(pickApiValue(row, ["actingTime", "acting_time", "tempo_atuacao"])),
-    experience: safeText(
-      pickApiValue(row, ["experience", "experiencia", "notes", "description", "observations"]),
-    ),
-    works: safeText(pickApiValue(row, ["works", "trabalhos", "projects", "projetos"])),
-    additionalInfo: safeText(
-      pickApiValue(row, ["additionalInfo", "additional_info", "observations", "notes"]),
-    ),
+    name: profile?.name || name || "Pessoa sem nome",
+    area: profile?.area || area || "Equipe",
+    formation:
+      profile?.formation || safeText(pickApiValue(row, ["formation", "formacao"])),
+    courses: profile?.courses || safeText(pickApiValue(row, ["courses", "cursos"])),
+    actingTime:
+      profile?.actingTime || safeText(pickApiValue(row, ["actingTime", "acting_time", "tempo_atuacao"])),
+    experience:
+      profile?.experience ||
+      safeText(
+        pickApiValue(row, ["experience", "experiencia", "notes", "description", "observations"]),
+      ),
+    works: profile?.works || safeText(pickApiValue(row, ["works", "trabalhos", "projects", "projetos"])),
+    additionalInfo:
+      profile?.additionalInfo ||
+      safeText(
+        pickApiValue(row, ["additionalInfo", "additional_info", "observations", "notes"]),
+      ),
     cityState:
+      profile?.cityState ||
       safeText(pickApiValue(row, ["cityState", "city_state", "city", "cidade", "location"])) ||
       "Jaraguá do Sul/SC",
     files: [],
@@ -334,17 +343,19 @@ function apiRowToResumePerson(row: ApiTeamRow): ResumePerson {
 }
 
 function teamToResumePerson(member: TeamMember): ResumePerson {
+  const profile = getLocalCurriculumProfile(member.name);
+
   return {
     id: `team-${member.id}`,
-    name: safeText(member.name) || "Pessoa sem nome",
-    area: safeText(member.role) || "Equipe",
-    formation: "",
-    courses: "",
-    actingTime: "",
-    experience: safeText(member.notes),
-    works: "",
-    additionalInfo: "",
-    cityState: "Jaraguá do Sul/SC",
+    name: profile?.name || safeText(member.name) || "Pessoa sem nome",
+    area: profile?.area || safeText(member.role) || "Equipe",
+    formation: profile?.formation || "",
+    courses: profile?.courses || "",
+    actingTime: profile?.actingTime || "",
+    experience: profile?.experience || safeText(member.notes),
+    works: profile?.works || "",
+    additionalInfo: profile?.additionalInfo || "",
+    cityState: profile?.cityState || "Jaraguá do Sul/SC",
     files: [],
     source: "project",
   };
