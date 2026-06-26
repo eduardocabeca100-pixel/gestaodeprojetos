@@ -1,218 +1,164 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import { Button } from "@/components/ui/button";
-import { can } from "@/lib/auth/permissions";
-import type { CurrentProfile } from "@/lib/auth/require-role";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
-  ACTIVE_PROJECT_EVENT,
-  getActiveProjectScope,
-  type ActiveProjectScope,
-} from "@/lib/project-scope";
-import { cn } from "@/lib/utils";
-import { logout } from "@/modules/users/actions";
+  Bell,
+  CalendarDays,
+  ClipboardList,
+  FileText,
+  Folder,
+  Home,
+  ImageIcon,
+  LogOut,
+  Newspaper,
+  Plus,
+  Receipt,
+  Settings,
+  Users,
+  UsersRound,
+  Wallet,
+} from "lucide-react";
 
-const navigation = [
+type CurrentProfile = {
+  name?: string | null;
+  email?: string | null;
+  role?: string | null;
+};
+
+type SidebarItem = {
+  label: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  projectScoped?: boolean;
+  badge?: string;
+};
+
+const navigation: SidebarItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: Home, projectScoped: true },
   { label: "Central Cultural", href: "/central-cultural", icon: ClipboardList, projectScoped: true },
   { label: "Projetos", href: "/projetos", icon: Folder },
   { label: "Documentos do projeto", href: "/documentos", icon: FileText, projectScoped: true },
-  { label: "Docs Oficiais", href: "/documentos-oficiais", icon: FileText, projectScoped: true },
+  { label: "Docs Oficiais", href: "/documentos-oficiais", icon: Newspaper, projectScoped: true },
   { label: "Cronograma", href: "/cronograma", icon: CalendarDays, projectScoped: true },
   { label: "Diário de classe", href: "/diario-de-classe", icon: ClipboardList, projectScoped: true },
   { label: "Financeiro", href: "/financeiro", icon: Wallet, projectScoped: true },
   { label: "Equipe", href: "/equipe", icon: Users, projectScoped: true },
-  { label: "Banco de Currículos", href: "/banco-de-curriculos", icon: UsersRound, projectScoped: false },
+  { label: "Banco de Currículos", href: "/banco-de-curriculos", icon: UsersRound },
   { label: "Participantes", href: "/participantes", icon: Users, projectScoped: true },
   { label: "Mídia", href: "/midia", icon: ImageIcon, projectScoped: true },
-  { label: "Configurações", href: "/configuracoes/usuarios", icon: Settings },
+  { label: "Relatórios", href: "/relatorios", icon: Receipt, projectScoped: true },
+  { label: "Notificações", href: "/notificacoes", icon: Bell, projectScoped: true },
+  { label: "Configurações", href: "/configuracoes", icon: Settings },
 ];
 
-function getProjectIdFromPathname(pathname: string) {
-  const [, section, projectId] = pathname.split("/");
-
-  if (section !== "projetos" || !projectId) {
-    return null;
-  }
-
-  if (projectId === "novo" || projectId === "selecionar") {
-    return null;
-  }
-
-  return projectId;
+function normalizeRole(role?: string | null) {
+  if (!role) return "Usuário";
+  if (role === "super_admin") return "Super Admin";
+  if (role === "admin") return "Admin";
+  if (role === "executive_director") return "Diretor Executivo";
+  return role;
 }
 
-function SidebarContent({ profile }: { profile: CurrentProfile }) {
+function getInitial(name?: string | null, email?: string | null) {
+  const value = name || email || "U";
+  return value.trim().slice(0, 1).toUpperCase();
+}
+
+function isActive(pathname: string, href: string) {
+  if (href === "/dashboard") {
+    return pathname === "/dashboard" || pathname === "/";
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+export function AppSidebar({ profile }: { profile?: CurrentProfile | null }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [storedProject, setStoredProject] = useState<ActiveProjectScope | null>(null);
+  const activeProjectId = searchParams.get("project");
 
-  useEffect(() => {
-    const syncProject = () => {
-      const scope = getActiveProjectScope();
-      setStoredProject(scope.id === "sem-projeto" ? null : scope);
-    };
+  function buildHref(item: SidebarItem) {
+    if (!item.projectScoped || !activeProjectId) {
+      return item.href;
+    }
 
-    syncProject();
-    window.addEventListener(ACTIVE_PROJECT_EVENT, syncProject as EventListener);
-    window.addEventListener("storage", syncProject);
-
-    return () => {
-      window.removeEventListener(ACTIVE_PROJECT_EVENT, syncProject as EventListener);
-      window.removeEventListener("storage", syncProject);
-    };
-  }, [pathname]);
-
-  const activeProjectId =
-    searchParams.get("project") ?? getProjectIdFromPathname(pathname) ?? storedProject?.id ?? null;
-
-  const visibleNavigation = navigation.filter(
-    (item) =>
-      item.href !== "/configuracoes/usuarios" || can(profile.role, "change_settings"),
-  );
+    return `${item.href}?project=${activeProjectId}`;
+  }
 
   return (
-    <aside
-      className="relative flex h-[100dvh] w-[var(--viva-sidebar-width)] flex-col overflow-hidden border-r border-white/8 bg-[linear-gradient(180deg,#06112f_0%,#0a1332_20%,#12103e_52%,#090d22_100%)] text-sidebar-foreground shadow-[18px_0_60px_-42px_rgba(15,23,42,0.9)]"
-      style={{ fontFamily: "var(--font-viva-heading)" }}
-    >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(96,165,250,0.24),transparent_28%),radial-gradient(circle_at_82%_22%,rgba(168,85,247,0.24),transparent_24%),radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.14),transparent_28%)]" />
-
-      <div className="flex shrink-0 items-center border-b border-sidebar-border px-4 py-3">
-        <div className="min-w-0">
-          <p className="truncate text-[1.9rem] font-black leading-none tracking-normal">
-            VIVA
-          </p>
-          <p className="mt-1 truncate text-[0.6rem] font-semibold uppercase tracking-[0.24em] text-sidebar-foreground/70">
+    <aside className="fixed inset-y-0 left-0 z-40 hidden w-[280px] border-r border-white/10 bg-[#070b24] text-white shadow-2xl lg:flex lg:flex-col">
+      <div className="flex h-full flex-col px-4 py-5">
+        <Link href="/dashboard" className="mb-6 block">
+          <div className="text-3xl font-black tracking-tight">VIVA</div>
+          <div className="mt-1 text-xs font-black uppercase tracking-[0.32em] text-white/55">
             Gestão Cultural
-          </p>
-        </div>
-      </div>
-
-      <div className="relative shrink-0 px-3 py-3">
-        {can(profile.role, "create_project") ? (
-          <Button asChild className="h-12 w-full justify-start rounded-2xl bg-[linear-gradient(135deg,#2563eb_0%,#6d28d9_100%)] px-4 text-[0.9rem] font-semibold text-white shadow-[0_18px_40px_-18px_rgba(99,102,241,0.88)] hover:opacity-95">
-            <Link href="/projetos/novo">
-              <Plus className="size-4" />
-              Novo Projeto
-            </Link>
-          </Button>
-        ) : (
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-sidebar-foreground/70 backdrop-blur">
-            Acesso somente aos projetos liberados
           </div>
-        )}
-      </div>
+        </Link>
 
-      <div className="relative min-h-0 flex-1 overflow-y-auto px-2.5 pb-3 [scrollbar-width:thin]">
-        <nav className="space-y-1">
-          {visibleNavigation.map((item) => {
+        <Link
+          href="/projetos/novo"
+          className="mb-5 flex h-12 items-center justify-center gap-2 rounded-2xl bg-[linear-gradient(135deg,#2563eb,#7c3aed)] px-4 text-sm font-black text-white shadow-lg shadow-blue-950/30 transition hover:brightness-110"
+        >
+          <Plus className="size-4" />
+          Novo Projeto
+        </Link>
+
+        <nav className="flex-1 space-y-1 overflow-y-auto pr-1">
+          {navigation.map((item) => {
             const Icon = item.icon;
-            const href =
-              item.projectScoped && activeProjectId
-                ? `${item.href}?project=${activeProjectId}`
-                : item.href;
-
-            const active =
-              pathname === item.href ||
-              pathname.startsWith(`${item.href}/`) ||
-              (item.href === "/projetos" && pathname.startsWith("/projetos/")) ||
-              (item.href === "/configuracoes/usuarios" && pathname.startsWith("/configuracoes"));
+            const href = buildHref(item);
+            const active = isActive(pathname, item.href);
 
             return (
               <Link
                 key={item.href}
                 href={href}
-                className={cn(
-                  "flex h-10 items-center gap-2.5 rounded-2xl px-3 text-[0.86rem] font-semibold text-sidebar-foreground/80 transition hover:bg-white/8 hover:text-sidebar-accent-foreground",
-                  active &&
-                    "bg-[linear-gradient(90deg,rgba(99,102,241,0.45),rgba(37,99,235,0.18))] text-sidebar-accent-foreground shadow-[0_16px_28px_-24px_rgba(96,165,250,0.85)] ring-1 ring-white/10",
-                )}
+                className={
+                  active
+                    ? "flex items-center gap-3 rounded-2xl bg-white/12 px-3 py-3 text-sm font-black text-white shadow-inner"
+                    : "flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-bold text-white/72 transition hover:bg-white/10 hover:text-white"
+                }
               >
-                <Icon className="viva-sidebar-icon size-[15px] shrink-0" />
-                <span className="viva-sidebar-label">{item.label}</span>
+                <Icon className="size-4 shrink-0" />
+                <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                {item.badge ? (
+                  <span className="rounded-full bg-emerald-400 px-2 py-0.5 text-xs font-black text-slate-950">
+                    {item.badge}
+                  </span>
+                ) : null}
               </Link>
             );
           })}
+        </nav>
 
-          <div className="mt-3 rounded-[1.35rem] border border-white/10 bg-white/5 p-3 backdrop-blur">
-            <div className="mb-3 flex items-center gap-2.5">
-              <div className="flex size-10 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#2563eb,#7c3aed)] text-[0.88rem] font-semibold text-white shadow-[0_12px_28px_-18px_rgba(99,102,241,0.95)]">
-                {profile.name.slice(0, 1)}
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-[12.5px] font-semibold leading-4">{profile.name}</p>
-                <p className="truncate text-[10.5px] leading-4 text-sidebar-foreground/65">
-                  {profile.role === "super_admin"
-                    ? "Super Admin"
-                    : profile.role === "admin"
-                      ? "Administrador Geral"
-                      : profile.role === "diretor_executivo"
-                        ? "Diretor Executivo"
-                        : profile.role === "editor_projeto"
-                          ? "Produtor"
-                          : "Equipe do projeto"}
-                </p>
-              </div>
+        <div className="mt-5 rounded-3xl border border-white/10 bg-white/5 p-3">
+          <div className="flex items-center gap-3">
+            <div className="grid size-10 place-items-center rounded-2xl bg-[linear-gradient(135deg,#2563eb,#7c3aed)] text-sm font-black text-white">
+              {getInitial(profile?.name, profile?.email)}
             </div>
 
-            <form action={logout}>
-              <Button
-                className="h-11 w-full justify-start rounded-2xl border-white/10 bg-transparent text-[0.86rem] text-sidebar-foreground hover:bg-white/8"
-                variant="outline"
-                type="submit"
-              >
-                <LogOut className="size-4" />
-                Sair
-              </Button>
-            </form>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-black text-white">
+                {profile?.name || "Eduardo"}
+              </p>
+              <p className="truncate text-xs text-white/55">
+                {normalizeRole(profile?.role)}
+              </p>
+            </div>
           </div>
-        </nav>
+
+          <Link
+            href="/login"
+            className="mt-3 flex items-center gap-2 rounded-2xl border border-white/10 px-3 py-2 text-sm font-bold text-white/70 transition hover:bg-white/10 hover:text-white"
+          >
+            <LogOut className="size-4" />
+            Sair
+          </Link>
+        </div>
       </div>
     </aside>
   );
 }
 
-export function AppSidebar({ profile }: { profile: CurrentProfile }) {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <>
-      <button
-        className="fixed left-4 top-4 z-40 flex size-9 items-center justify-center rounded-lg border border-border bg-white shadow-sm lg:hidden"
-        type="button"
-        aria-label="Abrir menu"
-        onClick={() => setOpen(true)}
-      >
-        <Menu className="size-5" />
-      </button>
-
-      <div className="fixed inset-y-0 left-0 z-30 hidden w-[var(--viva-sidebar-width)] lg:block">
-        <SidebarContent profile={profile} />
-      </div>
-
-      {open ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            className="absolute inset-0 bg-black/40"
-            aria-label="Fechar menu"
-            type="button"
-            onClick={() => setOpen(false)}
-          />
-          <div className="absolute inset-y-0 left-0 w-[var(--viva-sidebar-width)] max-w-[86vw]">
-            <SidebarContent profile={profile} />
-          </div>
-          <button
-            className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-lg bg-white text-foreground"
-            type="button"
-            aria-label="Fechar menu"
-            onClick={() => setOpen(false)}
-          >
-            <X className="size-5" />
-          </button>
-        </div>
-      ) : null}
-    </>
-  );
-}
+export default AppSidebar;
