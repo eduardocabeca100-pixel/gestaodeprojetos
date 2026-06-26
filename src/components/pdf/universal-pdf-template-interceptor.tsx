@@ -120,10 +120,6 @@ function wrapLegacyPdfHtml(html: string) {
     {
       title,
       subtitle: "Documento exportado pelo Sistema de Gestão.",
-
-
-
-exportado pelo Sistema de Gestão de Projetos.",
       documentLabel: title,
       preparedBy: "Sistema",
       fileName: `${title.toLowerCase().replace(/[^a-z0-9]+/gi, "-")}.pdf`,
