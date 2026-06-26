@@ -248,6 +248,8 @@ export function FinancialDocumentGenerator({
     setDescription((current) => current || member.role);
   }
 
+  const SelectedTemplateIcon = selectedTemplate.icon;
+
   function generatePdf() {
     const bodyHtml = buildDocumentBody({
       type: selectedType,
@@ -320,7 +322,7 @@ export function FinancialDocumentGenerator({
 
       <div className="mt-5 rounded-3xl border border-slate-200 bg-slate-50 p-4">
         <div className="flex items-center gap-2">
-          <selectedTemplate.icon className="size-5 text-primary" />
+          <SelectedTemplateIcon className="size-5 text-primary" />
           <h3 className="font-black text-slate-950">{selectedTemplate.type}</h3>
         </div>
 
