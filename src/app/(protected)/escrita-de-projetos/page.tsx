@@ -1,5 +1,3 @@
-import { CerebroIaWorkspace } from "@/components/cerebro/cerebro-ia-workspace";
-
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -15,9 +13,17 @@ export default async function EscritaDeProjetosPage({ searchParams }: PageProps)
   const params = (await searchParams) || {};
   const projectId = first(params.project || params.projectId);
 
+  const iframeSrc = `/cerebro-ia/index.html?viva=1${
+    projectId ? `&project=${encodeURIComponent(projectId)}` : ""
+  }`;
+
   return (
-    <main className="w-full max-w-none px-4 py-6 sm:px-6 lg:px-8">
-      <CerebroIaWorkspace projectId={projectId} />
+    <main className="h-[calc(100vh-72px)] w-full max-w-none overflow-hidden bg-white">
+      <iframe
+        title="CÉREBRO IA — Escrita de Projetos"
+        src={iframeSrc}
+        className="h-full w-full border-0 bg-white"
+      />
     </main>
   );
 }
