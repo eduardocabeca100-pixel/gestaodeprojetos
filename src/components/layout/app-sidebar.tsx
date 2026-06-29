@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import {
+  usePathname,
+  useSearchParams } from "next/navigation";
 import type { ComponentType } from "react";
 import {
   Bell,
@@ -18,6 +20,7 @@ import {
   Users,
   UsersRound,
   Wallet,
+  BrainCircuit,
 } from "lucide-react";
 
 type CurrentProfile = {
@@ -47,6 +50,7 @@ const navigation: SidebarItem[] = [
   { label: "Participantes", href: "/participantes", icon: Users, projectScoped: true },
   { label: "Mídia", href: "/midia", icon: ImageIcon, projectScoped: true },
   { label: "Notificações", href: "/notificacoes", icon: Bell, projectScoped: true },
+  { label: "Cérebro IA", href: "/escrita-de-projetos", icon: BrainCircuit, projectScoped: true },
   { label: "Configurações", href: "/configuracoes", icon: Settings },
 ];
 

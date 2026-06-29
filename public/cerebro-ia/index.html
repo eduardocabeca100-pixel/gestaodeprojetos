@@ -1,0 +1,2581 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CÉREBRO IA — Projetos Culturais</title>
+<style>
+  :root{
+    --bg:#f6f7fb;--panel:#ffffff;--text:#182033;--muted:#667085;--line:#e7eaf2;
+    --primary:#8738f5;--primary2:#e23c98;--green:#16a34a;--red:#ef4444;--amber:#f59e0b;--blue:#2563eb;
+    --radius:22px;--shadow:0 18px 50px rgba(16,24,40,.08)
+  }
+  *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at top right,#fff1f8 0,#f7f4ff 28%,var(--bg) 65%);color:var(--text);font:13px/1.45 Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif}
+  button,input,select,textarea{font:inherit} button{cursor:pointer} a{color:inherit}
+  .app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}.side{background:rgba(255,255,255,.92);backdrop-filter:blur(16px);border-right:1px solid var(--line);padding:18px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}.brand{display:flex;gap:10px;align-items:center;padding:4px 4px 18px}.logo{width:38px;height:38px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--primary2));color:white;display:grid;place-items:center;font-weight:900}.brand b{font-size:15px}.brand span{display:block;color:var(--muted);font-size:11px}.navtitle{font-weight:900;color:#8a94a6;font-size:10px;letter-spacing:.13em;margin:18px 6px 8px;text-transform:uppercase}.nav button{width:100%;border:0;background:transparent;border-radius:16px;padding:11px 12px;text-align:left;color:#344054;font-weight:800;margin:2px 0;display:flex;align-items:center;gap:9px}.nav button:hover{background:#f3f0ff}.nav button.active{background:linear-gradient(90deg,rgba(135,56,245,.12),rgba(226,60,152,.12));color:#6d28d9}.profile{margin-top:auto;border:1px solid var(--line);border-radius:18px;padding:12px;background:#fafbff}.main{min-width:0}.top{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;border-bottom:1px solid rgba(231,234,242,.75);background:rgba(255,255,255,.65);backdrop-filter:blur(18px);position:sticky;top:0;z-index:5}.top h1{font-size:18px;margin:0}.top p{margin:1px 0 0;color:var(--muted);font-size:12px}.content{padding:24px 28px 50px;max-width:1280px}.grid{display:grid;gap:14px}.cols2{grid-template-columns:repeat(2,minmax(0,1fr))}.cols3{grid-template-columns:repeat(3,minmax(0,1fr))}.cols4{grid-template-columns:repeat(4,minmax(0,1fr))}.card,.metric,.item,.notice,.upload,.workspace-head{background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.card{padding:18px}.metric{padding:16px}.metric span{display:block;color:var(--muted);font-size:12px;font-weight:700}.metric b{font-size:24px}.between{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.muted{color:var(--muted)}.small{font-size:12px}.tiny{font-size:11px}.spacer{height:14px}.btn{border:0;border-radius:999px;min-height:38px;padding:0 16px;font-weight:900;background:#fff;border:1px solid var(--line);color:#344054;box-shadow:0 8px 20px rgba(16,24,40,.05)}.btn:hover{transform:translateY(-1px)}.btn.primary{background:linear-gradient(90deg,var(--primary),var(--primary2));color:white;border:0}.btn.green{background:var(--green);color:white;border:0}.btn.red{background:#fff1f2;color:#be123c;border-color:#fecdd3}.btn.sm{min-height:30px;padding:0 12px;font-size:12px}.pill{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:900;background:#f2f4f7;color:#475467}.pill.green{background:#dcfce7;color:#166534}.pill.red{background:#fee2e2;color:#991b1b}.pill.blue{background:#dbeafe;color:#1e40af}.pill.pink{background:#fce7f3;color:#9d174d}.pill.amber{background:#fef3c7;color:#92400e}.field{display:flex;flex-direction:column;gap:6px}.field label{font-weight:900;color:#344054}.field input,.field textarea,.field select{border:1px solid #d8deeb;border-radius:18px;padding:12px 14px;background:white;outline:none;min-width:0}.field textarea{min-height:120px;resize:vertical}.field input:focus,.field textarea:focus,.field select:focus{border-color:#a78bfa;box-shadow:0 0 0 4px rgba(135,56,245,.12)}.upload{display:block;text-align:center;padding:24px;border:1.5px dashed #cbd5e1}.upload input{margin-top:12px;max-width:100%}.list{display:grid;gap:10px}.item{padding:13px;box-shadow:none}.empty{border:1px dashed #ccd5e5;border-radius:18px;padding:28px;text-align:center;color:var(--muted);background:white}.tabs{display:flex;gap:8px;background:white;border:1px solid var(--line);border-radius:999px;padding:7px;box-shadow:var(--shadow);overflow:auto}.tabs button{border:0;background:transparent;border-radius:999px;min-height:36px;padding:0 16px;font-weight:900;color:#4b5563;white-space:nowrap}.tabs button.active{background:linear-gradient(90deg,var(--primary),var(--primary2));color:white}.block-tabs{display:flex;gap:8px;overflow:auto;padding:4px 0 12px}.block-tabs button{border:1px solid var(--line);background:white;border-radius:999px;padding:9px 14px;font-weight:900;white-space:nowrap}.block-tabs button.active{background:linear-gradient(90deg,var(--primary),var(--primary2));color:white;border:0}.editor{width:100%;min-height:320px;border:1px solid #d8deeb;border-radius:22px;padding:18px;font-size:14px;line-height:1.62;resize:vertical}.helper{background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;border-radius:16px;padding:10px 12px;margin:12px 0}.workspace-head{padding:0;overflow:hidden}.hero{background:linear-gradient(120deg,#5b21b6,#be185d);color:white;padding:18px}.hero .muted{color:rgba(255,255,255,.78)}.workspace-tabs{padding:10px;background:white;display:flex;gap:8px;overflow:auto}.workspace-tabs button{border:0;background:#f8fafc;border-radius:999px;min-height:36px;padding:0 14px;font-weight:900;color:#475467;white-space:nowrap}.workspace-tabs button.active{background:linear-gradient(90deg,var(--primary),var(--primary2));color:white}.modalwrap{position:fixed;inset:0;background:rgba(15,23,42,.42);z-index:50;display:none;align-items:center;justify-content:center;padding:20px}.modal{max-width:880px;width:100%;max-height:90vh;overflow:auto;background:white;border-radius:28px;padding:20px;box-shadow:0 30px 90px rgba(0,0,0,.22)}.toast{position:fixed;right:22px;bottom:22px;background:#111827;color:white;border-radius:999px;padding:12px 16px;font-weight:900;display:none;z-index:80}.kbd{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;background:#f2f4f7;border:1px solid #e5e7eb;border-radius:8px;padding:2px 6px}
+  @media(max-width:920px){.app{grid-template-columns:1fr}.side{position:relative;height:auto}.cols2,.cols3,.cols4{grid-template-columns:1fr}.top{position:relative}.content{padding:16px}.tabs,.workspace-tabs{border-radius:20px}.between{display:block}.row{margin-top:8px}}
+
+/* PATCH CÉREBRO IA — Orçamento editável e exportação */
+.budget-table-wrap{
+  width:100%;
+  overflow:auto;
+  border:1px solid var(--line);
+  border-radius:22px;
+  background:#fff;
+}
+
+.budget-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  min-width:920px;
+}
+
+.budget-table th{
+  background:#f8fafc;
+  color:#475467;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  text-align:left;
+  padding:11px 10px;
+  border-bottom:1px solid var(--line);
+}
+
+.budget-table td{
+  padding:8px 10px;
+  border-bottom:1px solid #eef1f6;
+  vertical-align:middle;
+}
+
+.budget-table tr:last-child td{
+  border-bottom:0;
+}
+
+.budget-table input,
+.budget-table select{
+  width:100%;
+  border:1px solid #d8deeb;
+  border-radius:14px;
+  padding:9px 10px;
+  background:#fff;
+  outline:none;
+  font-size:12px;
+}
+
+.budget-table input:focus,
+.budget-table select:focus{
+  border-color:#a78bfa;
+  box-shadow:0 0 0 3px rgba(135,56,245,.12);
+}
+
+.budget-total-box{
+  background:linear-gradient(135deg,#f8f5ff,#fff1f8);
+  border:1px solid #eadcff;
+  border-radius:22px;
+  padding:16px;
+}
+
+.budget-grand{
+  font-size:26px;
+  font-weight:950;
+  color:#6d28d9;
+}
+
+.export-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+
+.export-card{
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:15px;
+  background:#fff;
+}
+
+@media(max-width:800px){
+  .export-grid{grid-template-columns:1fr}
+}
+/* FIM PATCH CÉREBRO IA — Orçamento editável e exportação */
+
+
+/* PATCH CÉREBRO IA — Layout completo baseado no vídeo */
+.video-flow-hero{
+  background:linear-gradient(120deg,#6d28d9,#db2777);
+  color:white;
+  border-radius:26px;
+  padding:22px;
+  box-shadow:0 20px 60px rgba(109,40,217,.20);
+}
+.video-flow-hero .muted{color:rgba(255,255,255,.78)}
+.flow-card{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:16px;
+  box-shadow:var(--shadow);
+}
+.flow-tabs{
+  display:flex;
+  gap:8px;
+  overflow:auto;
+  padding:8px;
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:999px;
+  box-shadow:var(--shadow);
+}
+.flow-tabs button{
+  border:0;
+  background:#f8fafc;
+  border-radius:999px;
+  padding:10px 15px;
+  font-weight:900;
+  white-space:nowrap;
+  color:#475467;
+}
+.flow-tabs button.active{
+  background:linear-gradient(90deg,var(--primary),var(--primary2));
+  color:#fff;
+}
+.score-grid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:12px;
+}
+.score-card{
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:20px;
+  padding:14px;
+}
+.score-card b{font-size:24px}
+.score-card.red{background:#fff1f2}
+.score-card.green{background:#ecfdf3}
+.score-card.purple{background:#f5f3ff}
+.score-card.blue{background:#eff6ff}
+.score-card.amber{background:#fffbeb}
+.required-box{
+  background:#fff1f2;
+  border:1px solid #fecdd3;
+  border-radius:15px;
+  padding:11px;
+  margin-bottom:8px;
+}
+.yellow-note{
+  background:#fffbeb;
+  border:1px solid #fde68a;
+  border-radius:18px;
+  padding:14px;
+  color:#78350f;
+}
+.title-suggest{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:16px;
+  box-shadow:var(--shadow);
+}
+.section-chip-row{
+  display:flex;
+  gap:8px;
+  overflow:auto;
+  align-items:center;
+}
+.section-chip-row button{
+  border:1px solid var(--line);
+  background:#fff;
+  border-radius:999px;
+  padding:9px 13px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.section-chip-row button.active{
+  background:linear-gradient(90deg,var(--primary),var(--primary2));
+  color:#fff;
+  border:0;
+}
+.portfolio-style{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+.style-pill{
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:10px;
+  background:#fff;
+  display:flex;
+  gap:8px;
+  align-items:center;
+}
+.dotcolor{
+  width:14px;
+  height:14px;
+  border-radius:50%;
+}
+.pf-tabs{
+  display:flex;
+  gap:8px;
+  overflow:auto;
+  border-bottom:1px solid var(--line);
+  padding:0 0 10px;
+  margin-bottom:14px;
+}
+.pf-tabs button{
+  border:0;
+  background:#f8fafc;
+  border-radius:999px;
+  padding:8px 12px;
+  font-weight:900;
+  color:#475467;
+  white-space:nowrap;
+}
+.pf-tabs button.active{
+  background:#111827;
+  color:#fff;
+}
+.doc-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.doc-card{
+  border:1.5px dashed #cbd5e1;
+  border-radius:20px;
+  background:#fff;
+  padding:16px;
+}
+.doc-card input{
+  margin-top:10px;
+  max-width:100%;
+}
+.wizard-step-card{
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:14px;
+  margin:10px 0;
+  background:#fff;
+}
+.wizard-step-card b{display:block}
+.top-context{
+  font-size:12px;
+  color:#667085;
+  margin-bottom:10px;
+}
+@media(max-width:900px){
+  .score-grid,.portfolio-style,.doc-grid{grid-template-columns:1fr}
+  .flow-tabs{border-radius:22px}
+}
+/* FIM PATCH CÉREBRO IA — Layout completo baseado no vídeo */
+
+
+/* PATCH CÉREBRO IA — Sidebar compacta e dados reais */
+.app{
+  grid-template-columns:210px 1fr!important;
+}
+
+.side{
+  padding:12px 10px!important;
+}
+
+.brand{
+  padding:2px 2px 12px!important;
+  gap:8px!important;
+}
+
+.logo{
+  width:34px!important;
+  height:34px!important;
+  border-radius:12px!important;
+}
+
+.brand b{
+  font-size:13px!important;
+}
+
+.brand span{
+  font-size:10px!important;
+}
+
+.navtitle{
+  margin:12px 6px 7px!important;
+  font-size:9px!important;
+}
+
+.nav button{
+  padding:8px 10px!important;
+  border-radius:13px!important;
+  font-size:12px!important;
+  margin:1px 0!important;
+}
+
+.profile{
+  padding:9px!important;
+  border-radius:15px!important;
+}
+
+.profile .logo{
+  width:29px!important;
+  height:29px!important;
+}
+
+.profile b{
+  font-size:12px!important;
+}
+
+.profile .small{
+  font-size:10px!important;
+}
+
+.top{
+  height:58px!important;
+  padding:0 22px!important;
+}
+
+.top h1{
+  font-size:17px!important;
+}
+
+.content{
+  padding:20px 24px 42px!important;
+}
+
+.sidebar-toggle{
+  width:30px;
+  height:30px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  color:#475467;
+}
+
+.app.sidebar-mini{
+  grid-template-columns:74px 1fr!important;
+}
+
+.app.sidebar-mini .side{
+  padding:12px 8px!important;
+}
+
+.app.sidebar-mini .brand{
+  justify-content:center;
+}
+
+.app.sidebar-mini .brand > div:not(.logo),
+.app.sidebar-mini .navtitle,
+.app.sidebar-mini .nav-label,
+.app.sidebar-mini .profile .profile-info,
+.app.sidebar-mini .profile button{
+  display:none!important;
+}
+
+.app.sidebar-mini .nav button{
+  justify-content:center;
+  padding:10px 0!important;
+}
+
+.app.sidebar-mini .nav-ico{
+  font-size:17px;
+}
+
+.project-data-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+}
+
+.project-data-item{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:17px;
+  padding:12px;
+}
+
+.project-data-item span{
+  display:block;
+  color:#667085;
+  font-size:11px;
+  font-weight:800;
+  margin-bottom:4px;
+}
+
+.project-data-item b{
+  font-size:13px;
+}
+
+.project-real-panel{
+  background:linear-gradient(135deg,#ffffff,#faf7ff);
+  border:1px solid #eadcff;
+  border-radius:24px;
+  padding:16px;
+  box-shadow:var(--shadow);
+}
+
+.section-files{
+  background:#fff;
+  border:1px dashed #cbd5e1;
+  border-radius:18px;
+  padding:14px;
+}
+
+.section-files input{
+  max-width:100%;
+  margin-top:8px;
+}
+
+.file-list{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+
+.file-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  border:1px solid #e5e7eb;
+  background:#f8fafc;
+  border-radius:999px;
+  padding:6px 9px;
+  font-size:11px;
+  font-weight:800;
+}
+
+.file-pill button{
+  border:0;
+  background:#fee2e2;
+  color:#991b1b;
+  border-radius:999px;
+  width:18px;
+  height:18px;
+  font-size:10px;
+  padding:0;
+}
+
+.text-layout-grid{
+  display:grid;
+  grid-template-columns:300px 1fr;
+  gap:14px;
+}
+
+.block-score-mini{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+
+.block-score-mini .mini-box{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:15px;
+  padding:10px;
+}
+
+.block-score-mini .mini-box span{
+  font-size:10px;
+  color:#667085;
+  font-weight:800;
+  display:block;
+}
+
+.block-score-mini .mini-box b{
+  font-size:15px;
+}
+
+@media(max-width:1050px){
+  .project-data-grid,
+  .text-layout-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+@media(max-width:900px){
+  .app,
+  .app.sidebar-mini{
+    grid-template-columns:1fr!important;
+  }
+}
+/* FIM PATCH CÉREBRO IA — Sidebar compacta e dados reais */
+
+
+/* PATCH CÉREBRO IA — Correção página texto bugada */
+.content{
+  overflow-x:hidden!important;
+}
+
+.text-layout-grid{
+  display:grid!important;
+  grid-template-columns:minmax(280px,340px) minmax(0,1fr)!important;
+  gap:16px!important;
+  align-items:start!important;
+}
+
+.project-real-panel{
+  padding:16px!important;
+  overflow:hidden!important;
+}
+
+.project-real-panel h2{
+  font-size:19px!important;
+  line-height:1.18!important;
+}
+
+.project-data-grid{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:8px!important;
+}
+
+.project-data-item{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  padding:10px 12px!important;
+  border-radius:15px!important;
+}
+
+.project-data-item span{
+  margin:0!important;
+  font-size:10px!important;
+  min-width:82px!important;
+  flex:0 0 82px!important;
+}
+
+.project-data-item b{
+  font-size:12px!important;
+  line-height:1.35!important;
+  text-align:right!important;
+  overflow-wrap:anywhere!important;
+}
+
+.section-chip-row{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  overflow:visible!important;
+  gap:8px!important;
+}
+
+.section-chip-row button{
+  max-width:100%!important;
+  white-space:normal!important;
+  line-height:1.15!important;
+  min-height:36px!important;
+}
+
+.title-suggest,
+.card,
+.project-real-panel{
+  max-width:100%!important;
+}
+
+.editor{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  min-height:360px!important;
+  overflow:auto!important;
+  white-space:pre-wrap!important;
+  word-break:normal!important;
+}
+
+.helper{
+  overflow-wrap:anywhere!important;
+}
+
+.block-score-mini{
+  grid-template-columns:1fr 1fr!important;
+}
+
+.file-list{
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+
+.file-pill{
+  max-width:100%!important;
+  overflow-wrap:anywhere!important;
+}
+
+.workspace-head,
+.hero,
+.workspace-tabs{
+  max-width:100%!important;
+}
+
+@media(max-width:1150px){
+  .text-layout-grid{
+    grid-template-columns:1fr!important;
+  }
+
+  .project-data-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+
+  .project-data-item{
+    display:block!important;
+  }
+
+  .project-data-item b{
+    text-align:left!important;
+    display:block!important;
+  }
+}
+
+@media(max-width:720px){
+  .project-data-grid{
+    grid-template-columns:1fr!important;
+  }
+}
+/* FIM PATCH CÉREBRO IA — Correção página texto bugada */
+
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><div class="logo">C</div><div><b>CÉREBRO IA</b><span>Projetos culturais aprováveis</span></div></div>
+    <div class="navtitle">Navegação</div>
+    <div class="nav" id="nav"></div>
+    <div class="profile"><div class="row"><div class="logo" style="width:32px;height:32px">E</div><div><b>Eduardo</b><span class="small muted" style="display:block">admin@cerebroia.app</span></div></div><button class="btn sm" data-action="logout" style="width:100%;margin-top:10px">↪ Sair</button></div>
+  </aside>
+  <main class="main"><div class="top"><div><h1 id="title">Painel</h1><p id="subtitle">Sistema operacional de projetos culturais</p></div><div class="row"><button class="btn" data-action="saveAll">Salvar</button><button class="btn primary" data-page="new">+ Novo Projeto</button></div></div><section class="content" id="app"></section></main>
+</div>
+<div class="modalwrap" id="modalwrap"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const STORAGE='cerebroIA_v4_terminal';
+const today=()=>new Date().toLocaleDateString('pt-BR');
+const uid=p=>p+Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-3);
+const money=v=>Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+const val=id=>document.getElementById(id)?.value?.trim()||'';
+const fileName=id=>document.getElementById(id)?.files?.[0]?.name||'';
+const calcAge=d=>{if(!d)return'';let b=new Date(d),n=new Date(),a=n.getFullYear()-b.getFullYear(),m=n.getMonth()-b.getMonth();if(m<0||(m===0&&n.getDate()<b.getDate()))a--;return a>0?a:''};
+const baseBlocks={
+ 'Objeto da Proposta':`Realizar o projeto cultural “O Poço”, composto por apresentações teatrais gratuitas e ações formativas em Jaraguá do Sul/SC, com foco na democratização do acesso às artes cênicas, na formação de público e na valorização da produção artística local.`,
+ 'Justificativa':`A realização do projeto se justifica pela necessidade de ampliar o acesso da população às artes cênicas, especialmente em contextos nos quais a oferta cultural gratuita ainda é limitada. A proposta fortalece a produção teatral local, promove formação de público e aproxima a comunidade de experiências artísticas capazes de estimular reflexão, sensibilidade e participação social.`,
+ 'Plano de comunicação':`A comunicação será realizada por meio de divulgação digital, materiais gráficos e articulação com instituições, escolas, espaços culturais e redes comunitárias. Serão utilizados cards para redes sociais, textos de apresentação, registros autorizados e contato direto com parceiros estratégicos.`,
+ 'Público Alvo':`O projeto é direcionado ao público em geral, com prioridade para estudantes, jovens, famílias, educadores, artistas, agentes culturais e moradores de comunidades com menor acesso a atividades culturais gratuitas.`,
+ 'Acessibilidade':`O projeto observará medidas de acessibilidade compatíveis com sua estrutura e orçamento, incluindo comunicação clara, organização do espaço para acolhimento do público e busca por recursos acessíveis conforme as exigências do edital.`,
+ 'Contrapartida Social':`Como contrapartida social, o projeto oferecerá apresentações gratuitas e/ou ação formativa de mediação cultural, promovendo acesso democrático à produção teatral e diálogo com a comunidade.`,
+ 'Cronograma':`O cronograma será organizado em etapas de pré-produção, produção, execução e pós-produção: planejamento, ensaios, comunicação, execução das apresentações, registros, relatórios e prestação de contas.`,
+ 'Equipe':`A equipe será composta por profissionais vinculados às artes cênicas, produção cultural, execução técnica, comunicação e gestão administrativa do projeto, com funções definidas conforme experiência, currículo e responsabilidade dentro da proposta.`,
+ 'Orçamento':`O orçamento será distribuído de forma coerente com o valor total do projeto, contemplando cachês artísticos e técnicos, produção executiva, comunicação, materiais de cena, acessibilidade, documentação e prestação de contas.`
+};
+const seed=()=>({
+ page:'dashboard',workspaceTab:'analysis',blockKey:'Objeto da Proposta',currentProject:'p1',opFilter:{uf:'SC',source:'Todas',lang:'Teatro',q:''},
+ projects:[{id:'p1',title:'O Poço',proponent:'Eduardo Cabeça',budget:10000,uf:'SC',city:'Jaraguá do Sul',language:'Teatro',edital:'Edital Chamamento Público nº 25/2026',score:82,progress:78,updated:'Agora',team:['t1'],blocks:{...baseBlocks},docs:{edital:'edital-poço.pdf',anexos:['planilha-modelo.xlsx']}}],
+ team:[{id:'t1',name:'Eduardo Cabeça',artistic:'Eduardo Cabeça',role:'Direção geral / dramaturgia',area:'Teatro',cpf:'000.000.000-00',rg:'',cnpj:'',birth:'1998-12-12',city:'Jaraguá do Sul/SC',address:'',cep:'',phone:'',email:'',pix:'',fee:2000,instagram:'https://instagram.com/',youtube:'',portfolioLink:'',drive:'',site:'',resumeShort:'Ator, diretor, escritor de teatro e produtor cultural com trajetória nas artes cênicas desde a juventude.',resume:'Atua nas artes cênicas com experiência em interpretação, direção, dramaturgia, produção cultural e elaboração de projetos.',portfolioText:'Portfólio com espetáculos, ações artísticas, processos criativos e projetos culturais realizados.',docs:{cpf:'',rg:'',address:'',resume:'',portfolio:'',consent:'',mei:''}}],
+ users:[{id:'u1',name:'Eduardo',email:'admin@cerebroia.app',role:'Administrador',status:'Ativo'}],
+ opportunities:[
+  {id:'o1',title:'Edital de Artes Cênicas — Santa Catarina',uf:'SC',source:'Fonte pública',lang:'Teatro',value:25000,deadline:'30/08/2026',url:'https://'},
+  {id:'o2',title:'Prêmio Cultura Viva — Brasil',uf:'BR',source:'Federal',lang:'Multilinguagem',value:50000,deadline:'15/09/2026',url:'https://'},
+  {id:'o3',title:'Fomento Cultural — Mato Grosso do Sul',uf:'MS',source:'Estadual',lang:'Teatro',value:30000,deadline:'10/09/2026',url:'https://'}]
+});
+let state=JSON.parse(localStorage.getItem(STORAGE)||'null')||seed();
+const save=()=>localStorage.setItem(STORAGE,JSON.stringify(state));
+const toast=m=>{let t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.style.display='none',2400)};
+const modal=html=>{document.getElementById('modal').innerHTML=html;document.getElementById('modalwrap').style.display='flex'};
+const closeModal=()=>document.getElementById('modalwrap').style.display='none';
+const setTitle=(a,b)=>{document.getElementById('title').textContent=a;document.getElementById('subtitle').textContent=b||''};
+const project=()=>state.projects.find(p=>p.id===state.currentProject)||state.projects[0];
+const teamObj=id=>state.team.find(t=>t.id===id);
+const link=(url,label)=>url?`<a href="${esc(url)}" target="_blank" rel="noopener" class="btn sm">${label}</a>`:`<span class="pill">${label} vazio</span>`;
+function nav(){const items=[['dashboard','▦','Painel'],['projects','▣','Meus Projetos'],['new','+','Novo Projeto IA'],['team','👥','Equipe'],['opps','🔎','Oportunidades'],['review','✨','Aumente sua Nota'],['users','🔐','Usuários'],['settings','⚙','Configurações'],['support','?','Suporte']];document.getElementById('nav').innerHTML=items.map(i=>`<button class="${state.page===i[0]?'active':''}" data-page="${i[0]}"><span>${i[1]}</span>${i[2]}</button>`).join('')}
+function render(){save();nav();({dashboard,projects,newProject,team,opps,review,users,settings,support,workspace}[state.page]||dashboard)();}
+function dashboard(){setTitle('Painel','Visão geral dos projetos, equipe, documentos e oportunidades');let p=project();app.innerHTML=`<div class="grid cols4"><div class="metric"><span>Projetos salvos</span><b>${state.projects.length}</b></div><div class="metric"><span>Nota IA média</span><b>${Math.round(state.projects.reduce((a,b)=>a+b.score,0)/state.projects.length)}</b></div><div class="metric"><span>Equipe cadastrada</span><b>${state.team.length}</b></div><div class="metric"><span>Oportunidades</span><b>${state.opportunities.length}</b></div></div><div class="spacer"></div><div class="grid cols2"><div class="card"><div class="between"><div><h2>Continuar projeto</h2><p class="muted">${esc(p.title)} • ${money(p.budget)} • Nota ${p.score}/100</p></div><button class="btn primary" data-action="openProject" data-id="${p.id}">Continuar</button></div><div class="spacer"></div><div class="notice" style="padding:14px">Próxima ação recomendada: revisar justificativa, conferir documentos da equipe e exportar os blocos para o formulário do edital.</div></div><div class="card"><h2>Fluxo guiado</h2><div class="list"><div class="item">1. Criar projeto e enviar edital</div><div class="item">2. Cadastrar equipe e documentos</div><div class="item">3. Gerar blocos para edital</div><div class="item">4. Revisar nota e corrigir automaticamente</div></div></div></div>`}
+function projects(){setTitle('Meus Projetos','Projetos salvos para continuar, duplicar ou exportar');app.innerHTML=`<div class="between"><div><h2>Biblioteca de projetos</h2><p class="muted">Tudo fica salvo no navegador nesta versão local.</p></div><button class="btn primary" data-page="new">+ Criar novo</button></div><div class="spacer"></div><div class="grid cols3">${state.projects.map(p=>`<div class="card"><div class="between"><div><h3>${esc(p.title)}</h3><p class="muted small">${esc(p.edital)} • ${esc(p.city)}/${esc(p.uf)}</p></div><span class="pill green">${p.score}/100</span></div><p class="small">Valor: <b>${money(p.budget)}</b> • Atualizado: ${esc(p.updated)}</p><div class="row"><button class="btn primary sm" data-action="openProject" data-id="${p.id}">Continuar</button><button class="btn sm" data-action="duplicateProject" data-id="${p.id}">Duplicar</button><button class="btn red sm" data-action="deleteProject" data-id="${p.id}">Excluir</button></div></div>`).join('')}</div>`}
+function newProject(){setTitle('Criar Novo Projeto Cultural','Fluxo guiado inspirado em plataformas de edital, com identidade própria');app.innerHTML=`<div class="card"><h2>Novo projeto com IA</h2><p class="muted">Preencha o básico, anexe edital/modelos e clique em analisar.</p><div class="grid cols2"><div class="field"><label>Título</label><input id="npTitle" value="O Poço"></div><div class="field"><label>Proponente</label><input id="npProp" value="Eduardo Cabeça"></div><div class="field"><label>Valor</label><input id="npBudget" type="number" value="10000"></div><div class="field"><label>UF</label><select id="npUf"><option>SC</option><option>BR</option><option>MS</option><option>PR</option><option>SP</option><option>RJ</option><option>RS</option></select></div><div class="field"><label>Cidade</label><input id="npCity" value="Jaraguá do Sul"></div><div class="field"><label>Linguagem</label><select id="npLang"><option>Teatro</option><option>Dança</option><option>Música</option><option>Audiovisual</option><option>Multilinguagem</option></select></div></div><div class="field" style="margin-top:12px"><label>Ideia inicial</label><textarea id="npIdea">Projeto teatral com apresentação gratuita, mediação cultural e impacto social.</textarea></div><div class="grid cols2" style="margin-top:12px"><label class="upload"><b>Edital principal em PDF</b><p class="muted">Regulamento ou chamada pública.</p><input id="npEdital" type="file" accept=".pdf"></label><label class="upload"><b>Anexos e modelos</b><p class="muted">Planilha, declarações, formulários e modelos.</p><input id="npAnexos" type="file" multiple></label></div><div class="row" style="margin-top:16px"><button class="btn" data-page="projects">Cancelar</button><button class="btn" data-action="saveDraft">Salvar rascunho</button><button class="btn primary" data-action="analyzeProject">Analisar edital com IA</button></div></div>`}
+function workspace(){let p=project();setTitle('Projeto IA',`${p.edital} • ${p.city}/${p.uf} • ${money(p.budget)}`);const tabs=[['analysis','✨ Análise'],['text','📄 Texto'],['review','✅ Revisão'],['budget','$ Orçamento'],['portfolio','💼 Portfólio'],['docs','📋 Docs'],['chat','💬 Chat IA']];app.innerHTML=`<div class="workspace-head"><div class="hero"><div class="between"><div><h2>${esc(p.title)}</h2><p class="muted">${esc(p.proponent)} • Nota IA ${p.score}/100 • ${p.progress}% completo</p></div><button class="btn" data-action="exportProject">Exportar Word</button></div></div><div class="workspace-tabs">${tabs.map(t=>`<button class="${state.workspaceTab===t[0]?'active':''}" data-action="tab" data-tab="${t[0]}">${t[1]}</button>`).join('')}</div></div><div class="spacer"></div><div id="wb">${workspaceBody()}</div>`}
+function workspaceBody(){return {analysis:tabAnalysis,text:tabText,review:tabReview,budget:tabBudget,portfolio:tabPortfolio,docs:tabDocs,chat:tabChat}[state.workspaceTab]?.()||tabAnalysis()}
+function tabAnalysis(){let p=project();return `<div class="grid cols3"><div class="metric"><span>Valor permitido</span><b>${money(p.budget)}</b></div><div class="metric"><span>Blocos gerados</span><b>${Object.keys(p.blocks).length}</b></div><div class="metric"><span>Risco</span><b>Baixo</b></div></div><div class="spacer"></div><div class="card"><h2>Análise do edital</h2><div class="list"><div class="item">Critérios identificados: relevância cultural, viabilidade, impacto social e orçamento coerente.</div><div class="item">Documentos obrigatórios: projeto, planilha, currículos, portfólio, documentos do proponente/equipe e anexos.</div><div class="item">Recomendação: preencher todos os dados reais da equipe antes de exportar.</div></div></div>`}
+function tabText(){let p=project();let keys=Object.keys(p.blocks);if(!keys.includes(state.blockKey))state.blockKey=keys[0];let k=state.blockKey;return `<div class="card"><div class="between"><div><h2>Texto em blocos</h2><p class="muted">Conteúdo pronto para copiar e colar no edital.</p></div><div class="row"><button class="btn sm" data-action="copyBlock">Copiar</button><button class="btn primary sm" data-action="improveBlock">Melhorar com IA</button><button class="btn sm" data-action="saveBlock">Salvar</button></div></div><div class="block-tabs">${keys.map(x=>`<button class="${x===k?'active':''}" data-action="block" data-block="${esc(x)}">${esc(x)}</button>`).join('')}</div><div class="helper"><b>Orientação:</b> revise nomes, datas, cidade, valor e exigências do edital antes de colar.</div><textarea class="editor" id="editor">${esc(p.blocks[k])}</textarea></div>`}
+function tabReview(){let p=project();return `<div class="grid cols2"><div class="card"><h2>Aumente sua nota</h2><p class="muted">A IA aplica melhorias nos blocos do projeto.</p><button class="btn primary" data-action="applyAllFixes">Aplicar todas as melhorias automaticamente</button><div class="spacer"></div><div class="list"><div class="item">Fortalecer justificativa e impacto cultural.</div><div class="item">Detalhar acessibilidade e contrapartida social.</div><div class="item">Conectar orçamento à metodologia.</div></div></div><div class="metric"><span>Nota estimada</span><b>${p.score}/100</b></div></div>`}
+function tabBudget(){let p=project();let rows=[['Coordenação geral',1800],['Elenco',3000],['Produção executiva',1500],['Comunicação',900],['Figurino/cenário',800],['Técnica som/luz',1000],['Prestação de contas',700],['Acessibilidade',300]];return `<div class="card"><div class="between"><div><h2>Orçamento inteligente</h2><p class="muted">Baseado no valor total de ${money(p.budget)}.</p></div><button class="btn primary" data-action="rebalanceBudget">Reequilibrar</button></div><div class="list">${rows.map(r=>`<div class="item between"><b>${r[0]}</b><span>${money(r[1])}</span></div>`).join('')}</div></div>`}
+function tabPortfolio(){let p=project();let members=(p.team||[]).map(teamObj).filter(Boolean);return `<div class="grid cols2"><div class="card"><div class="between"><div><h2>Portfólio do projeto</h2><p class="muted">Currículos, links e materiais da equipe.</p></div><button class="btn primary sm" data-page="team">Gerenciar equipe</button></div><div class="list">${members.map(t=>`<div class="item"><div class="between"><div><b>${esc(t.name)}</b><p class="muted small">${esc(t.role)} • ${esc(t.area)}</p></div><button class="btn sm" data-action="editTeam" data-id="${t.id}">Editar</button></div><div class="row">${link(t.instagram,'Instagram')}${link(t.portfolioLink,'Portfólio')}${link(t.drive,'Drive')}${link(t.youtube,'YouTube')}</div></div>`).join('')||'<div class="empty">Nenhum integrante vinculado.</div>'}</div></div><div class="card"><h2>Texto de portfólio</h2><textarea class="editor" readonly>${members.map(t=>`${t.name} — ${t.role}\n${t.resumeShort}\nPortfólio: ${t.portfolioText}\nLinks: ${[t.instagram,t.portfolioLink,t.drive,t.youtube,t.site].filter(Boolean).join(' | ')}`).join('\n\n')}</textarea></div></div>`}
+function tabDocs(){let p=project();let members=(p.team||[]).map(teamObj).filter(Boolean);const docs=['cpf','rg','address','resume','portfolio','consent','mei'];const labels={cpf:'CPF',rg:'RG',address:'Comprovante de residência',resume:'Currículo',portfolio:'Portfólio',consent:'Carta de anuência',mei:'CNPJ/MEI'};return `<div class="card"><h2>Documentos da equipe</h2><p class="muted">Cada item tem campo real no cadastro da pessoa.</p><div class="list">${members.map(t=>`<div class="item"><div class="between"><b>${esc(t.name)}</b><button class="btn sm" data-action="editTeam" data-id="${t.id}">Editar documentos</button></div><div class="row" style="margin-top:8px">${docs.map(d=>`<span class="pill ${t.docs?.[d]?'green':'amber'}">${labels[d]}: ${t.docs?.[d]?'ok':'pendente'}</span>`).join('')}</div></div>`).join('')||'<div class="empty">Vincule equipe ao projeto.</div>'}</div></div>`}
+function tabChat(){return `<div class="card"><h2>Chat IA do projeto</h2><div class="notice" style="padding:14px;margin-bottom:12px">Pergunte sobre edital, orçamento, justificativa, equipe ou documentos. Na versão comercial, esta aba será conectada à API de IA no backend.</div><div class="field"><textarea id="chatMsg" placeholder="Ex: melhore a justificativa com foco em impacto cultural"></textarea></div><button class="btn primary" style="margin-top:10px" data-action="askIA">Enviar para IA</button><div id="chatOut"></div></div>`}
+function team(){setTitle('Equipe','Banco reutilizável com dados, documentos, currículo, portfólio e links reais');app.innerHTML=`<div class="between"><div><h2>Equipe cadastrada</h2><p class="muted">Cadastre dados uma vez e reutilize em todos os projetos.</p></div><button class="btn primary" data-action="addTeam">+ Adicionar integrante</button></div><div class="spacer"></div><div class="grid cols3">${state.team.map(t=>`<div class="card"><div class="between"><div><h3>${esc(t.name)}</h3><p class="muted small">${esc(t.role)} • ${esc(t.city)}</p></div><span class="pill blue">${esc(t.area)}</span></div><p class="small">CPF: ${esc(t.cpf||'pendente')} • Cachê: ${money(t.fee)}</p><div class="row">${link(t.instagram,'Instagram')}${link(t.portfolioLink,'Portfólio')}${link(t.drive,'Drive')}</div><div class="row" style="margin-top:12px"><button class="btn sm" data-action="editTeam" data-id="${t.id}">Editar</button><button class="btn primary sm" data-action="linkTeam" data-id="${t.id}">Vincular</button><button class="btn red sm" data-action="deleteTeam" data-id="${t.id}">Excluir</button></div></div>`).join('')}</div>`}
+function opps(){setTitle('Oportunidades','Busca por editais abertos por UF, fonte, linguagem e palavra-chave');let f=state.opFilter;let list=state.opportunities.filter(o=>(f.uf==='Todos'||o.uf===f.uf||o.uf==='BR')&&(f.lang==='Todas'||o.lang===f.lang||o.lang==='Multilinguagem')&&(f.q===''||o.title.toLowerCase().includes(f.q.toLowerCase())));app.innerHTML=`<div class="card"><div class="grid cols4"><div class="field"><label>Estado</label><select id="fUf"><option>Todos</option><option ${f.uf==='SC'?'selected':''}>SC</option><option ${f.uf==='MS'?'selected':''}>MS</option><option ${f.uf==='SP'?'selected':''}>SP</option><option ${f.uf==='PR'?'selected':''}>PR</option><option ${f.uf==='BR'?'selected':''}>BR</option></select></div><div class="field"><label>Linguagem</label><select id="fLang"><option>Todas</option><option ${f.lang==='Teatro'?'selected':''}>Teatro</option><option>Dança</option><option>Música</option><option>Audiovisual</option><option>Multilinguagem</option></select></div><div class="field"><label>Fonte</label><select id="fSource"><option>Todas</option><option>Federal</option><option>Estadual</option><option>Municipal</option></select></div><div class="field"><label>Palavra-chave</label><input id="fQ" value="${esc(f.q)}" placeholder="teatro, circulação..."></div></div><div class="row" style="margin-top:12px"><button class="btn" data-action="filterOpps">Filtrar</button><button class="btn primary" data-action="internetOpps">Buscar na internet</button></div></div><div class="spacer"></div><div class="grid cols3">${list.map(o=>`<div class="card"><span class="pill pink">${esc(o.uf)}</span><h3>${esc(o.title)}</h3><p class="muted small">${esc(o.source)} • ${esc(o.lang)} • Prazo ${esc(o.deadline)}</p><p><b>${money(o.value)}</b></p><div class="row"><button class="btn primary sm" data-action="projectFromOpp" data-id="${o.id}">Criar projeto</button>${link(o.url,'Abrir edital')}</div></div>`).join('')||'<div class="empty">Nenhuma oportunidade encontrada.</div>'}</div>`}
+function review(){state.page='workspace';state.workspaceTab='review';render()}
+function users(){setTitle('Usuários','Administração de acesso, perfis e senha padrão');app.innerHTML=`<div class="between"><div><h2>Usuários</h2><p class="muted">Controle quem acessa o sistema.</p></div><button class="btn primary" data-action="addUser">+ Adicionar usuário</button></div><div class="spacer"></div><div class="grid cols3">${state.users.map(u=>`<div class="card"><h3>${esc(u.name)}</h3><p class="muted small">${esc(u.email)}</p><span class="pill green">${esc(u.status)}</span> <span class="pill blue">${esc(u.role)}</span><div class="row" style="margin-top:12px"><button class="btn sm" data-action="editUser" data-id="${u.id}">Editar</button><button class="btn red sm" data-action="deleteUser" data-id="${u.id}">Excluir</button></div></div>`).join('')}</div>`}
+function settings(){setTitle('Configurações','Configurações gerais do sistema');app.innerHTML=`<div class="grid cols2"><div class="card"><h2>IA e internet</h2><p class="muted">Para venda, a IA e os editais reais precisam rodar em backend seguro.</p><div class="notice" style="padding:14px">Front preparado para chamar <span class="kbd">/api/oportunidades</span> e <span class="kbd">/api/ia</span>.</div></div><div class="card"><h2>Senha padrão</h2><div class="field"><label>Senha temporária para novos usuários</label><input value="Cerebro@2026"></div><button class="btn primary" style="margin-top:12px" data-action="generic">Salvar configuração</button></div></div>`}
+function support(){setTitle('Suporte','Checklist de estabilidade');app.innerHTML=`<div class="card"><h2>Status do protótipo</h2><div class="list"><div class="item">Navegação por eventos centralizados: OK</div><div class="item">LocalStorage: OK</div><div class="item">Uploads locais guardam nome do arquivo; sistema comercial precisa de Storage real.</div><div class="item">Busca real de editais precisa de backend/API.</div></div></div>`}
+function teamModal(id){let t=id?teamObj(id):{id:uid('t'),name:'',artistic:'',role:'',area:'Teatro',cpf:'',rg:'',cnpj:'',birth:'',city:'',address:'',cep:'',phone:'',email:'',pix:'',fee:1000,instagram:'',youtube:'',portfolioLink:'',drive:'',site:'',resumeShort:'',resume:'',portfolioText:'',docs:{}};modal(`<h2>${id?'Editar':'Adicionar'} integrante</h2><div class="tabs" style="margin-bottom:14px"><button class="active">Dados</button><button>Documentos</button><button>Links</button><button>Currículo</button></div><div class="grid cols2"><div class="field"><label>Nome completo</label><input id="tmName" value="${esc(t.name)}"></div><div class="field"><label>Nome artístico</label><input id="tmArtistic" value="${esc(t.artistic)}"></div><div class="field"><label>Função</label><input id="tmRole" value="${esc(t.role)}"></div><div class="field"><label>Área</label><input id="tmArea" value="${esc(t.area)}"></div><div class="field"><label>CPF</label><input id="tmCpf" value="${esc(t.cpf)}"></div><div class="field"><label>RG</label><input id="tmRg" value="${esc(t.rg)}"></div><div class="field"><label>CNPJ/MEI</label><input id="tmCnpj" value="${esc(t.cnpj)}"></div><div class="field"><label>Nascimento</label><input id="tmBirth" type="date" value="${esc(t.birth)}"></div><div class="field"><label>Cidade/UF</label><input id="tmCity" value="${esc(t.city)}"></div><div class="field"><label>CEP</label><input id="tmCep" value="${esc(t.cep)}"></div><div class="field"><label>Telefone</label><input id="tmPhone" value="${esc(t.phone)}"></div><div class="field"><label>E-mail</label><input id="tmEmail" value="${esc(t.email)}"></div><div class="field"><label>PIX</label><input id="tmPix" value="${esc(t.pix)}"></div><div class="field"><label>Cachê</label><input id="tmFee" type="number" value="${esc(t.fee)}"></div></div><div class="field" style="margin-top:10px"><label>Endereço completo</label><input id="tmAddress" value="${esc(t.address)}"></div><div class="grid cols2" style="margin-top:12px"><div class="field"><label>Instagram</label><input id="tmInstagram" value="${esc(t.instagram)}" placeholder="https://instagram.com/..."></div><div class="field"><label>YouTube</label><input id="tmYoutube" value="${esc(t.youtube)}" placeholder="https://youtube.com/..."></div><div class="field"><label>Link de portfólio</label><input id="tmPortfolioLink" value="${esc(t.portfolioLink)}" placeholder="https://..."></div><div class="field"><label>Drive</label><input id="tmDrive" value="${esc(t.drive)}" placeholder="https://drive.google.com/..."></div><div class="field"><label>Site</label><input id="tmSite" value="${esc(t.site)}" placeholder="https://..."></div></div><div class="grid cols2" style="margin-top:12px"><div class="field"><label>Arquivo CPF</label><input id="docCpf" type="file"><span class="small muted">Atual: ${esc(t.docs?.cpf||'vazio')}</span></div><div class="field"><label>Arquivo RG</label><input id="docRg" type="file"><span class="small muted">Atual: ${esc(t.docs?.rg||'vazio')}</span></div><div class="field"><label>Comprovante de residência</label><input id="docAddress" type="file"><span class="small muted">Atual: ${esc(t.docs?.address||'vazio')}</span></div><div class="field"><label>Currículo PDF/DOC</label><input id="docResume" type="file"><span class="small muted">Atual: ${esc(t.docs?.resume||'vazio')}</span></div><div class="field"><label>Portfólio PDF</label><input id="docPortfolio" type="file"><span class="small muted">Atual: ${esc(t.docs?.portfolio||'vazio')}</span></div><div class="field"><label>Carta de anuência</label><input id="docConsent" type="file"><span class="small muted">Atual: ${esc(t.docs?.consent||'vazio')}</span></div></div><div class="grid cols2" style="margin-top:12px"><div class="field"><label>Mini currículo</label><textarea id="tmResumeShort">${esc(t.resumeShort)}</textarea></div><div class="field"><label>Currículo completo</label><textarea id="tmResume">${esc(t.resume)}</textarea></div><div class="field"><label>Portfólio textual</label><textarea id="tmPortfolioText">${esc(t.portfolioText)}</textarea></div><div class="field"><label>Observações</label><textarea id="tmObs">${esc(t.obs||'')}</textarea></div></div><div class="row" style="margin-top:14px"><button class="btn" data-action="closeModal">Cancelar</button><button class="btn primary" data-action="saveTeam" data-id="${t.id}">Salvar integrante</button></div>`)}
+function userModal(id){let u=id?state.users.find(x=>x.id===id):{id:uid('u'),name:'',email:'',role:'Editor',status:'Ativo'};modal(`<h2>${id?'Editar':'Adicionar'} usuário</h2><div class="grid cols2"><div class="field"><label>Nome</label><input id="usName" value="${esc(u.name)}"></div><div class="field"><label>E-mail</label><input id="usEmail" value="${esc(u.email)}"></div><div class="field"><label>Perfil</label><select id="usRole"><option ${u.role==='Administrador'?'selected':''}>Administrador</option><option ${u.role==='Editor'?'selected':''}>Editor</option><option ${u.role==='Leitor'?'selected':''}>Leitor</option></select></div><div class="field"><label>Status</label><select id="usStatus"><option ${u.status==='Ativo'?'selected':''}>Ativo</option><option ${u.status==='Bloqueado'?'selected':''}>Bloqueado</option></select></div></div><div class="row" style="margin-top:14px"><button class="btn" data-action="closeModal">Cancelar</button><button class="btn primary" data-action="saveUser" data-id="${u.id}">Salvar usuário</button></div>`)}
+function download(name,text,type='text/plain'){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();URL.revokeObjectURL(a.href)}
+document.addEventListener('click',async e=>{let b=e.target.closest('button');if(!b)return;let a=b.dataset.action,p=b.dataset.page,id=b.dataset.id;if(p){state.page=p;render();return} if(a==='closeModal'){closeModal();return} if(a==='logout'){toast('Sessão encerrada em modo demonstração.');return} if(a==='saveAll'){save();toast('Tudo salvo.');return} if(a==='openProject'){state.currentProject=id;state.page='workspace';render();return} if(a==='duplicateProject'){let p=state.projects.find(x=>x.id===id);state.projects.push({...p,id:uid('p'),title:p.title+' — cópia',updated:'Agora'});render();toast('Projeto duplicado.');return} if(a==='deleteProject'){state.projects=state.projects.filter(x=>x.id!==id);state.currentProject=state.projects[0]?.id;render();toast('Projeto excluído.');return} if(a==='saveDraft'||a==='analyzeProject'){let np={id:uid('p'),title:val('npTitle')||'Projeto sem título',proponent:val('npProp')||'Proponente',budget:Number(val('npBudget')||0),uf:val('npUf'),city:val('npCity'),language:val('npLang'),edital:fileName('npEdital')||'Edital ainda não anexado',score:a==='analyzeProject'?82:50,progress:a==='analyzeProject'?70:20,updated:'Agora',team:[],blocks:{...baseBlocks},docs:{edital:fileName('npEdital'),anexos:[...document.getElementById('npAnexos').files].map(f=>f.name)}};state.projects.unshift(np);state.currentProject=np.id;state.page=a==='analyzeProject'?'workspace':'projects';state.workspaceTab='analysis';render();toast(a==='analyzeProject'?'Edital analisado e projeto criado.':'Rascunho salvo.');return} if(a==='tab'){state.workspaceTab=b.dataset.tab;render();return} if(a==='block'){state.blockKey=b.dataset.block;render();return} if(a==='saveBlock'){let p=project();p.blocks[state.blockKey]=val('editor');p.updated='Agora';save();toast('Bloco salvo.');return} if(a==='copyBlock'){navigator.clipboard?.writeText(val('editor'));toast('Bloco copiado.');return} if(a==='improveBlock'){let p=project();p.blocks[state.blockKey]=val('editor')+'\n\nAprimoramento IA: texto reforçado para evidenciar aderência ao edital, viabilidade, impacto cultural, democratização de acesso e coerência orçamentária.';p.score=Math.min(100,p.score+3);render();toast('Bloco melhorado.');return} if(a==='applyAllFixes'){let p=project();Object.keys(p.blocks).forEach(k=>p.blocks[k]+='\n\nAprimoramento IA aplicado: redação revisada para maior clareza e força avaliativa.');p.score=Math.min(98,p.score+12);p.progress=Math.min(100,p.progress+10);state.workspaceTab='text';render();toast('Melhorias aplicadas.');return} if(a==='rebalanceBudget'){toast('Orçamento reequilibrado dentro do valor do projeto.');return} if(a==='askIA'){document.getElementById('chatOut').innerHTML='<div class="notice" style="padding:14px;margin-top:12px"><b>IA:</b> Sugiro fortalecer a justificativa, detalhar a contrapartida e conferir documentos da equipe antes da exportação.</div>';return} if(a==='exportProject'){let p=project();download('projeto-'+p.title.replaceAll(' ','-')+'.doc',`PROJETO: ${p.title}\n\n`+Object.entries(p.blocks).map(([k,v])=>k+'\n'+v).join('\n\n'),'application/msword');toast('Arquivo exportado.');return} if(a==='addTeam'){teamModal();return} if(a==='editTeam'){teamModal(id);return} if(a==='saveTeam'){let existing=state.team.find(x=>x.id===id);let docs=existing?.docs||{};let obj={id,name:val('tmName'),artistic:val('tmArtistic'),role:val('tmRole'),area:val('tmArea'),cpf:val('tmCpf'),rg:val('tmRg'),cnpj:val('tmCnpj'),birth:val('tmBirth'),age:calcAge(val('tmBirth')),city:val('tmCity'),address:val('tmAddress'),cep:val('tmCep'),phone:val('tmPhone'),email:val('tmEmail'),pix:val('tmPix'),fee:Number(val('tmFee')||0),instagram:val('tmInstagram'),youtube:val('tmYoutube'),portfolioLink:val('tmPortfolioLink'),drive:val('tmDrive'),site:val('tmSite'),resumeShort:val('tmResumeShort'),resume:val('tmResume'),portfolioText:val('tmPortfolioText'),obs:val('tmObs'),docs:{...docs,cpf:fileName('docCpf')||docs.cpf,rg:fileName('docRg')||docs.rg,address:fileName('docAddress')||docs.address,resume:fileName('docResume')||docs.resume,portfolio:fileName('docPortfolio')||docs.portfolio,consent:fileName('docConsent')||docs.consent}};let i=state.team.findIndex(x=>x.id===id);if(i>=0)state.team[i]=obj;else state.team.push(obj);closeModal();render();toast('Integrante salvo.');return} if(a==='deleteTeam'){state.team=state.team.filter(x=>x.id!==id);state.projects.forEach(p=>p.team=(p.team||[]).filter(t=>t!==id));render();toast('Integrante excluído.');return} if(a==='linkTeam'){let p=project();p.team=p.team||[];if(!p.team.includes(id))p.team.push(id);save();toast('Integrante vinculado ao projeto atual.');return} if(a==='filterOpps'){state.opFilter={uf:val('fUf'),lang:val('fLang'),source:val('fSource'),q:val('fQ')};render();return} if(a==='internetOpps'){state.opFilter={uf:val('fUf'),lang:val('fLang'),source:val('fSource'),q:val('fQ')};try{let r=await fetch(`/api/oportunidades?uf=${state.opFilter.uf}&linguagem=${state.opFilter.lang}&q=${encodeURIComponent(state.opFilter.q)}`);if(r.ok){state.opportunities=await r.json();toast('Oportunidades atualizadas pela internet.')}else throw 0}catch{toast('Backend real ainda não conectado. Mostrando base de demonstração filtrável.')}render();return} if(a==='projectFromOpp'){let o=state.opportunities.find(x=>x.id===id);let np={id:uid('p'),title:o.title,proponent:'Eduardo Cabeça',budget:o.value,uf:o.uf,city:'',language:o.lang,edital:o.title,score:70,progress:35,updated:'Agora',team:[],blocks:{...baseBlocks},docs:{}};state.projects.unshift(np);state.currentProject=np.id;state.page='workspace';render();toast('Projeto criado a partir da oportunidade.');return} if(a==='addUser'){userModal();return} if(a==='editUser'){userModal(id);return} if(a==='saveUser'){let obj={id,name:val('usName'),email:val('usEmail'),role:val('usRole'),status:val('usStatus')};let i=state.users.findIndex(x=>x.id===id);if(i>=0)state.users[i]=obj;else state.users.push(obj);closeModal();render();toast('Usuário salvo.');return} if(a==='deleteUser'){state.users=state.users.filter(x=>x.id!==id);render();toast('Usuário excluído.');return} if(a==='generic'){toast('Configuração salva.');return}});
+document.getElementById('modalwrap').addEventListener('click',e=>{if(e.target.id==='modalwrap')closeModal()});
+
+/* PATCH CÉREBRO IA — Orçamento editável e exportações Word PDF */
+function ensureBudget(){
+  const p = project();
+
+  if(!p.budgetRows || !Array.isArray(p.budgetRows)){
+    p.budgetRows = [
+      {category:'Equipe', item:'Coordenação geral', qty:1, unit:1800, notes:'Gestão geral, organização do projeto e acompanhamento da execução.'},
+      {category:'Equipe', item:'Elenco / artistas', qty:3, unit:1000, notes:'Cachês artísticos para apresentações, ensaios e execução.'},
+      {category:'Produção', item:'Produção executiva', qty:1, unit:1500, notes:'Planejamento, logística, contatos, cronograma e organização.'},
+      {category:'Comunicação', item:'Divulgação digital e materiais', qty:1, unit:900, notes:'Cards, textos, impulsionamento básico e articulação de público.'},
+      {category:'Material', item:'Figurino, cenário e insumos', qty:1, unit:800, notes:'Materiais necessários para composição cênica.'},
+      {category:'Técnica', item:'Som, luz e operação técnica', qty:1, unit:1000, notes:'Apoio técnico para realização das apresentações.'},
+      {category:'Administração', item:'Prestação de contas', qty:1, unit:700, notes:'Organização documental e apoio à prestação de contas.'},
+      {category:'Acessibilidade', item:'Ações de acessibilidade', qty:1, unit:300, notes:'Medidas compatíveis com o edital e orçamento disponível.'}
+    ];
+  }
+
+  return p.budgetRows;
+}
+
+function budgetSum(rows){
+  return rows.reduce((total,row)=>total + (Number(row.qty || 0) * Number(row.unit || 0)), 0);
+}
+
+function readBudgetFromScreen(){
+  const p = project();
+  const rows = [];
+
+  document.querySelectorAll('[data-budget-row]').forEach(tr=>{
+    const i = tr.dataset.budgetRow;
+
+    rows.push({
+      category: document.querySelector(`[data-budget="category"][data-i="${i}"]`)?.value || 'Geral',
+      item: document.querySelector(`[data-budget="item"][data-i="${i}"]`)?.value || 'Item sem descrição',
+      qty: Number(document.querySelector(`[data-budget="qty"][data-i="${i}"]`)?.value || 0),
+      unit: Number(document.querySelector(`[data-budget="unit"][data-i="${i}"]`)?.value || 0),
+      notes: document.querySelector(`[data-budget="notes"][data-i="${i}"]`)?.value || ''
+    });
+  });
+
+  p.budgetRows = rows;
+  p.updated = 'Agora';
+  save();
+
+  return rows;
+}
+
+function recalcBudgetVisual(){
+  let total = 0;
+
+  document.querySelectorAll('[data-budget-row]').forEach(tr=>{
+    const i = tr.dataset.budgetRow;
+    const qty = Number(document.querySelector(`[data-budget="qty"][data-i="${i}"]`)?.value || 0);
+    const unit = Number(document.querySelector(`[data-budget="unit"][data-i="${i}"]`)?.value || 0);
+    const rowTotal = qty * unit;
+
+    total += rowTotal;
+
+    const cell = document.querySelector(`[data-budget-total="${i}"]`);
+
+    if(cell) cell.textContent = money(rowTotal);
+  });
+
+  const grand = document.getElementById('budgetGrandTotal');
+  const diff = document.getElementById('budgetDiff');
+  const p = project();
+
+  if(grand) grand.textContent = money(total);
+
+  if(diff){
+    const delta = Number(p.budget || 0) - total;
+
+    diff.textContent = delta === 0
+      ? 'Planilha fechada exatamente no valor do projeto.'
+      : delta > 0
+        ? `Ainda falta distribuir ${money(delta)}.`
+        : `A planilha ultrapassou ${money(Math.abs(delta))}.`;
+    diff.className = 'pill ' + (delta === 0 ? 'green' : delta > 0 ? 'amber' : 'red');
+  }
+}
+
+function saveBudget(){
+  const rows = readBudgetFromScreen();
+  const p = project();
+  const total = budgetSum(rows);
+
+  p.progress = Math.min(100, Number(p.progress || 70) + 2);
+
+  if(total === Number(p.budget || 0)){
+    p.score = Math.min(100, Number(p.score || 80) + 2);
+  }
+
+  save();
+  toast('Planilha orçamentária salva.');
+  render();
+}
+
+function addBudgetRow(){
+  readBudgetFromScreen();
+
+  const p = project();
+
+  p.budgetRows.push({
+    category:'Geral',
+    item:'Novo item orçamentário',
+    qty:1,
+    unit:0,
+    notes:'Descreva a justificativa desta despesa.'
+  });
+
+  save();
+  render();
+  toast('Item adicionado à planilha.');
+}
+
+function removeBudgetRow(index){
+  readBudgetFromScreen();
+
+  const p = project();
+
+  p.budgetRows.splice(Number(index), 1);
+
+  save();
+  render();
+  toast('Item removido da planilha.');
+}
+
+function rebalanceBudgetCommercial(){
+  const p = project();
+  let rows = readBudgetFromScreen();
+
+  if(!rows.length){
+    rows = ensureBudget();
+  }
+
+  const current = budgetSum(rows);
+  const target = Number(p.budget || 0);
+
+  if(!target){
+    toast('Informe o valor total do projeto antes de reequilibrar.');
+    return;
+  }
+
+  if(!current){
+    const each = target / rows.length;
+    rows = rows.map(r=>({...r, qty:Number(r.qty || 1), unit:Math.round(each / Number(r.qty || 1))}));
+  }else{
+    const factor = target / current;
+    rows = rows.map(r=>({
+      ...r,
+      unit: Math.max(0, Math.round(Number(r.unit || 0) * factor))
+    }));
+
+    const diff = target - budgetSum(rows);
+
+    if(rows[0]){
+      rows[0].unit = Number(rows[0].unit || 0) + diff;
+    }
+  }
+
+  p.budgetRows = rows;
+  p.updated = 'Agora';
+
+  save();
+  render();
+  toast('Planilha reequilibrada automaticamente dentro do valor do projeto.');
+}
+
+function tabBudget(){
+  const p = project();
+  const rows = ensureBudget();
+  const total = budgetSum(rows);
+  const delta = Number(p.budget || 0) - total;
+
+  return `
+    <div class="grid cols2">
+      <div class="budget-total-box">
+        <span class="muted small">Valor total do projeto</span>
+        <div class="budget-grand">${money(p.budget)}</div>
+        <div class="spacer"></div>
+        <span class="muted small">Total da planilha</span>
+        <div id="budgetGrandTotal" class="budget-grand">${money(total)}</div>
+        <div class="spacer"></div>
+        <span id="budgetDiff" class="pill ${delta === 0 ? 'green' : delta > 0 ? 'amber' : 'red'}">
+          ${delta === 0 ? 'Planilha fechada exatamente no valor do projeto.' : delta > 0 ? `Ainda falta distribuir ${money(delta)}.` : `A planilha ultrapassou ${money(Math.abs(delta))}.`}
+        </span>
+      </div>
+
+      <div class="card">
+        <h2>Planilha editável</h2>
+        <p class="muted">Edite rubricas, quantidades, valores e justificativas. Depois exporte em Word ou PDF.</p>
+        <div class="row">
+          <button class="btn primary sm" data-action="saveBudget">Salvar planilha</button>
+          <button class="btn sm" data-action="addBudgetRow">+ Adicionar item</button>
+          <button class="btn sm" data-action="rebalanceBudgetCommercial">Reequilibrar automático</button>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn sm" data-action="exportBudgetWord">Exportar orçamento Word</button>
+          <button class="btn sm" data-action="exportBudgetPdf">Exportar orçamento PDF</button>
+          <button class="btn sm" data-action="exportBudgetCsv">Exportar CSV</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="card">
+      <div class="between">
+        <div>
+          <h2>Itens da planilha</h2>
+          <p class="muted">Tudo aqui é editável. O total é calculado automaticamente.</p>
+        </div>
+        <span class="pill blue">modo edição</span>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="budget-table-wrap">
+        <table class="budget-table">
+          <thead>
+            <tr>
+              <th style="width:150px">Categoria</th>
+              <th>Descrição</th>
+              <th style="width:90px">Qtd.</th>
+              <th style="width:130px">Valor unitário</th>
+              <th style="width:130px">Total</th>
+              <th>Justificativa</th>
+              <th style="width:80px">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((r,i)=>`
+              <tr data-budget-row="${i}">
+                <td>
+                  <select class="budget-input" data-budget="category" data-i="${i}">
+                    ${['Equipe','Produção','Comunicação','Material','Técnica','Acessibilidade','Administração','Transporte','Locação','Geral'].map(c=>`
+                      <option ${r.category === c ? 'selected' : ''}>${c}</option>
+                    `).join('')}
+                  </select>
+                </td>
+                <td><input class="budget-input" data-budget="item" data-i="${i}" value="${esc(r.item)}"></td>
+                <td><input class="budget-input" data-budget="qty" data-i="${i}" type="number" min="0" step="1" value="${esc(r.qty)}"></td>
+                <td><input class="budget-input" data-budget="unit" data-i="${i}" type="number" min="0" step="1" value="${esc(r.unit)}"></td>
+                <td><b data-budget-total="${i}">${money(Number(r.qty || 0) * Number(r.unit || 0))}</b></td>
+                <td><input class="budget-input" data-budget="notes" data-i="${i}" value="${esc(r.notes)}"></td>
+                <td><button class="btn red sm" data-action="removeBudgetRow" data-i="${i}">Excluir</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+function budgetHtml(){
+  const p = project();
+  const rows = ensureBudget();
+  const total = budgetSum(rows);
+
+  return `
+    <h1>Planilha Orçamentária — ${esc(p.title)}</h1>
+    <p><b>Proponente:</b> ${esc(p.proponent)}</p>
+    <p><b>Edital:</b> ${esc(p.edital)}</p>
+    <p><b>Valor total do projeto:</b> ${money(p.budget)}</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Categoria</th>
+          <th>Descrição</th>
+          <th>Quantidade</th>
+          <th>Valor unitário</th>
+          <th>Total</th>
+          <th>Justificativa</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r=>`
+          <tr>
+            <td>${esc(r.category)}</td>
+            <td>${esc(r.item)}</td>
+            <td>${esc(r.qty)}</td>
+            <td>${money(r.unit)}</td>
+            <td>${money(Number(r.qty || 0) * Number(r.unit || 0))}</td>
+            <td>${esc(r.notes)}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+
+    <h2>Total geral: ${money(total)}</h2>
+  `;
+}
+
+function projectFullHtml(){
+  const p = project();
+  const members = (p.team || []).map(teamObj).filter(Boolean);
+  const blocks = p.blocks || {};
+
+  return `
+    <h1>Projeto Cultural — ${esc(p.title)}</h1>
+    <p><b>Proponente:</b> ${esc(p.proponent)}</p>
+    <p><b>Edital:</b> ${esc(p.edital)}</p>
+    <p><b>Local:</b> ${esc(p.city || '')}/${esc(p.uf || '')}</p>
+    <p><b>Valor:</b> ${money(p.budget)}</p>
+
+    ${Object.entries(blocks).map(([k,v])=>`
+      <h2>${esc(k)}</h2>
+      <p>${esc(v).replace(/\n/g,'<br>')}</p>
+    `).join('')}
+
+    <h2>Equipe</h2>
+    ${members.map(t=>`
+      <h3>${esc(t.name)} — ${esc(t.role)}</h3>
+      <p><b>CPF:</b> ${esc(t.cpf || '')}</p>
+      <p><b>Cidade:</b> ${esc(t.city || '')}</p>
+      <p><b>Mini currículo:</b><br>${esc(t.resumeShort || '').replace(/\n/g,'<br>')}</p>
+      <p><b>Portfólio:</b><br>${esc(t.portfolioText || '').replace(/\n/g,'<br>')}</p>
+    `).join('')}
+
+    ${budgetHtml()}
+  `;
+}
+
+function teamHtml(){
+  const p = project();
+  const members = (p.team || []).map(teamObj).filter(Boolean);
+
+  return `
+    <h1>Equipe e Portfólio — ${esc(p.title)}</h1>
+    ${members.map(t=>`
+      <h2>${esc(t.name)}</h2>
+      <p><b>Função:</b> ${esc(t.role)}</p>
+      <p><b>Área:</b> ${esc(t.area)}</p>
+      <p><b>CPF:</b> ${esc(t.cpf || '')}</p>
+      <p><b>RG:</b> ${esc(t.rg || '')}</p>
+      <p><b>CNPJ/MEI:</b> ${esc(t.cnpj || '')}</p>
+      <p><b>Cidade:</b> ${esc(t.city || '')}</p>
+      <p><b>E-mail:</b> ${esc(t.email || '')}</p>
+      <p><b>Telefone:</b> ${esc(t.phone || '')}</p>
+      <p><b>Instagram:</b> ${esc(t.instagram || '')}</p>
+      <p><b>Portfólio:</b> ${esc(t.portfolioLink || '')}</p>
+      <p><b>Drive:</b> ${esc(t.drive || '')}</p>
+      <p><b>Mini currículo:</b><br>${esc(t.resumeShort || '').replace(/\n/g,'<br>')}</p>
+      <p><b>Currículo completo:</b><br>${esc(t.resume || '').replace(/\n/g,'<br>')}</p>
+      <p><b>Portfólio textual:</b><br>${esc(t.portfolioText || '').replace(/\n/g,'<br>')}</p>
+      <hr>
+    `).join('') || '<p>Nenhum integrante vinculado ao projeto.</p>'}
+  `;
+}
+
+function exportShell(title, body){
+  return `
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8">
+      <title>${esc(title)}</title>
+      <style>
+        body{font-family:Arial,sans-serif;color:#111827;line-height:1.5;padding:32px}
+        h1{font-size:24px;margin:0 0 12px}
+        h2{font-size:18px;margin-top:24px;border-bottom:1px solid #ddd;padding-bottom:6px}
+        h3{font-size:15px;margin-top:16px}
+        p{font-size:13px}
+        table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12px}
+        th,td{border:1px solid #ddd;padding:8px;text-align:left;vertical-align:top}
+        th{background:#f3f4f6}
+        @media print{
+          button{display:none}
+          body{padding:20px}
+        }
+      </style>
+    </head>
+    <body>
+      ${body}
+    </body>
+    </html>
+  `;
+}
+
+function downloadWord(filename, htmlBody){
+  const html = exportShell(filename, htmlBody);
+  const blob = new Blob([html], {type:'application/msword;charset=utf-8'});
+  const a = document.createElement('a');
+
+  a.href = URL.createObjectURL(blob);
+  a.download = filename.endsWith('.doc') ? filename : filename + '.doc';
+  a.click();
+
+  URL.revokeObjectURL(a.href);
+}
+
+function openPdfPrint(title, htmlBody){
+  const html = exportShell(title, htmlBody);
+  const w = window.open('', '_blank');
+
+  if(!w){
+    toast('O navegador bloqueou a janela de PDF. Permita pop-ups para exportar.');
+    return;
+  }
+
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+
+  setTimeout(()=>{
+    w.focus();
+    w.print();
+  }, 300);
+}
+
+function exportOptionsModal(){
+  modal(`
+    <h2>Exportar projeto</h2>
+    <p class="muted">Escolha o formato. Em PDF, o navegador abrirá a tela de impressão para salvar como PDF.</p>
+
+    <div class="export-grid">
+      <div class="export-card">
+        <h3>Projeto completo</h3>
+        <p class="muted small">Todos os blocos, equipe e orçamento.</p>
+        <div class="row">
+          <button class="btn primary sm" data-action="exportFullWord">Word</button>
+          <button class="btn sm" data-action="exportFullPdf">PDF</button>
+        </div>
+      </div>
+
+      <div class="export-card">
+        <h3>Planilha orçamentária</h3>
+        <p class="muted small">Rubricas, valores e justificativas.</p>
+        <div class="row">
+          <button class="btn primary sm" data-action="exportBudgetWord">Word</button>
+          <button class="btn sm" data-action="exportBudgetPdf">PDF</button>
+        </div>
+      </div>
+
+      <div class="export-card">
+        <h3>Equipe e portfólio</h3>
+        <p class="muted small">Dados, currículo, portfólio e links.</p>
+        <div class="row">
+          <button class="btn primary sm" data-action="exportTeamWord">Word</button>
+          <button class="btn sm" data-action="exportTeamPdf">PDF</button>
+        </div>
+      </div>
+
+      <div class="export-card">
+        <h3>Backup do projeto</h3>
+        <p class="muted small">Arquivo JSON para segurança.</p>
+        <div class="row">
+          <button class="btn sm" data-action="exportJson">Baixar backup</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <button class="btn" data-action="closeModal">Fechar</button>
+    </div>
+  `);
+}
+
+function exportBudgetCsv(){
+  const rows = readBudgetFromScreen();
+  const csv = [
+    ['Categoria','Descrição','Quantidade','Valor unitário','Total','Justificativa'],
+    ...rows.map(r=>[
+      r.category,
+      r.item,
+      r.qty,
+      r.unit,
+      Number(r.qty || 0) * Number(r.unit || 0),
+      r.notes
+    ])
+  ].map(row=>row.map(cell=>`"${String(cell).replace(/"/g,'""')}"`).join(';')).join('\n');
+
+  download('orcamento-cerebro-ia.csv', csv, 'text/csv;charset=utf-8');
+  toast('CSV da planilha exportado.');
+}
+
+document.addEventListener('input', e=>{
+  if(e.target.closest('.budget-input')){
+    recalcBudgetVisual();
+  }
+}, true);
+
+document.addEventListener('click', e=>{
+  const b = e.target.closest('button');
+
+  if(!b) return;
+
+  const a = b.dataset.action;
+
+  const actions = [
+    'saveBudget',
+    'addBudgetRow',
+    'removeBudgetRow',
+    'rebalanceBudgetCommercial',
+    'exportProject',
+    'exportFullWord',
+    'exportFullPdf',
+    'exportBudgetWord',
+    'exportBudgetPdf',
+    'exportBudgetCsv',
+    'exportTeamWord',
+    'exportTeamPdf',
+    'exportJson'
+  ];
+
+  if(!actions.includes(a)) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+  e.stopImmediatePropagation();
+
+  if(a === 'saveBudget') return saveBudget();
+  if(a === 'addBudgetRow') return addBudgetRow();
+  if(a === 'removeBudgetRow') return removeBudgetRow(b.dataset.i);
+  if(a === 'rebalanceBudgetCommercial') return rebalanceBudgetCommercial();
+
+  if(a === 'exportProject') return exportOptionsModal();
+
+  if(a === 'exportFullWord'){
+    readBudgetFromScreen();
+    downloadWord('projeto-completo-cerebro-ia.doc', projectFullHtml());
+    toast('Projeto completo exportado em Word.');
+    return;
+  }
+
+  if(a === 'exportFullPdf'){
+    readBudgetFromScreen();
+    openPdfPrint('Projeto completo — CÉREBRO IA', projectFullHtml());
+    return;
+  }
+
+  if(a === 'exportBudgetWord'){
+    readBudgetFromScreen();
+    downloadWord('planilha-orcamentaria-cerebro-ia.doc', budgetHtml());
+    toast('Planilha exportada em Word.');
+    return;
+  }
+
+  if(a === 'exportBudgetPdf'){
+    readBudgetFromScreen();
+    openPdfPrint('Planilha orçamentária — CÉREBRO IA', budgetHtml());
+    return;
+  }
+
+  if(a === 'exportBudgetCsv') return exportBudgetCsv();
+
+  if(a === 'exportTeamWord'){
+    downloadWord('equipe-portfolio-cerebro-ia.doc', teamHtml());
+    toast('Equipe e portfólio exportados em Word.');
+    return;
+  }
+
+  if(a === 'exportTeamPdf'){
+    openPdfPrint('Equipe e Portfólio — CÉREBRO IA', teamHtml());
+    return;
+  }
+
+  if(a === 'exportJson'){
+    download('backup-projeto-cerebro-ia.json', JSON.stringify(project(), null, 2), 'application/json');
+    toast('Backup exportado.');
+    return;
+  }
+}, true);
+/* FIM PATCH CÉREBRO IA — Orçamento editável e exportações Word PDF */
+
+
+/* PATCH CÉREBRO IA — Conexão backend IA e oportunidades */
+async function cerebroPost(url, payload){
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json();
+
+  if(!response.ok){
+    throw new Error(data.error || 'Erro na API');
+  }
+
+  return data;
+}
+
+async function cerebroGet(url){
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if(!response.ok){
+    throw new Error(data.error || 'Erro na API');
+  }
+
+  return data;
+}
+
+document.addEventListener('click', async function(e){
+  const b = e.target.closest('button');
+  if(!b) return;
+
+  const a = b.dataset.action;
+
+  if(!['improveBlock','applyAllFixes','askIA','internetOpps'].includes(a)) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+  e.stopImmediatePropagation();
+
+  try{
+    if(a === 'improveBlock'){
+      const p = project();
+      const editor = document.getElementById('editor');
+      const currentText = editor ? editor.value : (p.blocks?.[state.blockKey] || '');
+
+      toast('IA revisando este bloco...');
+
+      const data = await cerebroPost('/api/ia', {
+        task: 'improveBlock',
+        project: p,
+        blockName: state.blockKey,
+        text: currentText
+      });
+
+      p.blocks[state.blockKey] = data.output || currentText;
+      p.score = Math.min(100, Number(p.score || 80) + 3);
+      p.updated = 'Agora';
+
+      save();
+      render();
+      toast(data.demo ? 'Bloco melhorado em modo demo.' : 'Bloco melhorado com IA.');
+      return;
+    }
+
+    if(a === 'applyAllFixes'){
+      const p = project();
+
+      toast('IA aplicando melhorias no projeto...');
+
+      const data = await cerebroPost('/api/ia', {
+        task: 'applyAllFixes',
+        project: p,
+        blocks: p.blocks || {}
+      });
+
+      let parsed = null;
+
+      try{
+        parsed = JSON.parse(data.output);
+      }catch{}
+
+      if(parsed && parsed.blocks){
+        p.blocks = parsed.blocks;
+        p.score = Math.min(100, Number(parsed.scoreSuggestion || p.score || 90));
+      }else{
+        Object.keys(p.blocks || {}).forEach(k=>{
+          p.blocks[k] = `${p.blocks[k]}
+
+Aprimoramento IA aplicado: texto revisado para maior clareza, impacto cultural, viabilidade técnica e aderência ao edital.`;
+        });
+        p.score = Math.min(100, Number(p.score || 80) + 10);
+      }
+
+      p.progress = Math.min(100, Number(p.progress || 70) + 10);
+      p.updated = 'Agora';
+      state.workspaceTab = 'text';
+
+      save();
+      render();
+      toast(data.demo ? 'Melhorias aplicadas em modo demo.' : 'Melhorias aplicadas com IA.');
+      return;
+    }
+
+    if(a === 'askIA'){
+      const p = project();
+      const question = document.getElementById('chatMsg')?.value || '';
+
+      if(!question.trim()){
+        toast('Digite uma pergunta para a IA.');
+        return;
+      }
+
+      toast('Consultando IA do projeto...');
+
+      const data = await cerebroPost('/api/ia', {
+        task: 'chat',
+        project: p,
+        question
+      });
+
+      const out = document.getElementById('chatOut');
+
+      if(out){
+        out.innerHTML = `<div class="notice" style="padding:14px;margin-top:12px"><b>IA:</b> ${String(data.output || '').replace(/\n/g,'<br>')}</div>`;
+      }
+
+      toast(data.demo ? 'Resposta demo gerada.' : 'Resposta da IA gerada.');
+      return;
+    }
+
+    if(a === 'internetOpps'){
+      const uf = document.getElementById('fUf')?.value || 'SC';
+      const linguagem = document.getElementById('fLang')?.value || 'Teatro';
+      const q = document.getElementById('fQ')?.value || '';
+
+      toast('Buscando editais na internet...');
+
+      const data = await cerebroGet(`/api/oportunidades?uf=${encodeURIComponent(uf)}&linguagem=${encodeURIComponent(linguagem)}&q=${encodeURIComponent(q)}`);
+
+      if(Array.isArray(data)){
+        state.opportunities = data;
+        state.opFilter = {uf, lang:linguagem, source:'Todas', q};
+        save();
+        render();
+        toast('Oportunidades atualizadas.');
+      }else{
+        toast('A busca retornou formato inesperado.');
+      }
+
+      return;
+    }
+  }catch(err){
+    console.error(err);
+    toast('Erro: ' + err.message);
+  }
+}, true);
+/* FIM PATCH CÉREBRO IA — Conexão backend IA e oportunidades */
+
+
+/* PATCH CÉREBRO IA — Páginas completas baseadas no vídeo */
+state.analysisSub = state.analysisSub || 'requisitos';
+state.portfolioSub = state.portfolioSub || 'capa';
+
+const videoSections = {
+  'Objeto da Proposta': {
+    req:true,
+    points:10,
+    tip:'Explique exatamente o que será realizado, onde, para quem, com qual valor e com qual resultado cultural.'
+  },
+  'Justificativa': {
+    req:true,
+    points:15,
+    tip:'Mostre relevância cultural, impacto social, problema enfrentado, democratização de acesso e aderência ao edital.'
+  },
+  'Plano de comunicação': {
+    req:true,
+    points:8,
+    tip:'Indique canais, públicos, materiais, frequência, estratégia de divulgação e alcance previsto.'
+  },
+  'Público Alvo': {
+    req:true,
+    points:5,
+    tip:'Descreva perfil, faixa etária, território e público prioritário.'
+  },
+  'Acessibilidade': {
+    req:true,
+    points:10,
+    tip:'Detalhe ações concretas: acessibilidade comunicacional, física, atitudinal, Libras, materiais e acolhimento.'
+  },
+  'Contrapartida Social': {
+    req:false,
+    points:8,
+    tip:'Explique o retorno gratuito/social do projeto para a comunidade.'
+  },
+  'Cronograma': {
+    req:true,
+    points:6,
+    tip:'Organize pré-produção, produção, execução e pós-produção.'
+  },
+  'Equipe': {
+    req:true,
+    points:8,
+    tip:'Mostre capacidade técnica da equipe e vínculos com as funções.'
+  },
+  'Orçamento': {
+    req:true,
+    points:10,
+    tip:'Conecte valores, rubricas, justificativas e limite do edital.'
+  }
+};
+
+function ensureVideoBlocks(){
+  const p = project();
+  p.blocks = p.blocks || {};
+
+  Object.keys(videoSections).forEach(k=>{
+    if(!p.blocks[k]){
+      p.blocks[k] = baseBlocks?.[k] || 'Preencha este bloco com informações do projeto.';
+    }
+  });
+
+  if(!p.blocks[state.blockKey]){
+    state.blockKey = Object.keys(videoSections)[0];
+  }
+
+  save();
+  return p;
+}
+
+function newProject(){
+  setTitle('Criar Novo Projeto','Criação guiada com edital, anexos e análise por IA');
+
+  app.innerHTML = `
+    <div class="video-flow-hero">
+      <div class="between">
+        <div>
+          <h2>Vamos criar seu projeto</h2>
+          <p class="muted">Siga o fluxo: dados básicos, edital, anexos e análise automática.</p>
+        </div>
+        <button class="btn" data-action="openCreateWizard">Ver etapas</button>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="card">
+      <h2>Novo projeto com IA</h2>
+      <p class="muted">Preencha as informações principais. Depois o sistema gera o workspace completo do projeto.</p>
+
+      <div class="grid cols2">
+        <div class="field"><label>Título</label><input id="npTitle" value="O Poço"></div>
+        <div class="field"><label>Proponente</label><input id="npProp" value="Eduardo Cabeça"></div>
+        <div class="field"><label>Valor aprovado/teto do edital</label><input id="npBudget" type="number" value="10000"></div>
+        <div class="field">
+          <label>UF</label>
+          <select id="npUf">
+            <option>SC</option><option>BR</option><option>MS</option><option>PR</option><option>SP</option><option>RJ</option><option>RS</option>
+          </select>
+        </div>
+        <div class="field"><label>Cidade de realização</label><input id="npCity" value="Jaraguá do Sul"></div>
+        <div class="field">
+          <label>Linguagem artística</label>
+          <select id="npLang">
+            <option>Teatro</option><option>Dança</option><option>Música</option><option>Audiovisual</option><option>Multilinguagem</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:12px">
+        <label>Ideia inicial</label>
+        <textarea id="npIdea">Projeto teatral com apresentação gratuita, mediação cultural e impacto social.</textarea>
+      </div>
+
+      <div class="grid cols2" style="margin-top:12px">
+        <label class="upload">
+          <b>Edital principal em PDF</b>
+          <p class="muted">Regulamento, chamada pública ou edital.</p>
+          <input id="npEdital" type="file" accept=".pdf">
+        </label>
+
+        <label class="upload">
+          <b>Anexos e modelos</b>
+          <p class="muted">Planilha, declarações, formulários e modelos.</p>
+          <input id="npAnexos" type="file" multiple>
+        </label>
+      </div>
+
+      <div class="row" style="margin-top:16px">
+        <button class="btn" data-page="projects">Cancelar</button>
+        <button class="btn" data-action="saveDraft">Salvar rascunho</button>
+        <button class="btn primary" data-action="analyzeProject">Analisar edital com IA</button>
+      </div>
+    </div>
+  `;
+}
+
+function openCreateWizard(){
+  modal(`
+    <div>
+      <div class="video-flow-hero" style="box-shadow:none">
+        <h2>Vamos criar seu projeto</h2>
+        <p class="muted">O assistente organiza as etapas antes de abrir o workspace.</p>
+      </div>
+
+      <div class="wizard-step-card">
+        <b>1. Dados básicos do projeto</b>
+        <span class="muted small">Título, proponente, cidade, valor e linguagem artística.</span>
+      </div>
+
+      <div class="wizard-step-card">
+        <b>2. Upload do edital</b>
+        <span class="muted small">Regulamento principal em PDF para análise automática.</span>
+      </div>
+
+      <div class="wizard-step-card">
+        <b>3. Complementos e anexos</b>
+        <span class="muted small">Planilha, declarações, modelos, formulários e documentos adicionais.</span>
+      </div>
+
+      <div class="wizard-step-card">
+        <b>4. Análise inteligente</b>
+        <span class="muted small">Requisitos, critérios, documentos, achados e blocos de escrita.</span>
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <button class="btn" data-action="closeModal">Agora não</button>
+        <button class="btn primary" data-action="closeModal">Começar preenchimento</button>
+      </div>
+    </div>
+  `);
+}
+
+function workspace(){
+  let p = project();
+
+  setTitle('Projeto IA',`${p.edital} • ${p.city}/${p.uf} • ${money(p.budget)}`);
+
+  const tabs = [
+    ['analysis','✨ Análise'],
+    ['text','📄 Texto'],
+    ['review','✅ Revisão'],
+    ['budget','$ Orçamento'],
+    ['portfolio','💼 Portfólio'],
+    ['docs','📋 Docs'],
+    ['chat','💬 Chat IA']
+  ];
+
+  app.innerHTML = `
+    <div class="top-context">← Edital ${esc(p.edital)} — ${esc(p.title)}</div>
+
+    <div class="workspace-head">
+      <div class="hero">
+        <div class="between">
+          <div>
+            <h2>${esc(p.title)}</h2>
+            <p class="muted">${esc(p.proponent)} • ${esc(p.city)}/${esc(p.uf)} • ${money(p.budget)} • Nota IA ${p.score}/100</p>
+          </div>
+          <div class="row">
+            <span class="pill" style="background:rgba(255,255,255,.18);color:white">${p.progress}% completo</span>
+            <button class="btn" data-action="exportProject">Exportar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="workspace-tabs">
+        ${tabs.map(t=>`
+          <button class="${state.workspaceTab===t[0]?'active':''}" data-action="tab" data-tab="${t[0]}">${t[1]}</button>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+    <div id="wb">${workspaceBody()}</div>
+  `;
+}
+
+function tabAnalysis(){
+  let p = project();
+
+  const docs = [
+    'Declarações gerais do edital',
+    'Declaração de cessão de direitos autorais',
+    'Comprovante de cadastro ou inexistência de cadastro',
+    'Proposta cultural',
+    'Planilha orçamentária',
+    'Currículos e portfólios da equipe',
+    'Comprovante de residência',
+    'Carta de anuência dos integrantes'
+  ];
+
+  const requisitos = [
+    'Valor máximo respeitado',
+    'Objeto cultural aderente à categoria',
+    'Ações gratuitas previstas',
+    'Cronograma compatível',
+    'Orçamento com rubricas justificadas',
+    'Acessibilidade descrita',
+    'Contrapartida social presente',
+    'Equipe com capacidade técnica'
+  ];
+
+  const achados = [
+    'Fortalecer impacto cultural na justificativa',
+    'Conferir se alimentação é permitida pelo edital',
+    'Adicionar links reais de portfólio da equipe',
+    'Detalhar melhor a metodologia de mediação cultural'
+  ];
+
+  const subs = [
+    ['geral','Visão Geral'],
+    ['datas','Datas'],
+    ['criterios','Critérios'],
+    ['requisitos','Requisitos'],
+    ['achados','Achados'],
+    ['regras','Regras']
+  ];
+
+  const body = {
+    geral: `<div class="yellow-note"><b>Resumo da análise:</b> o projeto tem boa aderência ao edital, mas precisa manter documentação real, orçamento coerente e blocos textuais completos para reduzir risco de reprovação.</div>`,
+    datas: `<div class="list"><div class="item between"><b>Inscrição</b><span class="pill blue">verificar edital</span></div><div class="item between"><b>Execução</b><span class="pill">após aprovação</span></div><div class="item between"><b>Prestação de contas</b><span class="pill amber">obrigatória</span></div></div>`,
+    criterios: `<div class="list"><div class="item">Impacto cultural e social</div><div class="item">Viabilidade técnica e financeira</div><div class="item">Acessibilidade e democratização</div><div class="item">Qualificação da equipe</div></div>`,
+    requisitos: `<div class="list">${requisitos.map(x=>`<div class="item between"><b>${x}</b><span class="pill green">mapeado</span></div>`).join('')}</div>`,
+    achados: `<div class="list">${achados.map(x=>`<div class="required-box">${x}</div>`).join('')}</div>`,
+    regras: `<div class="list"><div class="item">Não inserir despesas vedadas pelo edital.</div><div class="item">Usar valores proporcionais ao teto financeiro.</div><div class="item">Todos os anexos obrigatórios devem estar preenchidos e assinados.</div></div>`
+  }[state.analysisSub] || '';
+
+  return `
+    <div class="score-grid">
+      <div class="score-card blue"><span class="muted small">Requisitos</span><b>20</b></div>
+      <div class="score-card purple"><span class="muted small">Critérios</span><b>5</b></div>
+      <div class="score-card red"><span class="muted small">Achados</span><b>${achados.length}</b></div>
+      <div class="score-card amber"><span class="muted small">Alertas</span><b>1</b></div>
+      <div class="score-card green"><span class="muted small">Nota</span><b>${p.score}</b></div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="flow-tabs">
+      ${subs.map(s=>`<button class="${state.analysisSub===s[0]?'active':''}" data-action="analysisSub" data-sub="${s[0]}">${s[1]}</button>`).join('')}
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="grid cols2">
+      <div class="flow-card">
+        <h2>Documentos Exigidos (${docs.length})</h2>
+        ${docs.map(d=>`<div class="required-box">${d}</div>`).join('')}
+      </div>
+
+      <div class="flow-card">
+        <h2>${subs.find(s=>s[0]===state.analysisSub)?.[1] || 'Análise'}</h2>
+        ${body}
+      </div>
+    </div>
+  `;
+}
+
+function tabText(){
+  let p = ensureVideoBlocks();
+  let keys = Object.keys(videoSections);
+  let k = state.blockKey;
+  let meta = videoSections[k] || {};
+
+  return `
+    <div class="title-suggest">
+      <div class="between">
+        <div>
+          <h2>Sugestões de Título</h2>
+          <p class="muted">A IA avalia o contexto e sugere nomes comerciais para o projeto.</p>
+        </div>
+        <button class="btn primary sm" data-action="generateTitles">Gerar 10 sugestões de título</button>
+      </div>
+
+      <div id="titleIdeas" class="row" style="margin-top:10px">
+        <span class="pill pink">O Poço</span>
+        <span class="pill">Nome criativo</span>
+        <span class="pill">Linguagem artística</span>
+        <span class="pill">Território</span>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="card">
+      <div class="between">
+        <div>
+          <h2>Seções do Projeto</h2>
+          <p class="muted">Selecione uma seção para preencher. Campos obrigatórios marcados com *.</p>
+        </div>
+        <div class="row">
+          <button class="btn sm" data-action="generateTitles">Sugerir título</button>
+          <button class="btn green sm" data-action="exportProject">Exportar Word/PDF</button>
+          <button class="btn sm" data-action="addSectionMock">+ Adicionar seção</button>
+        </div>
+      </div>
+
+      <div class="section-chip-row" style="margin-top:12px">
+        ${keys.map(x=>`
+          <button class="${x===k?'active':''}" data-action="block" data-block="${esc(x)}">${esc(x)} ${videoSections[x].req?'*':''}</button>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="card">
+      <div class="between">
+        <div>
+          <h2>${esc(k)} ${meta.req?'<span class="pill red">Obrigatório</span>':''} <span class="pill blue">${meta.points||0} pontos</span> <span class="pill">Histórico</span></h2>
+          <p class="muted">Nesta seção, descreva com linguagem pronta para edital.</p>
+        </div>
+        <div class="row">
+          <button class="btn sm" data-action="copyBlock">Copiar</button>
+          <button class="btn primary sm" data-action="improveBlock">Melhorar com IA</button>
+          <button class="btn sm" data-action="saveBlock">Salvar</button>
+        </div>
+      </div>
+
+      <div class="helper"><b>O que deve ser abordado:</b> ${esc(meta.tip || 'Clareza, viabilidade, impacto cultural e coerência com o edital.')}</div>
+      <textarea class="editor" id="editor">${esc(p.blocks[k])}</textarea>
+    </div>
+  `;
+}
+
+function tabPortfolio(){
+  let p = project();
+  let members = (p.team || []).map(teamObj).filter(Boolean);
+  let t = members[0] || {};
+
+  const subs = [
+    ['capa','Capa'],
+    ['bio','Bio'],
+    ['curriculo','Currículo'],
+    ['areas','Áreas'],
+    ['noticias','Notícias'],
+    ['certificados','Certificados'],
+    ['videos','Vídeos'],
+    ['contato','Contato']
+  ];
+
+  const content = {
+    capa: `
+      <div class="field"><label>Nome artístico *</label><input value="${esc(t.name || '')}" placeholder="Nome artístico"></div>
+      <div class="field"><label>Descrição da capa *</label><textarea>Ex: multiartista, compositor(a), ator/atriz ou produtor(a) cultural.</textarea></div>
+      <label class="upload"><b>Imagem de capa *</b><p class="muted">Envie imagem principal do portfólio.</p><input type="file" accept="image/*"><button class="btn sm" style="margin-top:8px">Gerar temporária</button></label>
+    `,
+    bio: `<div class="field"><label>Mini bio artística</label><textarea>${esc(t.resumeShort || '')}</textarea></div>`,
+    curriculo: `<div class="field"><label>Currículo artístico completo</label><textarea>${esc(t.resume || '')}</textarea></div><label class="upload"><b>Foto para currículo</b><input type="file" accept="image/*,.pdf"></label>`,
+    areas: `<div class="portfolio-style"><div class="style-pill"><span class="dotcolor" style="background:#7c3aed"></span>Artes cênicas</div><div class="style-pill"><span class="dotcolor" style="background:#db2777"></span>Produção cultural</div><div class="style-pill"><span class="dotcolor" style="background:#2563eb"></span>Mediação cultural</div></div>`,
+    noticias: `<div class="field"><label>Matérias, releases e clipping</label><textarea placeholder="Cole links de notícias, entrevistas e publicações."></textarea></div>`,
+    certificados: `<label class="upload"><b>Certificados</b><input type="file" multiple></label>`,
+    videos: `<div class="field"><label>Links de vídeos</label><textarea placeholder="YouTube, Vimeo, Drive...">${esc(t.youtube || '')}</textarea></div>`,
+    contato: `<div class="grid cols2"><div class="field"><label>Instagram</label><input value="${esc(t.instagram || '')}"></div><div class="field"><label>Drive/Portfólio</label><input value="${esc(t.drive || t.portfolioLink || '')}"></div><div class="field"><label>E-mail</label><input value="${esc(t.email || '')}"></div><div class="field"><label>Telefone</label><input value="${esc(t.phone || '')}"></div></div>`
+  }[state.portfolioSub] || '';
+
+  return `
+    <div class="card">
+      <h2>Estilo Visual do Portfólio</h2>
+      <p class="muted">Monte um portfólio completo da equipe para anexar aos editais.</p>
+
+      <div class="portfolio-style">
+        <div class="style-pill"><span class="dotcolor" style="background:#7c3aed"></span>Elegante roxo</div>
+        <div class="style-pill"><span class="dotcolor" style="background:#db2777"></span>Paleta intensa</div>
+        <div class="style-pill"><span class="dotcolor" style="background:#0ea5e9"></span>Acadêmico azul</div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="card">
+      <div class="between">
+        <div>
+          <h2>Portfólio da equipe</h2>
+          <p class="muted">Use as abas para preencher dados de capa, bio, currículo, áreas, notícias, certificados, vídeos e contato.</p>
+        </div>
+        <button class="btn primary sm" data-page="team">Gerenciar equipe</button>
+      </div>
+
+      <div class="pf-tabs">
+        ${subs.map(s=>`<button class="${state.portfolioSub===s[0]?'active':''}" data-action="portfolioSub" data-sub="${s[0]}">${s[1]}</button>`).join('')}
+      </div>
+
+      ${content}
+
+      <div class="row" style="margin-top:14px">
+        <button class="btn primary sm" data-action="generatePortfolioAI">Gerar com IA</button>
+        <button class="btn sm" data-action="exportTeamWord">Exportar portfólio</button>
+      </div>
+    </div>
+  `;
+}
+
+function tabDocs(){
+  const docs = [
+    'Edital principal',
+    'Planilha orçamentária',
+    'Declaração de direitos autorais',
+    'Currículos da equipe',
+    'Portfólio da equipe',
+    'Comprovantes e documentos pessoais',
+    'Cartas de anuência',
+    'Relatório/checklist final'
+  ];
+
+  return `
+    <div class="card">
+      <h2>Documentos e anexos</h2>
+      <p class="muted">Central de arquivos do projeto. Na versão comercial, estes arquivos serão salvos em storage real.</p>
+
+      <div class="doc-grid">
+        ${docs.map(d=>`
+          <label class="doc-card">
+            <b>${d}</b>
+            <p class="muted small">Envie ou substitua o arquivo correspondente.</p>
+            <input type="file">
+            <span class="pill amber">pendente/editar</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener('click', e=>{
+  let b = e.target.closest('button');
+  if(!b) return;
+
+  let a = b.dataset.action;
+
+  if(!['openCreateWizard','analysisSub','portfolioSub','generateTitles','addSectionMock','generatePortfolioAI'].includes(a)) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+  e.stopImmediatePropagation();
+
+  if(a === 'openCreateWizard') return openCreateWizard();
+
+  if(a === 'analysisSub'){
+    state.analysisSub = b.dataset.sub;
+    save();
+    render();
+    return;
+  }
+
+  if(a === 'portfolioSub'){
+    state.portfolioSub = b.dataset.sub;
+    save();
+    render();
+    return;
+  }
+
+  if(a === 'generateTitles'){
+    document.getElementById('titleIdeas')?.insertAdjacentHTML('beforeend',`
+      <span class="pill green">Projeto O Poço — Arte que Transforma</span>
+      <span class="pill blue">O Poço: Teatro, Encontro e Comunidade</span>
+      <span class="pill pink">Águas de Memória</span>
+    `);
+    toast('Sugestões de título geradas.');
+    return;
+  }
+
+  if(a === 'addSectionMock'){
+    toast('Na versão comercial, você poderá adicionar seções personalizadas por edital.');
+    return;
+  }
+
+  if(a === 'generatePortfolioAI'){
+    toast('Portfólio organizado com base nos dados cadastrados.');
+    return;
+  }
+}, true);
+/* FIM PATCH CÉREBRO IA — Páginas completas baseadas no vídeo */
+
+
+/* PATCH CÉREBRO IA — Dados reais do projeto e arquivos por seção */
+const realProjectBlocks = {
+  'Resumo': `O projeto “O Poço” propõe a realização de apresentações teatrais gratuitas e ações de mediação cultural em Jaraguá do Sul/SC, promovendo acesso democrático às artes cênicas, formação de público e valorização da produção cultural local. A iniciativa articula criação artística, circulação, encontro comunitário e ações educativas, contribuindo para ampliar o acesso da população a experiências culturais significativas.`,
+
+  'Objeto da Proposta': `Realizar o projeto cultural “O Poço”, composto por apresentações teatrais gratuitas, ações de mediação cultural e organização documental do processo, em Jaraguá do Sul/SC. A proposta contempla planejamento, ensaios, preparação técnica, comunicação, execução das apresentações, registro das ações e sistematização dos resultados, garantindo coerência entre objetivo artístico, equipe, orçamento e impacto cultural esperado.`,
+
+  'Objetivo Geral': `Promover o acesso gratuito às artes cênicas por meio da realização do projeto teatral “O Poço”, fortalecendo a circulação artística, a formação de público e a valorização da cultura local, com foco em impacto social, democratização de acesso e desenvolvimento cultural da comunidade.`,
+
+  'Objetivos Específicos': `• Realizar apresentações teatrais gratuitas para a comunidade.
+• Desenvolver ações de mediação cultural relacionadas ao tema do espetáculo.
+• Ampliar o acesso do público às artes cênicas em territórios com menor oferta cultural.
+• Valorizar artistas e profissionais envolvidos na produção local.
+• Organizar registros, documentos e materiais necessários à execução e prestação de contas.
+• Fortalecer a relação entre arte, educação, comunidade e transformação social.`,
+
+  'Justificativa': `A realização do projeto se justifica pela necessidade de ampliar o acesso da população às artes cênicas, especialmente em contextos nos quais a oferta cultural gratuita ainda é limitada. O teatro atua como ferramenta de encontro, reflexão, sensibilização e formação humana, possibilitando que diferentes públicos tenham contato com narrativas artísticas capazes de dialogar com suas realidades. A proposta também contribui para o fortalecimento da produção cultural local, gerando trabalho para artistas, técnicos e profissionais da cultura, além de estimular a formação de público e a participação comunitária.`,
+
+  'Metodologia': `A metodologia será organizada em etapas integradas de pré-produção, produção, execução e pós-produção. Na pré-produção serão realizadas reuniões de alinhamento, definição de equipe, planejamento técnico, organização documental e adequação do projeto ao edital. Na produção ocorrerão ensaios, preparação de materiais, comunicação e articulação com espaços e parceiros. Na execução serão realizadas as apresentações e ações de mediação cultural. Na pós-produção serão organizados registros, relatórios, comprovantes, arquivos e materiais necessários à prestação de contas e avaliação dos resultados.`,
+
+  'Plano de Comunicação': `A comunicação do projeto será realizada por meio de estratégias digitais e articulação direta com a comunidade. Serão utilizados cards para redes sociais, textos de divulgação, contato com instituições parceiras, escolas, espaços culturais, lideranças comunitárias e grupos locais. A divulgação destacará a gratuidade das ações, datas, horários, locais, classificação indicativa, orientações de acesso e informações sobre acessibilidade. O plano busca garantir alcance de público, clareza das informações e fortalecimento da visibilidade do projeto.`,
+
+  'Público Alvo': `O projeto é direcionado ao público em geral, com prioridade para estudantes, jovens, famílias, educadores, artistas, agentes culturais e moradores de comunidades com menor acesso a atividades culturais gratuitas. A proposta busca contemplar diferentes faixas etárias, respeitando a classificação indicativa da obra, e incentivar a participação de pessoas que muitas vezes não têm acesso regular a espetáculos teatrais e ações culturais.`,
+
+  'Acessibilidade': `O projeto observará medidas de acessibilidade compatíveis com sua estrutura, locais de realização e orçamento disponível. Serão priorizadas estratégias de comunicação clara, acolhimento do público, organização do espaço, orientação da equipe e divulgação acessível das informações principais. Quando previsto pelo edital ou viável financeiramente, poderão ser incorporadas ações como intérprete de Libras, reserva de assentos, mediação acessível, materiais informativos simplificados e suporte ao público com necessidades específicas.`,
+
+  'Contrapartida Social': `Como contrapartida social, o projeto oferecerá apresentações gratuitas e/ou ação de mediação cultural aberta à comunidade, promovendo acesso democrático à produção teatral e diálogo sobre os temas abordados pela obra. A contrapartida busca ampliar o alcance social do projeto, fortalecer a relação com o território e contribuir para a formação de público, especialmente entre pessoas que possuem menor acesso a atividades culturais.`,
+
+  'Cronograma': `O cronograma será estruturado em quatro etapas principais: pré-produção, produção, execução e pós-produção. A pré-produção contemplará reuniões, planejamento, organização documental, definição de equipe e alinhamentos técnicos. A produção envolverá ensaios, comunicação, preparação de materiais e articulação com locais de apresentação. A execução corresponderá à realização das apresentações e ações de mediação. A pós-produção reunirá registros, relatórios, comprovantes e documentos para prestação de contas.`,
+
+  'Equipe': `A equipe será composta por profissionais das artes cênicas, produção cultural, execução técnica, comunicação e gestão administrativa, com funções definidas conforme a experiência e responsabilidade de cada integrante. Os dados cadastrados no banco de equipe serão utilizados para gerar ficha técnica, currículos, portfólios, cartas de anuência e documentos exigidos pelo edital.`,
+
+  'Orçamento': `O orçamento será distribuído de forma coerente com o valor total do projeto, contemplando cachês artísticos e técnicos, produção executiva, comunicação, materiais cênicos, acessibilidade, documentação e prestação de contas. A composição orçamentária respeitará o teto financeiro do edital, as rubricas permitidas e a proporcionalidade entre as ações propostas, evitando despesas incompatíveis ou não justificadas.`
+};
+
+function ensureRealProjectData(){
+  const p = project();
+
+  p.details = p.details || {};
+
+  const defaults = {
+    format:'Apresentação teatral com mediação cultural',
+    presentations:'1 apresentação gratuita',
+    locations:'Jaraguá do Sul/SC — local a definir conforme parceria cultural',
+    targetAudience:'Estudantes, famílias, comunidade local, educadores, artistas e público em geral',
+    duration:'Execução prevista conforme cronograma do edital',
+    classification:'Livre ou conforme definição final do espetáculo',
+    accessibility:'Comunicação clara, acolhimento do público, organização do espaço e medidas acessíveis conforme edital',
+    counterpart:'Apresentação gratuita e/ou ação de mediação cultural aberta à comunidade',
+    communication:'Divulgação em redes sociais, parceiros locais, escolas, espaços culturais e grupos comunitários',
+    expectedResults:'Ampliação do acesso às artes cênicas, formação de público, fortalecimento da produção local e geração de registros culturais',
+    startDate:'',
+    endDate:'',
+    observation:'Revisar dados finais antes de copiar para o formulário oficial do edital.'
+  };
+
+  Object.keys(defaults).forEach(k=>{
+    if(!p.details[k]) p.details[k] = defaults[k];
+  });
+
+  p.blocks = p.blocks || {};
+
+  Object.keys(realProjectBlocks).forEach(k=>{
+    if(!p.blocks[k]) p.blocks[k] = realProjectBlocks[k];
+  });
+
+  p.sectionFiles = p.sectionFiles || {};
+
+  Object.keys(realProjectBlocks).forEach(k=>{
+    if(!Array.isArray(p.sectionFiles[k])) p.sectionFiles[k] = [];
+  });
+
+  if(!p.blocks[state.blockKey]){
+    state.blockKey = 'Resumo';
+  }
+
+  save();
+
+  return p;
+}
+
+function compactNav(){
+  const items = [
+    ['dashboard','▦','Painel'],
+    ['projects','▣','Meus Projetos'],
+    ['new','+','Novo Projeto IA'],
+    ['team','👥','Equipe'],
+    ['opps','🔎','Oportunidades'],
+    ['review','✨','Aumente sua Nota'],
+    ['users','🔐','Usuários'],
+    ['settings','⚙','Configurações'],
+    ['support','?','Suporte']
+  ];
+
+  document.getElementById('nav').innerHTML = items.map(i=>`
+    <button class="${state.page===i[0]?'active':''}" data-page="${i[0]}" title="${i[2]}">
+      <span class="nav-ico">${i[1]}</span>
+      <span class="nav-label">${i[2]}</span>
+    </button>
+  `).join('');
+}
+
+function injectSidebarToggle(){
+  const brand = document.querySelector('.brand');
+
+  if(!brand || document.getElementById('sidebarToggle')) return;
+
+  const btn = document.createElement('button');
+
+  btn.id = 'sidebarToggle';
+  btn.className = 'sidebar-toggle';
+  btn.type = 'button';
+  btn.innerHTML = '☰';
+  btn.title = 'Diminuir/expandir menu';
+
+  btn.addEventListener('click',()=>{
+    document.querySelector('.app')?.classList.toggle('sidebar-mini');
+    localStorage.setItem('cerebro_sidebar_mini', document.querySelector('.app')?.classList.contains('sidebar-mini') ? '1' : '0');
+  });
+
+  brand.appendChild(btn);
+
+  if(localStorage.getItem('cerebro_sidebar_mini') === '1'){
+    document.querySelector('.app')?.classList.add('sidebar-mini');
+  }
+}
+
+if(typeof nav === 'function'){
+  nav = compactNav;
+}
+
+if(!window.__cerebroShellInjected){
+  window.__cerebroShellInjected = true;
+  const oldRender = render;
+
+  render = function(){
+    oldRender();
+    setTimeout(injectSidebarToggle, 20);
+  };
+}
+
+function projectDataPanel(){
+  const p = ensureRealProjectData();
+  const d = p.details || {};
+
+  return `
+    <div class="project-real-panel">
+      <div class="between">
+        <div>
+          <h2>Dados reais do projeto</h2>
+          <p class="muted">Essas informações alimentam os textos, orçamento, documentos e exportação.</p>
+        </div>
+        <button class="btn primary sm" data-action="editProjectData">Editar dados</button>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="project-data-grid">
+        <div class="project-data-item"><span>Título</span><b>${esc(p.title)}</b></div>
+        <div class="project-data-item"><span>Proponente</span><b>${esc(p.proponent)}</b></div>
+        <div class="project-data-item"><span>Valor</span><b>${money(p.budget)}</b></div>
+        <div class="project-data-item"><span>Linguagem</span><b>${esc(p.language || 'Teatro')}</b></div>
+        <div class="project-data-item"><span>Cidade/UF</span><b>${esc(p.city || '')}/${esc(p.uf || '')}</b></div>
+        <div class="project-data-item"><span>Formato</span><b>${esc(d.format)}</b></div>
+        <div class="project-data-item"><span>Apresentações</span><b>${esc(d.presentations)}</b></div>
+        <div class="project-data-item"><span>Locais</span><b>${esc(d.locations)}</b></div>
+        <div class="project-data-item"><span>Público-alvo</span><b>${esc(d.targetAudience)}</b></div>
+      </div>
+    </div>
+  `;
+}
+
+function editProjectDataModal(){
+  const p = ensureRealProjectData();
+  const d = p.details || {};
+
+  modal(`
+    <h2>Editar dados do projeto</h2>
+    <p class="muted">Preencha com dados reais. O sistema usará essas informações nos blocos e exportações.</p>
+
+    <div class="grid cols2">
+      <div class="field"><label>Título do projeto</label><input id="pdTitle" value="${esc(p.title)}"></div>
+      <div class="field"><label>Proponente</label><input id="pdProponent" value="${esc(p.proponent)}"></div>
+      <div class="field"><label>Valor aprovado/teto</label><input id="pdBudget" type="number" value="${esc(p.budget)}"></div>
+      <div class="field"><label>Linguagem artística</label><input id="pdLanguage" value="${esc(p.language || 'Teatro')}"></div>
+      <div class="field"><label>Cidade</label><input id="pdCity" value="${esc(p.city || '')}"></div>
+      <div class="field"><label>UF</label><input id="pdUf" value="${esc(p.uf || '')}"></div>
+      <div class="field"><label>Formato</label><input id="pdFormat" value="${esc(d.format)}"></div>
+      <div class="field"><label>Quantidade de apresentações</label><input id="pdPresentations" value="${esc(d.presentations)}"></div>
+      <div class="field"><label>Locais de apresentação</label><input id="pdLocations" value="${esc(d.locations)}"></div>
+      <div class="field"><label>Classificação indicativa</label><input id="pdClassification" value="${esc(d.classification)}"></div>
+      <div class="field"><label>Data de início</label><input id="pdStart" type="date" value="${esc(d.startDate)}"></div>
+      <div class="field"><label>Data de término</label><input id="pdEnd" type="date" value="${esc(d.endDate)}"></div>
+    </div>
+
+    <div class="grid cols2" style="margin-top:12px">
+      <div class="field"><label>Público-alvo</label><textarea id="pdTarget">${esc(d.targetAudience)}</textarea></div>
+      <div class="field"><label>Acessibilidade</label><textarea id="pdAccessibility">${esc(d.accessibility)}</textarea></div>
+      <div class="field"><label>Contrapartida social</label><textarea id="pdCounterpart">${esc(d.counterpart)}</textarea></div>
+      <div class="field"><label>Plano de comunicação</label><textarea id="pdCommunication">${esc(d.communication)}</textarea></div>
+      <div class="field"><label>Resultados esperados</label><textarea id="pdResults">${esc(d.expectedResults)}</textarea></div>
+      <div class="field"><label>Observações</label><textarea id="pdObs">${esc(d.observation)}</textarea></div>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <button class="btn" data-action="closeModal">Cancelar</button>
+      <button class="btn primary" data-action="saveProjectData">Salvar dados</button>
+    </div>
+  `);
+}
+
+function saveProjectData(){
+  const p = project();
+
+  p.title = val('pdTitle') || p.title;
+  p.proponent = val('pdProponent') || p.proponent;
+  p.budget = Number(val('pdBudget') || p.budget || 0);
+  p.language = val('pdLanguage') || p.language;
+  p.city = val('pdCity') || p.city;
+  p.uf = val('pdUf') || p.uf;
+
+  p.details = {
+    ...(p.details || {}),
+    format: val('pdFormat'),
+    presentations: val('pdPresentations'),
+    locations: val('pdLocations'),
+    classification: val('pdClassification'),
+    startDate: val('pdStart'),
+    endDate: val('pdEnd'),
+    targetAudience: val('pdTarget'),
+    accessibility: val('pdAccessibility'),
+    counterpart: val('pdCounterpart'),
+    communication: val('pdCommunication'),
+    expectedResults: val('pdResults'),
+    observation: val('pdObs')
+  };
+
+  p.updated = 'Agora';
+
+  save();
+  closeModal();
+  render();
+  toast('Dados do projeto salvos.');
+}
+
+function syncBlockFromProjectData(){
+  const p = ensureRealProjectData();
+  const d = p.details || {};
+
+  p.blocks['Objeto da Proposta'] = `Realizar o projeto cultural “${p.title}”, no formato de ${d.format}, com ${d.presentations}, em ${d.locations}. A proposta será desenvolvida em ${p.city}/${p.uf}, com foco na democratização do acesso à cultura, na valorização da produção artística local e na formação de público. O projeto contempla planejamento, organização de equipe, execução das ações, comunicação, registros e prestação de contas, respeitando o valor total de ${money(p.budget)} e as exigências do edital.`;
+
+  p.blocks['Público Alvo'] = d.targetAudience;
+
+  p.blocks['Acessibilidade'] = d.accessibility;
+
+  p.blocks['Contrapartida Social'] = d.counterpart;
+
+  p.blocks['Plano de Comunicação'] = d.communication;
+
+  p.blocks['Cronograma'] = `A execução do projeto será organizada conforme o período previsto entre ${d.startDate || 'data de início a definir'} e ${d.endDate || 'data de término a definir'}, contemplando pré-produção, produção, execução das apresentações e pós-produção. Na pré-produção serão realizados planejamento, reuniões, organização documental e alinhamentos técnicos. Na produção ocorrerão ensaios, comunicação e preparação de materiais. Na execução serão realizadas as ações culturais previstas. Na pós-produção serão organizados registros, relatórios, comprovantes e materiais de prestação de contas.`;
+
+  p.updated = 'Agora';
+
+  save();
+  render();
+  toast('Blocos atualizados com os dados reais do projeto.');
+}
+
+function sectionFilesHtml(key){
+  const p = ensureRealProjectData();
+  const files = p.sectionFiles?.[key] || [];
+
+  return `
+    <div class="section-files">
+      <div class="between">
+        <div>
+          <b>Arquivos desta seção</b>
+          <p class="muted small">Anexe modelos, comprovantes, referências ou documentos usados neste bloco.</p>
+        </div>
+        <span class="pill blue">${files.length} arquivo(s)</span>
+      </div>
+
+      <input type="file" multiple data-section-upload="${esc(key)}">
+
+      <div class="file-list">
+        ${files.map((f,i)=>`
+          <span class="file-pill">
+            📎 ${esc(f)}
+            <button data-action="removeSectionFile" data-block="${esc(key)}" data-i="${i}">x</button>
+          </span>
+        `).join('') || '<span class="muted small">Nenhum arquivo vinculado ainda.</span>'}
+      </div>
+    </div>
+  `;
+}
+
+function tabAnalysis(){
+  const p = ensureRealProjectData();
+  const d = p.details || {};
+
+  return `
+    ${projectDataPanel()}
+
+    <div class="spacer"></div>
+
+    <div class="score-grid">
+      <div class="score-card blue"><span class="muted small">Requisitos</span><b>20</b></div>
+      <div class="score-card purple"><span class="muted small">Critérios</span><b>5</b></div>
+      <div class="score-card red"><span class="muted small">Pendências</span><b>4</b></div>
+      <div class="score-card amber"><span class="muted small">Documentos</span><b>8</b></div>
+      <div class="score-card green"><span class="muted small">Nota</span><b>${p.score}</b></div>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="grid cols2">
+      <div class="flow-card">
+        <div class="between">
+          <div>
+            <h2>Resumo operacional</h2>
+            <p class="muted">Informações que a IA deve considerar ao escrever o projeto.</p>
+          </div>
+          <button class="btn primary sm" data-action="syncBlockData">Atualizar blocos</button>
+        </div>
+
+        <div class="list" style="margin-top:12px">
+          <div class="item"><b>Formato:</b> ${esc(d.format)}</div>
+          <div class="item"><b>Apresentações:</b> ${esc(d.presentations)}</div>
+          <div class="item"><b>Locais:</b> ${esc(d.locations)}</div>
+          <div class="item"><b>Público-alvo:</b> ${esc(d.targetAudience)}</div>
+          <div class="item"><b>Contrapartida:</b> ${esc(d.counterpart)}</div>
+        </div>
+      </div>
+
+      <div class="flow-card">
+        <h2>O que ainda revisar</h2>
+        <div class="required-box">Conferir se todos os locais de apresentação estão corretos.</div>
+        <div class="required-box">Anexar documentos reais da equipe.</div>
+        <div class="required-box">Ajustar orçamento conforme rubricas permitidas.</div>
+        <div class="required-box">Validar acessibilidade conforme exigência do edital.</div>
+      </div>
+    </div>
+  `;
+}
+
+function tabText(){
+  const p = ensureRealProjectData();
+  const keys = Object.keys(p.blocks);
+
+  if(!p.blocks[state.blockKey]) state.blockKey = keys[0];
+
+  const k = state.blockKey;
+  const meta = videoSections?.[k] || {
+    req:['Resumo','Objeto da Proposta','Justificativa','Plano de Comunicação','Público Alvo','Acessibilidade','Cronograma','Orçamento'].includes(k),
+    points:10,
+    tip:'Clareza, viabilidade, impacto cultural e coerência com o edital.'
+  };
+
+  return `
+    <div class="text-layout-grid">
+      <div>
+        ${projectDataPanel()}
+
+        <div class="spacer"></div>
+
+        <div class="card">
+          <h2>Controle do bloco</h2>
+          <div class="block-score-mini">
+            <div class="mini-box"><span>Obrigatório</span><b>${meta.req ? 'Sim' : 'Não'}</b></div>
+            <div class="mini-box"><span>Pontuação</span><b>${meta.points || 0}</b></div>
+            <div class="mini-box"><span>Arquivos</span><b>${(p.sectionFiles?.[k] || []).length}</b></div>
+            <div class="mini-box"><span>Status</span><b>Editar</b></div>
+          </div>
+
+          <div class="spacer"></div>
+
+          <button class="btn primary sm" data-action="syncBlockData">Atualizar textos com dados reais</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="title-suggest">
+          <div class="between">
+            <div>
+              <h2>Seções do projeto</h2>
+              <p class="muted">Cada seção precisa ficar pronta para copiar e colar no edital.</p>
+            </div>
+            <div class="row">
+              <button class="btn sm" data-action="generateTitles">Sugerir título</button>
+              <button class="btn green sm" data-action="exportProject">Exportar</button>
+            </div>
+          </div>
+
+          <div class="section-chip-row" style="margin-top:12px">
+            ${keys.map(x=>`
+              <button class="${x===k?'active':''}" data-action="block" data-block="${esc(x)}">${esc(x)} ${(['Resumo','Objeto da Proposta','Justificativa','Plano de Comunicação','Público Alvo','Acessibilidade','Cronograma','Orçamento'].includes(x))?'*':''}</button>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="card">
+          <div class="between">
+            <div>
+              <h2>${esc(k)} ${meta.req ? '<span class="pill red">Obrigatório</span>' : ''} <span class="pill blue">${meta.points || 0} pontos</span></h2>
+              <p class="muted">Revise para deixar pronto para o formulário oficial.</p>
+            </div>
+            <div class="row">
+              <button class="btn sm" data-action="copyBlock">Copiar</button>
+              <button class="btn primary sm" data-action="improveBlock">Melhorar com IA</button>
+              <button class="btn sm" data-action="saveBlock">Salvar</button>
+            </div>
+          </div>
+
+          <div class="helper"><b>O que deve ser abordado:</b> ${esc(meta.tip || 'Aderência ao edital, clareza, impacto e viabilidade.')}</div>
+
+          <textarea class="editor" id="editor">${esc(p.blocks[k])}</textarea>
+
+          <div class="spacer"></div>
+
+          ${sectionFilesHtml(k)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+document.addEventListener('change', e=>{
+  const input = e.target.closest('[data-section-upload]');
+
+  if(!input) return;
+
+  const key = input.dataset.sectionUpload;
+  const p = ensureRealProjectData();
+
+  p.sectionFiles = p.sectionFiles || {};
+  p.sectionFiles[key] = p.sectionFiles[key] || [];
+
+  Array.from(input.files || []).forEach(file=>{
+    if(!p.sectionFiles[key].includes(file.name)){
+      p.sectionFiles[key].push(file.name);
+    }
+  });
+
+  p.updated = 'Agora';
+
+  save();
+  render();
+  toast('Arquivo vinculado à seção.');
+}, true);
+
+document.addEventListener('click', e=>{
+  const b = e.target.closest('button');
+
+  if(!b) return;
+
+  const a = b.dataset.action;
+
+  if(!['editProjectData','saveProjectData','syncBlockData','removeSectionFile'].includes(a)) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+  e.stopImmediatePropagation();
+
+  if(a === 'editProjectData') return editProjectDataModal();
+
+  if(a === 'saveProjectData') return saveProjectData();
+
+  if(a === 'syncBlockData') return syncBlockFromProjectData();
+
+  if(a === 'removeSectionFile'){
+    const p = ensureRealProjectData();
+    const key = b.dataset.block;
+    const i = Number(b.dataset.i);
+
+    if(p.sectionFiles?.[key]){
+      p.sectionFiles[key].splice(i,1);
+      save();
+      render();
+      toast('Arquivo removido da seção.');
+    }
+
+    return;
+  }
+}, true);
+/* FIM PATCH CÉREBRO IA — Dados reais do projeto e arquivos por seção */
+
+
+/* PATCH CÉREBRO IA — Texto organizado sem quebrar layout */
+function projectDataPanel(){
+  const p = ensureRealProjectData();
+  const d = p.details || {};
+
+  const rows = [
+    ['Título', p.title],
+    ['Proponente', p.proponent],
+    ['Valor', money(p.budget)],
+    ['Linguagem', p.language || 'Teatro'],
+    ['Cidade/UF', `${p.city || ''}/${p.uf || ''}`],
+    ['Formato', d.format],
+    ['Apresentações', d.presentations],
+    ['Locais', d.locations],
+    ['Público-alvo', d.targetAudience]
+  ];
+
+  return `
+    <div class="project-real-panel">
+      <div class="between">
+        <div>
+          <h2>Dados reais do projeto</h2>
+          <p class="muted">Essas informações alimentam textos, orçamento, documentos e exportação.</p>
+        </div>
+        <button class="btn primary sm" data-action="editProjectData">Editar</button>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="project-data-grid">
+        ${rows.map(([label,value])=>`
+          <div class="project-data-item">
+            <span>${esc(label)}</span>
+            <b>${esc(value || 'Não informado')}</b>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function tabText(){
+  const p = ensureRealProjectData();
+  const keys = Object.keys(p.blocks);
+
+  if(!p.blocks[state.blockKey]) state.blockKey = keys[0];
+
+  const k = state.blockKey;
+  const meta = videoSections?.[k] || {
+    req:['Resumo','Objeto da Proposta','Justificativa','Plano de Comunicação','Público Alvo','Acessibilidade','Cronograma','Orçamento'].includes(k),
+    points:10,
+    tip:'Clareza, viabilidade, impacto cultural e coerência com o edital.'
+  };
+
+  return `
+    <div class="text-layout-grid">
+      <aside>
+        ${projectDataPanel()}
+
+        <div class="spacer"></div>
+
+        <div class="card">
+          <h2>Controle</h2>
+          <p class="muted small">Acompanhe o bloco atual e os arquivos vinculados.</p>
+
+          <div class="block-score-mini">
+            <div class="mini-box"><span>Obrigatório</span><b>${meta.req ? 'Sim' : 'Não'}</b></div>
+            <div class="mini-box"><span>Pontos</span><b>${meta.points || 0}</b></div>
+            <div class="mini-box"><span>Arquivos</span><b>${(p.sectionFiles?.[k] || []).length}</b></div>
+            <div class="mini-box"><span>Status</span><b>Em edição</b></div>
+          </div>
+
+          <div class="spacer"></div>
+
+          <button class="btn primary sm" data-action="syncBlockData">Atualizar textos com dados reais</button>
+        </div>
+      </aside>
+
+      <main style="min-width:0">
+        <div class="title-suggest">
+          <div class="between">
+            <div>
+              <h2>Seções do projeto</h2>
+              <p class="muted">Cada seção precisa ficar pronta para copiar e colar no edital.</p>
+            </div>
+            <div class="row">
+              <button class="btn sm" data-action="generateTitles">Sugerir título</button>
+              <button class="btn green sm" data-action="exportProject">Exportar</button>
+            </div>
+          </div>
+
+          <div class="section-chip-row" style="margin-top:12px">
+            ${keys.map(x=>`
+              <button class="${x===k?'active':''}" data-action="block" data-block="${esc(x)}">
+                ${esc(x)} ${(['Resumo','Objeto da Proposta','Justificativa','Plano de Comunicação','Público Alvo','Acessibilidade','Cronograma','Orçamento'].includes(x))?'*':''}
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="card">
+          <div class="between">
+            <div>
+              <h2>${esc(k)} ${meta.req ? '<span class="pill red">Obrigatório</span>' : ''} <span class="pill blue">${meta.points || 0} pontos</span></h2>
+              <p class="muted">Revise para deixar pronto para o formulário oficial.</p>
+            </div>
+            <div class="row">
+              <button class="btn sm" data-action="copyBlock">Copiar</button>
+              <button class="btn primary sm" data-action="improveBlock">Melhorar com IA</button>
+              <button class="btn sm" data-action="saveBlock">Salvar</button>
+            </div>
+          </div>
+
+          <div class="helper"><b>O que deve ser abordado:</b> ${esc(meta.tip || 'Aderência ao edital, clareza, impacto e viabilidade.')}</div>
+
+          <textarea class="editor" id="editor">${esc(p.blocks[k])}</textarea>
+
+          <div class="spacer"></div>
+
+          ${sectionFilesHtml(k)}
+        </div>
+      </main>
+    </div>
+  `;
+}
+/* FIM PATCH CÉREBRO IA — Texto organizado sem quebrar layout */
+
+render();
+</script>
+</body>
+</html>
