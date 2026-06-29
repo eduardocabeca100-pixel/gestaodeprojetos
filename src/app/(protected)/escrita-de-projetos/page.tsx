@@ -3,7 +3,19 @@ import { BrainCircuit } from "lucide-react";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default function EscritaDeProjetosPage() {
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function first(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value || "";
+}
+
+export default async function EscritaDeProjetosPage({ searchParams }: PageProps) {
+  const params = (await searchParams) || {};
+  const projectId = first(params.project || params.projectId);
+  const iframeSrc = `/cerebro-ia/index.html?viva=1${projectId ? `&project=${encodeURIComponent(projectId)}` : ""}`;
+
   return (
     <main className="w-full max-w-none space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <section className="rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-sm backdrop-blur">
@@ -26,7 +38,7 @@ export default function EscritaDeProjetosPage() {
           </div>
 
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
-            Integrado ao sistema principal
+            Equipe sincronizada com o VIVA
           </div>
         </div>
       </section>
@@ -34,7 +46,7 @@ export default function EscritaDeProjetosPage() {
       <section className="overflow-hidden rounded-[2rem] border border-white/80 bg-white shadow-sm">
         <iframe
           title="CÉREBRO IA — Escrita de Projetos"
-          src="/cerebro-ia/index.html"
+          src={iframeSrc}
           className="h-[calc(100vh-230px)] min-h-[760px] w-full border-0 bg-white"
         />
       </section>
