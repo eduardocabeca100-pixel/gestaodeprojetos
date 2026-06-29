@@ -1,5 +1,7 @@
 import { BrainCircuit } from "lucide-react";
 
+import { CerebroIaWorkspace } from "@/components/cerebro/cerebro-ia-workspace";
+
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
@@ -14,7 +16,6 @@ function first(value: string | string[] | undefined) {
 export default async function EscritaDeProjetosPage({ searchParams }: PageProps) {
   const params = (await searchParams) || {};
   const projectId = first(params.project || params.projectId);
-  const iframeSrc = `/cerebro-ia/index.html?viva=1${projectId ? `&project=${encodeURIComponent(projectId)}` : ""}`;
 
   return (
     <main className="w-full max-w-none space-y-6 px-4 py-6 sm:px-6 lg:px-8">
@@ -38,18 +39,12 @@ export default async function EscritaDeProjetosPage({ searchParams }: PageProps)
           </div>
 
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">
-            Equipe sincronizada com o VIVA
+            Sem iframe • Sem login interno
           </div>
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-[2rem] border border-white/80 bg-white shadow-sm">
-        <iframe
-          title="CÉREBRO IA — Escrita de Projetos"
-          src={iframeSrc}
-          className="h-[calc(100vh-230px)] min-h-[760px] w-full border-0 bg-white"
-        />
-      </section>
+      <CerebroIaWorkspace projectId={projectId} />
     </main>
   );
 }
