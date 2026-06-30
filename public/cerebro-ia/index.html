@@ -79,6 +79,7 @@ document.addEventListener('change',e=>{const el=e.target;if(el.dataset.action===
 document.addEventListener('input',e=>{const el=e.target;if(el.dataset.action==='filter-q'){state.q=el.value;save();renderOpps()}});document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
 render();
 </script>
+
 <script src="/cerebro-ia/viva-bridge.js"></script>
 </body>
 </html>
