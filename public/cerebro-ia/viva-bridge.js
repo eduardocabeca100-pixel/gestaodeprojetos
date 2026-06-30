@@ -12,6 +12,7 @@
     .userbox,
     .logout,
     button.logout,
+    [data-action="logout"],
     [onclick*="logout"],
     [onclick*="Logout"] {
       display: none !important;
@@ -64,7 +65,6 @@
     const email = clean(member.email).toLowerCase();
     const name = clean(member.name).toLowerCase();
     const role = clean(member.role || member.area).toLowerCase();
-
     return cpf || email || `${name}|${role}`;
   }
 
@@ -103,23 +103,17 @@
 
   function mergeTeam(vivaTeam) {
     const currentState = getState();
-
     if (!currentState || !Array.isArray(vivaTeam)) return 0;
     if (!Array.isArray(currentState.team)) currentState.team = [];
 
     const map = new Map();
-
-    for (const member of currentState.team) {
-      map.set(keyOf(member), member);
-    }
+    for (const member of currentState.team) map.set(keyOf(member), member);
 
     let added = 0;
-
     for (const raw of vivaTeam) {
       const incoming = normalizeVivaMember(raw);
       const key = keyOf(incoming);
       const existing = map.get(key);
-
       if (!existing) {
         map.set(key, incoming);
         added += 1;
@@ -136,7 +130,6 @@
 
     currentState.team = Array.from(map.values());
     saveSafe();
-
     return added;
   }
 
@@ -151,23 +144,14 @@
         credentials: "same-origin",
         cache: "no-store"
       });
-
       const data = await response.json();
-
       if (!data.ok) {
         toastSafe(data.message || "Não consegui carregar equipe do VIVA.");
         return;
       }
-
       const added = mergeTeam(data.team || []);
-
       renderSafe();
-
-      if (added > 0) {
-        toastSafe(`Equipe do VIVA sincronizada: ${added} integrante(s) adicionados.`);
-      } else {
-        toastSafe("Equipe do VIVA sincronizada.");
-      }
+      toastSafe(added > 0 ? `Equipe do VIVA sincronizada: ${added} integrante(s) adicionados.` : "Equipe do VIVA sincronizada.");
     } catch (error) {
       console.error(error);
       toastSafe("Não consegui sincronizar equipe do VIVA agora.");
@@ -176,90 +160,56 @@
 
   async function syncMemberToViva(member) {
     if (!member || !clean(member.name)) return;
-
     try {
       const response = await fetch("/api/cerebro/equipe", {
         method: "POST",
         credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          projectId,
-          member
-        })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, member })
       });
-
       const data = await response.json().catch(() => ({}));
-
-      if (data.ok) {
-        toastSafe(data.message || "Integrante sincronizado com o VIVA.");
-      } else {
-        toastSafe(data.message || "Integrante salvo no Cérebro; sincronização com VIVA pendente.");
-      }
+      toastSafe(data.message || (data.ok ? "Integrante sincronizado com o VIVA." : "Integrante salvo no Cérebro; sincronização com VIVA pendente."));
     } catch (error) {
       console.error(error);
       toastSafe("Integrante salvo no Cérebro; sincronização com VIVA pendente.");
     }
   }
 
-  function patchSaveTeam() {
+  function patchTeamSave() {
     try {
-      if (typeof saveTeam !== "function") return;
-      if (saveTeam.__vivaPatched) return;
-
-      const originalSaveTeam = saveTeam;
-
-      const patchedSaveTeam = function (id) {
-        const result = originalSaveTeam.apply(this, arguments);
-
+      if (typeof saveTeam !== "function" || saveTeam.__vivaPatched) return;
+      const original = saveTeam;
+      const patched = function (id) {
+        const result = original.apply(this, arguments);
         setTimeout(function () {
           const currentState = getState();
-
           if (!currentState || !Array.isArray(currentState.team)) return;
-
-          const member =
-            currentState.team.find((item) => item.id === id) ||
-            currentState.team[currentState.team.length - 1];
-
+          const member = currentState.team.find((item) => item.id === id) || currentState.team[currentState.team.length - 1];
           if (member) syncMemberToViva(member);
         }, 250);
-
         return result;
       };
-
-      patchedSaveTeam.__vivaPatched = true;
-      saveTeam = patchedSaveTeam;
+      patched.__vivaPatched = true;
+      saveTeam = patched;
     } catch {}
   }
 
   function patchChatIa() {
     try {
-      if (typeof sendChat !== "function") return;
-      if (sendChat.__vivaPatched) return;
-
-      const patchedSendChat = async function () {
+      if (typeof sendChat !== "function" || sendChat.__vivaPatched) return;
+      const patched = async function () {
         const input = document.getElementById("chatInput");
         const chatBox = document.getElementById("chatBox");
         const message = input ? clean(input.value) : "";
-
         if (!message) return;
-
-        if (chatBox) {
-          chatBox.innerHTML += `<br><br><b>Você:</b> ${message}<br><b>IA:</b> Gerando resposta...`;
-        }
-
+        if (chatBox) chatBox.innerHTML += `<br><br><b>Você:</b> ${message}<br><b>IA:</b> Gerando resposta...`;
         if (input) input.value = "";
-
         try {
           const currentState = getState();
-
           const response = await fetch("/api/ia", {
             method: "POST",
             credentials: "same-origin",
-            headers: {
-              "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               task: "chat do Cérebro IA",
               message,
@@ -267,38 +217,32 @@
               team: currentState?.team || []
             })
           });
-
           const data = await response.json().catch(() => ({}));
           const output = data.output || data.message || "A IA não retornou texto.";
-
           if (chatBox) {
             chatBox.innerHTML = chatBox.innerHTML.replace("Gerando resposta...", output);
             chatBox.scrollTop = chatBox.scrollHeight;
           }
         } catch {
           if (chatBox) {
-            chatBox.innerHTML = chatBox.innerHTML.replace(
-              "Gerando resposta...",
-              "Não consegui conectar com a IA. Confira GROQ_API_KEY e GROQ_MODEL na Vercel."
-            );
+            chatBox.innerHTML = chatBox.innerHTML.replace("Gerando resposta...", "Não consegui conectar com a IA. Confira GROQ_API_KEY e GROQ_MODEL na Vercel.");
           }
         }
       };
-
-      patchedSendChat.__vivaPatched = true;
-      sendChat = patchedSendChat;
+      patched.__vivaPatched = true;
+      sendChat = patched;
     } catch {}
   }
 
   function boot() {
-    patchSaveTeam();
+    patchTeamSave();
     patchChatIa();
     loadVivaTeam();
   }
 
   window.vivaSyncTeamNow = loadVivaTeam;
   window.vivaSyncMemberToViva = syncMemberToViva;
-
   setTimeout(boot, 700);
   setTimeout(boot, 1800);
 })();
+
