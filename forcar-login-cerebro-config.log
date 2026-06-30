@@ -6,15 +6,15 @@
 - Environments: .env.local
 
   Creating an optimized production build ...
-✓ Compiled successfully in 5.2s
+✓ Compiled successfully in 5.1s
   Running TypeScript ...
-  Finished TypeScript in 4.3s ...
+  Finished TypeScript in 4.9s ...
   Collecting page data using 7 workers ...
-  Generating static pages using 7 workers (0/46) ...
-  Generating static pages using 7 workers (11/46) 
-  Generating static pages using 7 workers (22/46) 
-  Generating static pages using 7 workers (34/46) 
-✓ Generating static pages using 7 workers (46/46) in 214ms
+  Generating static pages using 7 workers (0/48) ...
+  Generating static pages using 7 workers (12/48) 
+  Generating static pages using 7 workers (24/48) 
+  Generating static pages using 7 workers (36/48) 
+✓ Generating static pages using 7 workers (48/48) in 219ms
   Finalizing page optimization ...
 
 Route (app)
@@ -22,8 +22,15 @@ Route (app)
 ├ ○ /_not-found
 ├ ƒ /acesso-negado
 ├ ƒ /anexos
+├ ƒ /api/cerebro/auth
+├ ƒ /api/cerebro/equipe
+├ ƒ /api/cerebro/users
+├ ƒ /api/ia
+├ ƒ /api/oportunidades
 ├ ƒ /api/team-roster
 ├ ƒ /api/team-roster/assignments
+├ ƒ /banco-de-curriculos
+├ ƒ /central-cultural
 ├ ƒ /certificados
 ├ ƒ /configuracoes
 ├ ƒ /configuracoes/aparencia
@@ -32,6 +39,7 @@ Route (app)
 ├ ƒ /configuracoes/certificados
 ├ ƒ /configuracoes/cronograma
 ├ ƒ /configuracoes/documentos
+├ ƒ /configuracoes/exportar-projeto
 ├ ƒ /configuracoes/financeiro
 ├ ƒ /configuracoes/geral
 ├ ƒ /configuracoes/importar-refens
@@ -51,6 +59,7 @@ Route (app)
 ├ ƒ /equipe
 ├ ƒ /equipe/global
 ├ ƒ /equipe/projeto
+├ ƒ /escrita-de-projetos
 ├ ƒ /financeiro
 ├ ƒ /gestao
 ├ ○ /login

@@ -15,7 +15,7 @@ function requireAdmin(request: Request) {
     return {
       ok: false as const,
       response: Response.json(
-        { ok: false, message: "Faça login no Cérebro IA." },
+        { ok: false, message: "Faça login como administrador do Cérebro IA." },
         { status: 401 },
       ),
     };
@@ -36,7 +36,6 @@ function requireAdmin(request: Request) {
 
 async function getClient() {
   if (!hasSupabaseServerEnv()) return null;
-
   return (await createClient()) as any;
 }
 
@@ -62,7 +61,7 @@ export async function GET(request: Request) {
   if (error) {
     return Response.json({
       ok: false,
-      message: "Não consegui listar usuários. Confira a tabela cerebro_access_users.",
+      message: "Tabela cerebro_access_users não encontrada ou sem permissão.",
       users: [],
     });
   }
@@ -87,7 +86,7 @@ export async function POST(request: Request) {
   if (!email || !password) {
     return Response.json({
       ok: false,
-      message: "Informe e-mail e senha.",
+      message: "Informe e-mail e senha do Cérebro.",
     });
   }
 
@@ -100,25 +99,26 @@ export async function POST(request: Request) {
     });
   }
 
-  const payload = {
-    name: name || email,
-    email,
-    role,
-    password_hash: hashPassword(password),
-    is_active: true,
-    updated_at: new Date().toISOString(),
-  };
-
   const { data, error } = await client
     .from("cerebro_access_users")
-    .upsert(payload, { onConflict: "email" })
+    .upsert(
+      {
+        name: name || email,
+        email,
+        role,
+        password_hash: hashPassword(password),
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "email" },
+    )
     .select("id,name,email,role,is_active,created_at")
     .single();
 
   if (error) {
     return Response.json({
       ok: false,
-      message: "Não consegui salvar o usuário. Confira a tabela cerebro_access_users.",
+      message: "Não consegui salvar usuário. Confira a tabela cerebro_access_users.",
     });
   }
 

@@ -1,5 +1,6 @@
 import { createClient, hasSupabaseServerEnv } from "@/lib/supabase/server";
 import {
+  alwaysRequireLogin,
   cerebroCookie,
   clearCerebroCookie,
   envAdminEmails,
@@ -18,18 +19,21 @@ function text(value: unknown) {
 
 export async function GET(request: Request) {
   const session = readCerebroSession(request);
+  const forceLogin = alwaysRequireLogin();
 
   return Response.json({
     ok: true,
     enabled: isCerebroAuthEnabled(),
-    authenticated: Boolean(session),
-    user: session
-      ? {
-          email: session.email,
-          name: session.name,
-          role: session.role,
-        }
-      : null,
+    alwaysRequireLogin: forceLogin,
+    authenticated: forceLogin ? false : Boolean(session),
+    user:
+      session && !forceLogin
+        ? {
+            email: session.email,
+            name: session.name,
+            role: session.role,
+          }
+        : null,
   });
 }
 
@@ -55,7 +59,7 @@ export async function POST(request: Request) {
   if (!email || !password) {
     return Response.json({
       ok: false,
-      message: "Informe e-mail e senha.",
+      message: "Informe e-mail e senha do Cérebro.",
     });
   }
 
@@ -66,7 +70,7 @@ export async function POST(request: Request) {
     const token = signCerebroSession({
       email,
       role: "admin",
-      name: "Administrador",
+      name: "Administrador do Cérebro",
     });
 
     return Response.json(
@@ -78,7 +82,7 @@ export async function POST(request: Request) {
   if (!hasSupabaseServerEnv()) {
     return Response.json({
       ok: false,
-      message: "Banco de usuários do Cérebro não configurado.",
+      message: "Usuário não encontrado no Cérebro IA.",
     });
   }
 
@@ -96,21 +100,21 @@ export async function POST(request: Request) {
     return Response.json({
       ok: false,
       message:
-        "Não consegui consultar os usuários do Cérebro. Confira se a tabela cerebro_access_users existe no Supabase.",
+        "Não consegui consultar usuários do Cérebro. Confira a tabela cerebro_access_users no Supabase.",
     });
   }
 
   if (!data || data.is_active === false) {
     return Response.json({
       ok: false,
-      message: "Usuário não autorizado para acessar o Cérebro IA.",
+      message: "Este e-mail não está autorizado no Cérebro IA.",
     });
   }
 
   if (!verifyPassword(password, data.password_hash)) {
     return Response.json({
       ok: false,
-      message: "Senha incorreta.",
+      message: "Senha do Cérebro incorreta.",
     });
   }
 

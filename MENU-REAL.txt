@@ -1,0 +1,16 @@
+src/components/layout/app-sidebar.tsx:47:  { label: "Participantes", href: "/participantes", icon: Users, projectScoped: true },
+src/components/projects/project-workspace-nav.tsx:28:  { label: "Participantes", href: "/participantes", icon: Users },
+src/components/projects/project-tabs.tsx:13:  "Participantes",
+src/components/management/accountability-editor.tsx:117:      title: "Participantes e presença",
+src/components/management/accountability-editor.tsx:300:        <tr><td><strong>Participantes encontrados</strong></td><td>${data.participants}</td></tr>
+src/components/management/accountability-editor.tsx:400:Participantes: ${data.participants}
+src/components/management/accountability-editor.tsx:718:            <DataCard icon={UsersRound} label="Participantes" value={String(data.participants)} />
+src/components/management/accountability-editor.tsx:732:            <Button type="button" variant="outline" onClick={() => insertHtml("<h2>Participantes e frequência</h2><p>Participantes encontrados no sistema: " + data.participants + ".</p>")}>
+src/components/management/cultural-report-workspace.tsx:275:        <tr><td><strong>Participantes encontrados</strong></td><td>${data.participants}</td></tr>
+src/components/management/cultural-report-workspace.tsx:369:Participantes: ${data.participants}
+src/components/management/cultural-report-workspace.tsx:739:            <DataCard icon={BarChart3} label="Participantes" value={String(data.participants)} />
+src/components/management/accountability-connected-panel.tsx:113:        <tr><td><strong>Participantes encontrados</strong></td><td>${data.participantsCount}</td></tr>
+src/components/management/accountability-connected-panel.tsx:215:        <Metric icon={UsersRound} label="Participantes" value={String(data.participantsCount)} />
+src/components/certificates/certificate-student-selector.tsx:51:          <h3 className="mt-1 text-[1rem] font-semibold">Participantes do certificado</h3>
+src/app/(protected)/participantes/page.tsx:19:      title="Participantes"
+src/app/(protected)/participantes/page.tsx:24:        <SectionCard title={`Participantes do projeto ${project.name}`}>

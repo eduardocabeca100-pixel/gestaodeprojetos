@@ -1,0 +1,82 @@
+
+> viva-gestao-cultural@0.1.0 build
+> next build
+
+▲ Next.js 16.2.9 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 5.6s
+  Running TypeScript ...
+  Finished TypeScript in 5.0s ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/48) ...
+  Generating static pages using 7 workers (12/48) 
+  Generating static pages using 7 workers (24/48) 
+  Generating static pages using 7 workers (36/48) 
+✓ Generating static pages using 7 workers (48/48) in 184ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /acesso-negado
+├ ƒ /anexos
+├ ƒ /api/cerebro/auth
+├ ƒ /api/cerebro/equipe
+├ ƒ /api/cerebro/users
+├ ƒ /api/ia
+├ ƒ /api/oportunidades
+├ ƒ /api/team-roster
+├ ƒ /api/team-roster/assignments
+├ ƒ /banco-de-curriculos
+├ ƒ /central-cultural
+├ ƒ /certificados
+├ ƒ /configuracoes
+├ ƒ /configuracoes/aparencia
+├ ƒ /configuracoes/backup
+├ ƒ /configuracoes/campos-personalizados
+├ ƒ /configuracoes/certificados
+├ ƒ /configuracoes/cronograma
+├ ƒ /configuracoes/documentos
+├ ƒ /configuracoes/exportar-projeto
+├ ƒ /configuracoes/financeiro
+├ ƒ /configuracoes/geral
+├ ƒ /configuracoes/importar-refens
+├ ƒ /configuracoes/integracoes
+├ ƒ /configuracoes/midia
+├ ƒ /configuracoes/pdf
+├ ƒ /configuracoes/projetos
+├ ƒ /configuracoes/relatorios
+├ ƒ /configuracoes/seguranca
+├ ƒ /configuracoes/usuarios
+├ ƒ /cronograma
+├ ƒ /dashboard
+├ ƒ /diario-de-classe
+├ ƒ /documentos
+├ ƒ /documentos-oficiais
+├ ƒ /edital
+├ ƒ /equipe
+├ ƒ /equipe/global
+├ ƒ /equipe/projeto
+├ ƒ /escrita-de-projetos
+├ ƒ /financeiro
+├ ƒ /gestao
+├ ○ /login
+├ ƒ /midia
+├ ƒ /notificacoes
+├ ƒ /participantes
+├ ƒ /projetos
+├ ƒ /projetos/[id]
+├ ƒ /projetos/[id]/certificados
+├ ƒ /projetos/novo
+├ ƒ /projetos/selecionar
+├ ƒ /redefinir-senha
+└ ƒ /relatorios
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

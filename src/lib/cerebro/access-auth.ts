@@ -24,6 +24,10 @@ export function isCerebroAuthEnabled() {
   return text(process.env.CEREBRO_AUTH_ENABLED).toLowerCase() !== "false";
 }
 
+export function alwaysRequireLogin() {
+  return text(process.env.CEREBRO_ALWAYS_REQUIRE_LOGIN).toLowerCase() === "true";
+}
+
 export function envAdminEmails() {
   const emails = [
     ...text(process.env.CEREBRO_ALLOWED_EMAILS).split(","),

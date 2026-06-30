@@ -1,8 +1,0 @@
-src/app/(protected)/projetos/[id]/page.tsx(71,31): error TS2322: Type '{ formId: string; projectId: string; initialUrl: string; }' is not assignable to type 'IntrinsicAttributes & { project?: Project; }'.
-  Property 'formId' does not exist on type 'IntrinsicAttributes & { project?: Project; }'.
-src/app/(protected)/projetos/[id]/page.tsx(72,32): error TS2322: Type '{ formId: string; projectId: string; initialUrl: string; }' is not assignable to type 'IntrinsicAttributes & { project?: Project; }'.
-  Property 'formId' does not exist on type 'IntrinsicAttributes & { project?: Project; }'.
-src/app/(protected)/projetos/novo/page.tsx(23,31): error TS2322: Type '{ formId: string; }' is not assignable to type 'IntrinsicAttributes & { project?: Project; }'.
-  Property 'formId' does not exist on type 'IntrinsicAttributes & { project?: Project; }'.
-src/app/(protected)/projetos/novo/page.tsx(24,32): error TS2322: Type '{ formId: string; }' is not assignable to type 'IntrinsicAttributes & { project?: Project; }'.
-  Property 'formId' does not exist on type 'IntrinsicAttributes & { project?: Project; }'.

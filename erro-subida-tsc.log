@@ -1,1 +1,0 @@
-src/app/(protected)/projetos/[id]/page.tsx(40,9): error TS2657: JSX expressions must have one parent element.
